@@ -9,6 +9,7 @@ public interface IRepository<TEntity, TKey> where TEntity : IEntity<TKey>
 
     // 新增實體
     void Add(TEntity entity);
+    Task AddAsync(TEntity entity);
 
     // 更新實體
     void Update(TEntity entity);

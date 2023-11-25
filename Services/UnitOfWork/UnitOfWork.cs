@@ -22,6 +22,11 @@ namespace IngBackend.Services.UnitOfWork
             _context.SaveChanges();
         }
 
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
+        }
+
         public IRepository<TEntity, TKey> Repository<TEntity, TKey>() where TEntity : class, IEntity<TKey>
         {
             if (_repositories == null)

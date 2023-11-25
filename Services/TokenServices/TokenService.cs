@@ -24,6 +24,7 @@ public class TokenService
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email),
+            new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString())
         };
 
 
@@ -34,8 +35,8 @@ public class TokenService
         var token = new JwtSecurityToken(
             issuer: _config["Jwt:Issuer"],
             audience: _config["Jwt:Audience"],
-            claims,
-            expires,
+            claims: claims,
+            expires: expires,
             signingCredentials: creds
             );
         return new TokenDTO

@@ -3,6 +3,7 @@
 public class UserDTO
 {
     public UserInfoDTO User { get; set; }
+    public TokenDTO Token { get; set; }
 }
 
 public class UserInfoDTO
@@ -12,8 +13,6 @@ public class UserInfoDTO
     public string Email { get; set; }
 
     public string Username { get; set; }
-
-    public string HashedPassword { get; set; }
 
     public List<ResumeDTO>? Resumes { get; set; }
 }

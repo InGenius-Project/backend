@@ -18,15 +18,14 @@ public class UserService : Service<User, Guid>
         _userRepository = unitOfWork.Repository<User, Guid>();
     }
 
-    public User? GetUserByEmail(string email, params Expression<Func<User, object>>[] includes)
+    public async Task<User>? GetUserByEmailAsync(string email, params Expression<Func<User, object>>[] includes)
     {
         var query = _userRepository.GetAll();
-
         foreach (var include in includes)
         {
             query = query.Include(include);
         }
-        return query.FirstOrDefault(e => e.Email == email);
+        return await query.FirstOrDefaultAsync(e => e.Email == email);
     }
 
 

@@ -24,6 +24,12 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
     {
         _context.Set<TEntity>().Add(entity);
     }
+
+    public async Task AddAsync(TEntity entity)
+    {
+        await _context.Set<TEntity>().AddAsync(entity);
+    }
+
     public void Update(TEntity entity)
     {
         _context.Set<TEntity>().Update(entity);

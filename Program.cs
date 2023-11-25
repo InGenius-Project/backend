@@ -1,13 +1,16 @@
 using IngBackend.Context;
 using IngBackend.Interfaces.Service;
 using IngBackend.Interfaces.UnitOfWork;
+using IngBackend.Profiles;
 using IngBackend.Services;
+using IngBackend.Services.Middlewares;
 using IngBackend.Services.TokenServices;
 using IngBackend.Services.UnitOfWork;
 using IngBackend.Services.UserService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,19 +26,53 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped(typeof(IService<,>), typeof(Service<,>));
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<ApiResponseMiddleware>();
+builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
 
-builder.Services.AddCors(options =>
+// Add Swagger
+builder.Services.AddSwaggerGen(c =>
 {
-    options.AddPolicy("DevCorsPolicy", builder =>
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        Description = "JWT Authorization header using the Bearer scheme",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
     });
 });
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+// AutoMapper
+builder.Services.AddAutoMapper(
+    cfg => cfg.AddProfile(new MappingProfile(
+        builder.Services.BuildServiceProvider().GetService<IPasswordHasher>()
+        )),
+        AppDomain.CurrentDomain.GetAssemblies()
+);
+
+
+
+
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
@@ -44,11 +81,26 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issurer"],
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]))
         };
     });
+
+
+// CORS
+var devCorsPolicy = "_devCorsPolicy";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(
+        name: devCorsPolicy,
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+        });
+});
+
+
 
 var app = builder.Build();
 
@@ -59,12 +111,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+
+// Middleware
+app.UseMiddleware<ApiResponseMiddleware>();
+
+app.UseCors(devCorsPolicy);
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
 app.UseAuthentication();
-
-app.UseCors("DevCorsPolicy");
 
 app.MapControllers();
 

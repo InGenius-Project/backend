@@ -7,9 +7,11 @@ public interface IService<TEntity, TKey> where TEntity : class, IEntity<TKey>
 {
     // 根據主鍵查詢實體
     TEntity? GetById(TKey id, params Expression<Func<TEntity, object>>[] includes);
+    Task<TEntity>? GetByIdAsync(TKey id, params Expression<Func<TEntity, object>>[] includes);
 
     // 新增實體
     void Add(TEntity entity);
+    Task AddAsync(TEntity entity);
 
     // 更新實體
     void Update(TEntity entity);

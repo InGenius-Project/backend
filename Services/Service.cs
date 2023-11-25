@@ -17,6 +17,12 @@ public class Service<TEntity, TKey> : IService<TEntity, TKey> where TEntity : cl
     {
         _unitOfWork.Repository<TEntity, TKey>().Add(entity);
     }
+
+    public virtual async Task AddAsync(TEntity entity)
+    {
+        await _unitOfWork.Repository<TEntity, TKey>().AddAsync(entity);
+    }
+
     public TEntity? GetById(TKey id, params Expression<Func<TEntity, object>>[] includes)
     {
         var query = _unitOfWork.Repository<TEntity, TKey>().GetAll();
@@ -30,7 +36,19 @@ public class Service<TEntity, TKey> : IService<TEntity, TKey> where TEntity : cl
 
     }
 
+    public async Task<TEntity>? GetByIdAsync(TKey id, params Expression<Func<TEntity, object>>[] includes)
+    {
+        var query = _unitOfWork.Repository<TEntity, TKey>().GetAll();
 
+        foreach (var include in includes)
+        {
+            query = query.Include(include);
+        }
+
+        var entity = await query.FirstOrDefaultAsync(e => e.Id.Equals(id));
+
+        return entity;
+    }
     public IQueryable<TEntity>? GetAll(Expression<Func<TEntity, bool>> predicate, params Expression<Func<TEntity, object>>[] includes)
     {
         var query = _unitOfWork.Repository<TEntity, TKey>().GetAll();
@@ -57,5 +75,9 @@ public class Service<TEntity, TKey> : IService<TEntity, TKey> where TEntity : cl
     public void SaveChange()
     {
         _unitOfWork.SaveChanges();
+    }
+    public async Task SaveChangesAsync()
+    {
+        await _unitOfWork.SaveChangesAsync();
     }
 }
