@@ -118,8 +118,8 @@ app.UseMiddleware<ApiResponseMiddleware>();
 app.UseCors(devCorsPolicy);
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
 app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 
