@@ -177,7 +177,7 @@ public class ApiResponseMiddleware : IMiddleware
                 Success = isSuccess,
                 StatusCode = statusCode,
                 Message = message ?? GetDefaultMessage(statusCode),
-                Exception = jsonToken["Exception"]
+                Exception = jsonToken["InnerException"]
             };
             return JsonConvert.SerializeObject(responseObject);
         }

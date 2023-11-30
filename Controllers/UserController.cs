@@ -54,7 +54,7 @@ public class UserController : BaseController
     [HttpPost("signup")]
     [ProducesResponseType(typeof(UserDTO), 201)]
     [ProducesResponseType(typeof(string), 400)]
-    public async Task<ActionResult<UserDTO>> SignUp([FromBody] UserSignUpDTO req)
+    public async Task<ActionResult<TokenDTO>> SignUp([FromBody] UserSignUpDTO req)
     {
         if (await _userService.GetUserByEmailAsync(req.Email.ToLower()) != null)
         {
@@ -72,14 +72,15 @@ public class UserController : BaseController
 
         // TODO: add send email process to background job
 
-        var userInfoDTO = _mapper.Map<UserInfoDTO>(user);
+        //var userInfoDTO = _mapper.Map<UserInfoDTO>(user);
         var TokenDTO = _tokenService.GenerateToken(user);
-        var userDTO = _mapper.Map<UserDTO>(userInfoDTO);
-        _mapper.Map(TokenDTO, userDTO);
+        //var userDTO = _mapper.Map<UserDTO>(userInfoDTO);
+        //_mapper.Map(TokenDTO, userDTO);
 
-        return userDTO;
+        return TokenDTO;
 
     }
+
 
     [AllowAnonymous]
     [HttpPost("login")]
