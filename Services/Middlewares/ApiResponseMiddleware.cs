@@ -11,9 +11,11 @@ namespace IngBackend.Services.Middlewares;
 public class ApiResponseMiddleware : IMiddleware
 {
 
-    public ApiResponseMiddleware()
-    {
 
+    private readonly ILogger _logger;
+    public ApiResponseMiddleware(ILogger<ApiResponseMiddleware> logger)
+    {
+        _logger = logger;
     }
 
 
@@ -32,6 +34,8 @@ public class ApiResponseMiddleware : IMiddleware
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, ex.Message);
+
                 await HandleException(context, memStream, ex);
             }
 
@@ -130,27 +134,11 @@ public class ApiResponseMiddleware : IMiddleware
         {
             // 轉換成 jsonObject
             JObject jsonObject = (JObject)jsonToken;
-
+            jsonObject["Exception"] = jsonObject["InnerException"];
             // Bad request
             if (statusCode == (int)HttpStatusCode.BadRequest)
             {
-                jsonObject["Exception"] = jsonObject["InnerException"];
-
-                if (jsonObject["errors"] != null && jsonObject["errors"] is JObject fieldObject && jsonObject["title"] != null && jsonObject["title"].ToString() == "One or more validation errors occurred.")
-                {
-                    var errorFields = string.Join(", ", fieldObject.Properties().Select(p => $"欄位 {p.Name} 不能為空"));
-
-                    jsonObject["Exception"] = errorFields;
-                }
-
-                //刪除不必要的屬性
-                //jsonObject.Remove("Message");
-                //jsonObject.Remove("errors");
-                //jsonObject.Remove("InnerException");
-                //jsonObject.Remove("type");
-                //jsonObject.Remove("title");
-                //jsonObject.Remove("status");
-                //jsonObject.Remove("traceId");
+                jsonToken["Exception"] = jsonObject["errors"];
             }
 
             // 寫回 JsonToken
@@ -172,12 +160,13 @@ public class ApiResponseMiddleware : IMiddleware
         }
         else
         {
+
             var responseObject = new
             {
                 Success = isSuccess,
                 StatusCode = statusCode,
                 Message = message ?? GetDefaultMessage(statusCode),
-                Exception = jsonToken["InnerException"]
+                Exception = jsonToken["Exception"]
             };
             return JsonConvert.SerializeObject(responseObject);
         }

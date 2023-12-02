@@ -13,14 +13,14 @@ namespace IngBackend.Models.DBEntity
         public Guid Id { get; set; }
 
         [Column(TypeName = "varchar(512)")]
-        public string Email { get; set; }
+        public required string Email { get; set; }
 
         [MaxLength(124)]
-        public string Username { get; set; }
+        public required string Username { get; set; }
 
         [Required]
-        public string HashedPassword { get; set; }
+        public required string HashedPassword { get; set; }
 
-        public List<Resume>? Resumes { get; set; }
+        public List<Resume> Resumes { get; set; } = new List<Resume> { };
     }
 }

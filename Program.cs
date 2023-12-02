@@ -27,9 +27,22 @@ builder.Services.AddScoped(typeof(IService<,>), typeof(Service<,>));
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<ResumeService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ApiResponseMiddleware>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
+
+// Json Serializer
+builder.Services.AddControllers()
+       .AddJsonOptions(options =>
+       {
+           options.JsonSerializerOptions.PropertyNamingPolicy = null;
+       });
+
+// Add Logger
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
 
 // Add Swagger
 builder.Services.AddSwaggerGen(c =>
