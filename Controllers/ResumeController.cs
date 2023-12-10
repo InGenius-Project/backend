@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using IngBackend.Controllers;
 using IngBackend.Exceptions;
 using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
@@ -7,7 +6,7 @@ using IngBackend.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace lng_backend.Controllers;
+namespace IngBackend.Controllers;
 
 [Route("api/[controller]")]
 [Authorize]
@@ -27,7 +26,7 @@ public class ResumeController : BaseController
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ResumeDTO>>> GetResume()
+    public async Task<ActionResult<List<ResumeDTO>>> GetResumes()
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         var user = await _userService.GetByIdAsync(userId);
@@ -39,10 +38,36 @@ public class ResumeController : BaseController
 
         var resumes = _resumeService
             .GetResumeByUser(userId)
-            .DefaultIfEmpty()
             .ToList();
 
         var resumeDTO = _mapper.Map<List<ResumeDTO>>(resumes);
+
+        return resumeDTO;
+
+    }
+
+
+    [HttpGet("{resumeId}")]
+    public async Task<ActionResult<ResumeDTO>> GetResume(Guid resumeId)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+
+        var user = await _userService.GetByIdAsync(userId);
+
+
+        if (user == null)
+        {
+            throw new UserNotFoundException();
+        }
+
+        var resumes = await _resumeService.GetByIdAsync(resumeId);
+
+        if (resumes == null)
+        {
+            throw new NotFoundException("履歷不存在");
+        }
+
+        var resumeDTO = _mapper.Map<ResumeDTO>(resumes);
 
         return resumeDTO;
 
@@ -59,27 +84,57 @@ public class ResumeController : BaseController
             throw new UserNotFoundException();
         }
 
-        var newResume = _mapper.Map<Resume>(req);
+        var reqResume = _mapper.Map<Resume>(req);
 
-        var existResume = user.Resumes?.FirstOrDefault(x => x.Id == req.Id);
-
-        // if resume exist, update it
-        if (existResume != null)
+        if (req.Id.HasValue && req.Id != Guid.Empty)
         {
-            existResume.TextLayouts = newResume.TextLayouts;
-            existResume.ImageTextLayouts = newResume.ImageTextLayouts;
-            existResume.Title = newResume.Title;
-            _userService.Update(user);
-            await _userService.SaveChangesAsync();
-            return Ok();
+            var existResume = await _resumeService.GetByIdAsync(req.Id ?? Guid.Empty);
+
+            // if resume exist, update it
+            if (existResume != null)
+            {
+                existResume.Title = reqResume.Title;
+                existResume.Areas = reqResume.Areas;
+                _resumeService.Update(existResume);
+            }
+            else
+            {
+                throw new NotFoundException("此履歷不存在");
+            }
+        }
+        else
+        {
+            user.Resumes ??= new List<Resume> { };
+            user.Resumes.Add(reqResume);
         }
 
-        user.Resumes ??= new List<Resume> { };
-        user.Resumes.Add(newResume);
+        await _userService.SaveChangesAsync();
+        var resume = await _resumeService.GetByIdAsync(req.Id ?? Guid.Empty);
+        var resumeDTO = _mapper.Map<ResumeDTO>(resume);
+        return Ok(resumeDTO);
+    }
+
+    [HttpDelete("{resumeId}")]
+    public async Task<IActionResult> DeleteResume(Guid resumeId)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        var user = await _userService.GetByIdAsync(userId, u => u.Resumes);
+        if (user == null)
+        {
+            throw new UserNotFoundException();
+        }
+        var existResume = user.Resumes?.FirstOrDefault(x => x.Id == resumeId);
+
+        if (existResume == null)
+        {
+            throw new NotFoundException("找不到履歷");
+        }
+
+        user.Resumes.Remove(existResume);
 
         _userService.Update(user);
-
         await _userService.SaveChangesAsync();
         return Ok();
     }
+
 }

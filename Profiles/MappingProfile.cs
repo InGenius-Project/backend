@@ -17,14 +17,11 @@ public class MappingProfile : Profile
 
 
         // Resume
-        CreateMap<ResumeDTO, Resume>();
         CreateMap<Resume, ResumeDTO>();
         CreateMap<ResumePostDTO, Resume>();
-        CreateMap<TextLayoutDTO, TextLayout>();
-        CreateMap<ImageTextLayoutDTO, ImageTextLayout>();
-        CreateMap<ImageDTO, Image>();
-        CreateMap(typeof(ResumeAreaDTO<>), typeof(ResumeAreaDTO<>));
-
+        CreateMap<Area, AreaDTO>();
+        CreateMap<TextLayout, TextLayoutDTO>();
+        CreateMap<ImageTextLayout, ImageTextLayoutDTO>();
 
     }
     public MappingProfile(IPasswordHasher passwordHasher) : this()
