@@ -19,7 +19,13 @@ public class MappingProfile : Profile
         // Resume
         CreateMap<Resume, ResumeDTO>();
         CreateMap<ResumePostDTO, Resume>();
+
+        // Area
         CreateMap<Area, AreaDTO>();
+        CreateMap<AreaDTO, Area>();
+        CreateMap<AreaPostDTO, Area>();
+        CreateMap<TextLayoutDTO, TextLayout>();
+        CreateMap<ImageTextLayoutDTO, ImageTextLayout>();
         CreateMap<TextLayout, TextLayoutDTO>();
         CreateMap<ImageTextLayout, ImageTextLayoutDTO>();
 

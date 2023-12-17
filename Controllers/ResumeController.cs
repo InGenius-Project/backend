@@ -60,7 +60,7 @@ public class ResumeController : BaseController
             throw new UserNotFoundException();
         }
 
-        var resumes = await _resumeService.GetByIdAsync(resumeId);
+        var resumes = _resumeService.GetResumeIncludeById(resumeId);
 
         if (resumes == null)
         {
@@ -75,7 +75,7 @@ public class ResumeController : BaseController
 
 
     [HttpPost]
-    public async Task<IActionResult> PostResume([FromBody] ResumePostDTO req)
+    public async Task<ActionResult<ResumeDTO>> PostResume([FromBody] ResumePostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         var user = await _userService.GetByIdAsync(userId, u => u.Resumes);
@@ -84,34 +84,22 @@ public class ResumeController : BaseController
             throw new UserNotFoundException();
         }
 
-        var reqResume = _mapper.Map<Resume>(req);
-
-        if (req.Id.HasValue && req.Id != Guid.Empty)
+        var resume = await _resumeService.GetByIdAsync(req.Id ?? Guid.Empty);
+        if (resume == null)
         {
-            var existResume = await _resumeService.GetByIdAsync(req.Id ?? Guid.Empty);
-
-            // if resume exist, update it
-            if (existResume != null)
-            {
-                existResume.Title = reqResume.Title;
-                existResume.Areas = reqResume.Areas;
-                _resumeService.Update(existResume);
-            }
-            else
-            {
-                throw new NotFoundException("此履歷不存在");
-            }
+            var newResume = _mapper.Map<Resume>(req);
+            user.Resumes.Add(newResume);
         }
         else
         {
-            user.Resumes ??= new List<Resume> { };
-            user.Resumes.Add(reqResume);
+            // Patch Area
+            _mapper.Map(req, resume);
         }
 
+        _userService.Update(user);
         await _userService.SaveChangesAsync();
-        var resume = await _resumeService.GetByIdAsync(req.Id ?? Guid.Empty);
         var resumeDTO = _mapper.Map<ResumeDTO>(resume);
-        return Ok(resumeDTO);
+        return resumeDTO;
     }
 
     [HttpDelete("{resumeId}")]

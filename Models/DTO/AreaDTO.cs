@@ -4,10 +4,21 @@ public class AreaDTO
 {
     public Guid Id { get; set; }
     public required int Sequence { get; set; }
-    public required bool isDisplayed { get; set; }
+    public required bool IsDisplayed { get; set; }
     public TextLayoutDTO? TextLayout { get; set; }
     public ImageTextLayoutDTO? ImageTextLayout { get; set; }
 }
+
+public class AreaPostDTO
+{
+    //public Guid? ProfileId ;
+    public Guid? ResumeId { get; set; }
+    public required int Sequence { get; set; }
+    public required bool IsDisplayed { get; set; }
+    public TextLayoutDTO? TextLayout { get; set; }
+    public ImageTextLayoutDTO? ImageTextLayout { get; set; }
+}
+
 
 public interface ILayout
 {

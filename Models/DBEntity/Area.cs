@@ -11,7 +11,7 @@ public class Area : BaseEntity, IEntity<Guid>
     public Guid Id { get; set; }
 
     public required int Sequence { get; set; }
-    public required bool isDisplayed { get; set; }
+    public required bool IsDisplayed { get; set; }
 
 
     [JsonIgnore]
@@ -20,7 +20,7 @@ public class Area : BaseEntity, IEntity<Guid>
     [JsonIgnore]
     public TextLayout? TextLayout { get; set; }
     [JsonIgnore]
-    public ImageTextLayout? ImageTextayout { get; set; }
+    public ImageTextLayout? ImageTextLayout { get; set; }
 }
 
 public interface ILayout
