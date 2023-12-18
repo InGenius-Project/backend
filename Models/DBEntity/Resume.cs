@@ -15,7 +15,9 @@ public class Resume : BaseEntity, IEntity<Guid>
 
     [JsonIgnore]
     [Required]
-    public required User User { get; set; }
+    public required InternUser Owner { get; set; }
+    public required Guid OwnerId { get; set; }
+
     public Guid UserId { get; set; }
 
 }

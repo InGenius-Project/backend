@@ -16,5 +16,6 @@ public class IngDbContext : DbContext
         base.OnConfiguring(optionsBuilder);
     }
 
-    public DbSet<User> User { get; set; }
+    public DbSet<InternUser> InternUser { get; set; }
+    public DbSet<CompanyUser> CompanyUser { get; set; }
 }
