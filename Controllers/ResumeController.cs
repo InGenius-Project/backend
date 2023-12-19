@@ -54,13 +54,12 @@ public class ResumeController : BaseController
 
         var user = await _userService.GetByIdAsync(userId);
 
-
         if (user == null)
         {
             throw new UserNotFoundException();
         }
 
-        var resumes = _resumeService.GetResumeIncludeById(resumeId);
+        var resumes = await _resumeService.GetResumeIncludeByIdAsync(resumeId);
 
         if (resumes == null)
         {
