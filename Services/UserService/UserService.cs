@@ -23,6 +23,12 @@ public class UserService : Service<User, Guid>
         _userRepository = unitOfWork.Repository<User, Guid>();
     }
 
+    /// <summary>
+    /// Asynchronously finds the user information that matches the specified email address.
+    /// </summary>
+    /// <param name="email">The email address of the user to retrieve</param>
+    /// <param name="includes">(optional) A list of related properties to retrieve</param>
+    /// <returns>A `User` object containing the user information that matches the email address `email`, or null if no matching user exists</returns>
     public async Task<User>? GetUserByEmailAsync(string email, params Expression<Func<User, object>>[] includes)
     {
         var query = _userRepository.GetAll();
@@ -33,13 +39,27 @@ public class UserService : Service<User, Guid>
         return await query.FirstOrDefaultAsync(e => e.Email == email);
     }
 
-    public async Task<User>? CheckAndGetUserAsync(Guid userId)
+    /// <summary>
+    /// Asynchronously checks if a user exists with the specified ID and retrieves the user information if found.
+    /// </summary>
+    /// <param name="userId">The ID of the user to check and retrieve (Guid).</param>
+    /// <returns>A `User` object containing the user information if found.</returns>
+    /// <exception cref="UserNotFoundException">Throws a `UserNotFoundException` if no user exists with the specified ID.</exception>
+    public async Task<User> CheckAndGetUserAsync(Guid userId)
     {
         var user = await _userRepository.GetByIdAsync(userId) ?? throw new UserNotFoundException();
         return user ;
     }
 
-    public async Task<User?> CheckAndGetUserAsync(Guid userId, UserRole allowedRole)
+    /// <summary>
+    /// Asynchronously checks if a user exists with the specified ID, retrieves the user information, and verifies if the user has the required role.
+    /// </summary>
+    /// <param name="userId">The ID of the user to check and retrieve (Guid).</param>
+    /// <param name="allowedRole">The required role the user must have (UserRole).</param>
+    /// <returns>A `User` object containing the user information if found and has the allowed role.</returns>
+    /// <exception cref="UserNotFoundException">Throws a `UserNotFoundException` if no user exists with the specified ID.</exception>
+    /// <exception cref="ForbiddenException">Throws a `ForbiddenException` if the user exists but does not have the required role.</exception>
+    public async Task<User> CheckAndGetUserAsync(Guid userId, UserRole allowedRole)
     {
         var user = await _userRepository.GetByIdAsync(userId) ?? throw new UserNotFoundException();
         
@@ -51,6 +71,14 @@ public class UserService : Service<User, Guid>
         return user;
     }
 
+    /// <summary>
+    /// Asynchronously checks if a user exists with the specified ID, retrieves the user information, and verifies if the user belongs to any of the allowed roles.
+    /// </summary>
+    /// <param name="userId">The ID of the user to check and retrieve (Guid).</param>
+    /// <param name="allowedRoles">An enumerable collection of allowed roles the user must belong to (IEnumerable<UserRole>).</param>
+    /// <returns>A `User` object containing the user information if found and belongs to any of the allowed roles.</returns>
+    /// <exception cref="UserNotFoundException">Throws a `UserNotFoundException` if no user exists with the specified ID.</exception>
+    /// <exception cref="ForbiddenException">Throws a `ForbiddenException` if the user exists but does not belong to any of the allowed roles.</exception>
     public async Task<User?> CheckAndGetUserAsync(Guid userId, IEnumerable<UserRole> allowedRoles)
     {
         var user = await _userRepository.GetByIdAsync(userId) ?? throw new UserNotFoundException();
@@ -62,6 +90,4 @@ public class UserService : Service<User, Guid>
 
         return user;
     }
-
-
 }
