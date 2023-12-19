@@ -86,7 +86,10 @@ public class ResumeService : Service<Resume, Guid>
         }
 
         // Not Related Company
-        if (!IsRelatedCompany(resume, user.Id)) { throw new ForbiddenException(); }
+        if (!IsRelatedCompany(resume, user.Id)) 
+        { 
+            throw new ForbiddenException(); 
+        }
 
         return resume;
     }
