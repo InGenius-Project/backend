@@ -13,11 +13,17 @@ public class Resume : BaseEntity, IEntity<Guid>
 
     public List<Area>? Areas { get; set; }
 
+    public bool Visibility { get; set; } = false;
+
     [JsonIgnore]
     [Required]
     public required User User { get; set; }
     public Guid UserId { get; set; }
 
+
+    // Related Recruitment
+    [JsonIgnore]
+    public IEnumerable<Recruitment>? Recruitments { get; set; } = new List<Recruitment>() { };
 }
 
 

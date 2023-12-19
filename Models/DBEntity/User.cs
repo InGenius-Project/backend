@@ -3,6 +3,7 @@ using IngBackend.Interfaces.Repository;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 
 namespace IngBackend.Models.DBEntity;
@@ -26,5 +27,27 @@ public class User : BaseEntity, IEntity<Guid>
     [Required]
     public required string HashedPassword { get; set; }
 
+    [JsonIgnore]
     public List<Resume> Resumes { get; set; } = new List<Resume> { };
+
+    [JsonIgnore]
+    public List<Recruitment>? Recruitments { get; set; } = new List<Recruitment> { };
+}
+
+
+public class Recruitment : BaseEntity, IEntity<Guid>
+{
+    [Key]
+    public Guid Id { get; set; }
+
+    public required string JobName { get; set; }
+    public required string ContactEmail { get; set; }
+    public required string ContactName { get; set; }
+
+    [JsonIgnore]
+    public IEnumerable<Resume>? Resumes { get; set; } = new List<Resume>() { };
+
+    [Required]
+    public required User Publisher { get; set; }
+    public required Guid PublisherId { get; set; }
 }

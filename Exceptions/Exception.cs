@@ -30,6 +30,24 @@ public class UnauthorizedException : Exception
     }
 }
 
+public class ForbiddenException : Exception
+{
+    public ForbiddenException() : base("拒絕存取")
+    {
+
+    }
+
+    public ForbiddenException (string message) : base(message)
+    {
+
+    }
+
+    public ForbiddenException(string message, Exception innerException) : base(message, innerException)
+    {
+
+    }
+}
+
 public class BadRequestException : Exception
 {
     public BadRequestException(string message) : base(message)
