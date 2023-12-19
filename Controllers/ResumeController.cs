@@ -88,6 +88,10 @@ public class ResumeController : BaseController
         {
             var newResume = _mapper.Map<Resume>(req);
             user.Resumes.Add(newResume);
+            _userService.Update(user);
+            await _userService.SaveChangesAsync();
+            // update resume to returnd
+            resume = newResume;
         }
         else
         {

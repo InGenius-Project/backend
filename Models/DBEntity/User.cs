@@ -45,7 +45,7 @@ public class Recruitment : BaseEntity, IEntity<Guid>
     public required string ContactName { get; set; }
 
     [JsonIgnore]
-    public IEnumerable<Resume>? Resumes { get; set; } = new List<Resume>() { };
+    public IEnumerable<Resume> Resumes { get; set; } = new List<Resume>() { };
 
     [Required]
     public required User Publisher { get; set; }

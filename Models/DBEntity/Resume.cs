@@ -1,5 +1,6 @@
 ﻿using IngBackend.Interfaces.Repository;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace IngBackend.Models.DBEntity;
@@ -23,7 +24,7 @@ public class Resume : BaseEntity, IEntity<Guid>
 
     // Related Recruitment
     [JsonIgnore]
-    public IEnumerable<Recruitment>? Recruitments { get; set; } = new List<Recruitment>() { };
+    public IEnumerable<Recruitment> Recruitments { get; set; } = new List<Recruitment>() { };
 }
 
 
