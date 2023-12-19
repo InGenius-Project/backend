@@ -1,4 +1,4 @@
-﻿using lng_backend.Exception;
+﻿using IngBackend.Exceptions;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -184,6 +184,7 @@ public class ApiResponseMiddleware : IMiddleware
             202 => "請求已接受",
             400 => "請求無效",
             401 => "驗證錯誤",
+            403 => "拒絕存取",
             404 => "已被刪除、移動或從未存在",
             _ => "發生未知的錯誤",
         };
