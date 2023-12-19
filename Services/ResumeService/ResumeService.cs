@@ -70,11 +70,8 @@ public class ResumeService : Service<Resume, Guid>
     {
         var resume = await GetResumeIncludeByIdAsync(id) ?? throw new NotFoundException("履歷不存在");
 
-        // Check Ownership
-        bool IsOwner = resume.User.Id != user.Id;
-
         // Is Owner
-        if (IsOwner)
+        if (resume.User.Id == user.Id)
         {
             return resume;
         }
