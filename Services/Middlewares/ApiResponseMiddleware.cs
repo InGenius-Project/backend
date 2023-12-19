@@ -212,6 +212,12 @@ public class ApiResponseMiddleware : IMiddleware
             message = "使用者不存在";
             code = HttpStatusCode.NotFound; // 404
         }
+        
+        else if (exception is ForbiddenException)
+        {
+            message = "拒絕存取";
+            code = HttpStatusCode.Forbidden;
+        }
 
         else if (exception is BadRequestException || exception is BadHttpRequestException)
         {
