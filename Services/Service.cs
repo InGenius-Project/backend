@@ -105,7 +105,7 @@ public class Service<TEntity, TKey> : IService<TEntity, TKey> where TEntity : cl
     }
 
     /// <inheritdoc />
-    public async Task<TEntity>? GetByIdAsync(TKey id, params Expression<Func<TEntity, object>>[] includes)
+    public async Task<TEntity?> GetByIdAsync(TKey id, params Expression<Func<TEntity, object>>[] includes)
     {
         var query = _unitOfWork.Repository<TEntity, TKey>().Query();
 

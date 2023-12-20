@@ -29,76 +29,45 @@ public class ResumeController : BaseController
     public async Task<ActionResult<List<ResumeDTO>>> GetResumes()
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.GetByIdAsync(userId);
+        await _userService.CheckAndGetUserAsync(userId);
 
-        if (user == null)
-        {
-            throw new UserNotFoundException();
-        }
-
-        var resumes = _resumeService
-            .GetResumeByUser(userId)
-            .ToList();
-
-        var resumeDTO = _mapper.Map<List<ResumeDTO>>(resumes);
-
+        var resume = await _userService.GetUserResumes(userId);
+        var resumeDTO = _mapper.Map<List<ResumeDTO>>(resume);
         return resumeDTO;
-
     }
-
 
     [HttpGet("{resumeId}")]
     public async Task<ActionResult<ResumeDTO>> GetResume(Guid resumeId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
 
-        var user = await _userService.GetByIdAsync(userId);
-
-        if (user == null)
-        {
-            throw new UserNotFoundException();
-        }
-
-        var resumes = await _resumeService.GetResumeIncludeByIdAsync(resumeId);
-
-        if (resumes == null)
-        {
-            throw new NotFoundException("履歷不存在");
-        }
+        var user = await _userService.CheckAndGetUserAsync(userId);
+        var resumes = await _resumeService.CheckAndGetResumeAsync(resumeId, user);
 
         var resumeDTO = _mapper.Map<ResumeDTO>(resumes);
-
         return resumeDTO;
-
     }
-
 
     [HttpPost]
     public async Task<ActionResult<ResumeDTO>> PostResume([FromBody] ResumePostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.GetByIdAsync(userId, u => u.Resumes);
-        if (user == null)
-        {
-            throw new UserNotFoundException();
-        }
+        var user = await _userService.CheckAndGetUserAsync(userId, u => u.Resumes);
 
         var resume = await _resumeService.GetByIdAsync(req.Id ?? Guid.Empty);
+
+        // Add new resume
         if (resume == null)
         {
             var newResume = _mapper.Map<Resume>(req);
             user.Resumes.Add(newResume);
             _userService.Update(user);
             await _userService.SaveChangesAsync();
-            // update resume to returnd
-            resume = newResume;
+            return _mapper.Map<ResumeDTO>(newResume);
         }
-        else
-        {
-            // Patch Area
-            _mapper.Map(req, resume);
-        }
-
+       
+        // Patch
+        _mapper.Map(req, resume);
         _userService.Update(user);
         await _userService.SaveChangesAsync();
         var resumeDTO = _mapper.Map<ResumeDTO>(resume);
@@ -109,20 +78,16 @@ public class ResumeController : BaseController
     public async Task<IActionResult> DeleteResume(Guid resumeId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.GetByIdAsync(userId, u => u.Resumes);
-        if (user == null)
-        {
-            throw new UserNotFoundException();
-        }
-        var existResume = user.Resumes?.FirstOrDefault(x => x.Id == resumeId);
+        var user = await _userService.CheckAndGetUserAsync(userId, u => u.Resumes);
 
-        if (existResume == null)
+        if (user.Resumes == null)
         {
             throw new NotFoundException("找不到履歷");
         }
 
-        user.Resumes.Remove(existResume);
+        var existResume = user.Resumes.FirstOrDefault(x => x.Id == resumeId) ?? throw new NotFoundException("找不到履歷");
 
+        user.Resumes.Remove(existResume);
         _userService.Update(user);
         await _userService.SaveChangesAsync();
         return Ok();

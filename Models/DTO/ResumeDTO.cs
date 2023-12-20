@@ -6,7 +6,7 @@ public class ResumeDTO
     public required string Title { get; set; }
     public DateTime ModifiedAt { get; set; }
     public List<AreaDTO>? Areas { get; set; }
-
+    public bool Visibility { get; set; }
 }
 public class ResumePostDTO
 {
@@ -14,5 +14,5 @@ public class ResumePostDTO
     public string? Title { get; set; }
 
     public List<AreaDTO>? Areas { get; set; }
-
+    public bool Visibility { get; set; }
 }
