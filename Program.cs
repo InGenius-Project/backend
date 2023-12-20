@@ -13,11 +13,20 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using IngBackend.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// context
-string connectionString = builder.Configuration.GetConnectionString("Admin");
+// connectionString
+string? connectionString = builder.Configuration.GetConnectionString("Admin");
+// In Docker
+if (Helper.IsInDocker())
+{
+    connectionString = string.Format("{0}Password={1};",
+        builder.Configuration.GetConnectionString("Docker"),
+        Helper.GetSAPassword()
+        );
+}
 
 
 builder.Services.AddDbContext<IngDbContext>(options => options.UseSqlServer(connectionString));

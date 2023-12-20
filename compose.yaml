@@ -1,0 +1,22 @@
+services:
+    ing-db:
+        container_name: "ing-db"  
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        ports:
+            - "1433:1433"
+        hostname: ing-sql-server
+        volumes:
+            - sqlvolume:/var/opt/mssql
+        environment:
+            - "ACCEPT_EULA=Y"
+            - "MSSQL_SA_PASSWORD=${SA_PASSWORD}"    
+    ing-backend:
+        container_name: "ing-backend"
+        build: .
+        ports:
+            - "34003:80"
+        depends_on: 
+            - ing-db
+volumes:
+    sqlvolume:
+        
