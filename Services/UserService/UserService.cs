@@ -3,10 +3,8 @@ using IngBackend.Exceptions;
 using IngBackend.Interfaces.Repository;
 using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Models.DBEntity;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using System.Web.Http.Results;
 
 
 namespace IngBackend.Services.UserService;

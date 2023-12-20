@@ -28,7 +28,6 @@ if (Helper.IsInDocker())
         );
 }
 
-
 builder.Services.AddDbContext<IngDbContext>(options => options.UseSqlServer(connectionString));
 
 // Add services to the container.
@@ -135,6 +134,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Apply Migration
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    var context = services.GetRequiredService<IngDbContext>();
+    if (context.Database.GetPendingMigrations().Any())
+    {
+        context.Database.Migrate();
+    }
+}
 
 // Middleware
 app.UseMiddleware<ApiResponseMiddleware>();

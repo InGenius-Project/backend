@@ -14,9 +14,13 @@ services:
         container_name: "ing-backend"
         build: .
         ports:
-            - "34003:80"
+            - "34003:8080"
+            - "34004:8081" 
+        environment:
+            - DOCKER_HOST=true
+            - "SA_PASSWORD=${SA_PASSWORD}"
         depends_on: 
             - ing-db
-volumes:
+volumes:    
     sqlvolume:
         
