@@ -5,6 +5,7 @@ using IngBackend.Models.DTO;
 using IngBackend.Services.AreaService;
 using IngBackend.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IngBackend.Controllers;
@@ -34,36 +35,23 @@ public class AreaController : BaseController
     {
 
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.GetByIdAsync(userId);
+        await _userService.CheckAndGetUserAsync(userId);
 
-        if (user == null)
-        {
-            throw new UserNotFoundException();
-        }
+        var area = _areaService.GetAreaIncludeAllById(areaId)
+            ?? throw new NotFoundException("找不到區塊");
 
-        var area = _areaService.GetAreaIncludeAllById(areaId);
-
-        if (area == null)
-        {
-            throw new NotFoundException("找不到區塊");
-        }
         var areaDTO = _mapper.Map<AreaDTO>(area);
         return areaDTO;
     }
 
 
     [HttpPost("{areaId?}")]
-    public async Task<ActionResult<AreaDTO>> PostArea(Guid? areaId, AreaPostDTO req)
+    public async Task<ActionResult<AreaDTO>> PostArea(Guid areaId, AreaPostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.GetByIdAsync(userId);
+        await _userService.CheckAndGetUserAsync(userId);
 
-        if (user == null)
-        {
-            throw new UserNotFoundException();
-        }
-
-        var area = _areaService.GetAreaIncludeAllById(areaId ?? Guid.Empty);
+        var area = _areaService.GetAreaIncludeAllById(areaId);
 
         // Add Area
         if (area == null)
@@ -75,7 +63,6 @@ public class AreaController : BaseController
             var newAreaDTO = _mapper.Map<AreaDTO>(newArea);
             return newAreaDTO;
         }
-
 
         // Patch Area
         _mapper.Map(req, area);
@@ -91,23 +78,10 @@ public class AreaController : BaseController
     public async Task<IActionResult> DeleteArea(Guid areaId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.GetByIdAsync(userId);
-
-        if (user == null)
-        {
-            throw new UserNotFoundException();
-        }
-
-        var area = await _areaService.GetByIdAsync(areaId);
-
-        // Add Area
-        if (area == null)
-        {
-            throw new NotFoundException("找不到區塊");
-        }
-
+        await _userService.CheckAndGetUserAsync(userId);
+ 
+        var area = await _areaService.GetByIdAsync(areaId) ?? throw new NotFoundException("找不到區塊");
         _areaService.Delete(area);
-
         await _areaService.SaveChangesAsync();
 
         return Ok();

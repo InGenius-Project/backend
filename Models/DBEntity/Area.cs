@@ -17,6 +17,7 @@ public class Area : BaseEntity, IEntity<Guid>
     [JsonIgnore]
     public Resume? Resume { get; set; }
     public Guid ResumeId { get; set; }
+
     [JsonIgnore]
     public TextLayout? TextLayout { get; set; }
     [JsonIgnore]
