@@ -11,8 +11,12 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["ing-backend.csproj", "."]
 RUN dotnet restore "./././ing-backend.csproj"
+RUN dotnet tool install --global dotnet-ef
+ENV PATH="$PATH:/root/.dotnet/tools"
+RUN dotnet add package Microsoft.EntityFrameworkCore.Design
 COPY . .
 WORKDIR "/src/."
+RUN dotnet ef migrations add "initCreate"
 RUN dotnet build "./ing-backend.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
