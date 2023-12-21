@@ -9,7 +9,7 @@ services:
             - sqlvolume:/var/opt/mssql
         environment:
             - "ACCEPT_EULA=Y"
-            - "MSSQL_SA_PASSWORD=${JENKINS_SECRETS_SA_PASSWORD}"    
+            - "MSSQL_SA_PASSWORD=${SA_PASSWORD}"    
     ing-backend:
         container_name: "ing-backend"
         build: .
@@ -17,7 +17,7 @@ services:
             - "34003:8080"
         environment:
             - DOCKER_HOST=true
-            - "SA_PASSWORD=${JENKINS_SECRETS_SA_PASSWORD}"
+            - "SA_PASSWORD=${SA_PASSWORD}"
         depends_on: 
             - ing-db
 volumes:    
