@@ -137,14 +137,28 @@ if (app.Environment.IsDevelopment())
 }
 
 // Apply Migration
+
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
 
     var context = services.GetRequiredService<IngDbContext>();
-    if (context.Database.GetPendingMigrations().Any())
+
+    bool migrationSucceeded = false;
+    while (migrationSucceeded)
     {
-        context.Database.Migrate();
+        try
+        {
+            if (context.Database.GetPendingMigrations().Any())
+            {
+                context.Database.Migrate();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Migration failed: {ex.Message}");
+            Thread.Sleep(5000);
+        }
     }
 }
 
