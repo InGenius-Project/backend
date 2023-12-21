@@ -147,20 +147,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Apply Migration
-
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-
-    Console.WriteLine("READY To Applying Migrations");
-
-    var context = services.GetRequiredService<IngDbContext>();
-    if (context.Database.GetPendingMigrations().Any())
-    {
-        Console.WriteLine("Applying Migrations...");
-        context.Database.Migrate();
-    }
-}
-
 app.Run();
