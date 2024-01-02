@@ -22,6 +22,8 @@ public class Area : BaseEntity, IEntity<Guid>
     public TextLayout? TextLayout { get; set; }
     [JsonIgnore]
     public ImageTextLayout? ImageTextLayout { get; set; }
+    [JsonIgnore]
+    public ListLayout? ListLayout { get; set; }
 }
 
 public interface ILayout
@@ -49,6 +51,8 @@ public class TextLayout : BaseEntity, ILayout, IEntity<Guid>
 }
 
 
+
+
 public class Image : BaseEntity, IEntity<Guid>
 {
     [Key]
@@ -73,3 +77,26 @@ public class ImageTextLayout : BaseEntity, ILayout, IEntity<Guid>
     [Required]
     public Guid AreaId;
 }
+
+
+public class ListLayout : BaseEntity, ILayout, IEntity<Guid>
+{
+    [Key]
+    public Guid Id { get; set; }
+    public string Title { get; set; } = "";
+    public string Arrangement { get; set; } = "LIST";
+    public string Type { get; set; } = "CUSTOM";
+
+    [JsonIgnore]
+    public List<Tag>? Items { get; set; }
+
+    [JsonIgnore]
+    [Required]
+    public required Area Area { get; set; }
+    [ForeignKey("Area")]
+    [Required]
+    public Guid AreaId;
+}
+
+
+

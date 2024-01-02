@@ -23,6 +23,7 @@ public class AreaService : Service<Area, Guid>
             .Where(x => x.Id.Equals(areaId))
             .Include(a => a.TextLayout)
             .Include(a => a.ImageTextLayout)
+            .Include(a => a.ListLayout)
             .FirstOrDefault();
         return area;
     }

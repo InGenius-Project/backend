@@ -38,6 +38,9 @@ public class ResumeService : Service<Resume, Guid>
                 .ThenInclude(a => a.TextLayout)
             .Include(r => r.Areas)
                 .ThenInclude(a => a.ImageTextLayout)
+            .Include(r => r.Areas)
+                .ThenInclude(a => a.ListLayout)
+                    .ThenInclude(l => l.Items)
             .Include(r => r.User)
             .Include(r => r.Recruitments)
                 .ThenInclude(a => a.Publisher)
@@ -54,7 +57,7 @@ public class ResumeService : Service<Resume, Guid>
     public async Task<Resume> CheckAndGetResumeAsync(Guid id)
     {
         var resume = await GetResumeIncludeByIdAsync(id) ?? throw new NotFoundException("履歷不存在");
-        
+
         return resume;
     }
 
@@ -86,9 +89,9 @@ public class ResumeService : Service<Resume, Guid>
         }
 
         // Not Related Company
-        if (!IsRelatedCompany(resume, user.Id)) 
-        { 
-            throw new ForbiddenException(); 
+        if (!IsRelatedCompany(resume, user.Id))
+        {
+            throw new ForbiddenException();
         }
 
         return resume;

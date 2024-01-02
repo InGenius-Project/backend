@@ -25,9 +25,15 @@ public class MappingProfile : Profile
         CreateMap<AreaDTO, Area>();
         CreateMap<AreaPostDTO, Area>();
         CreateMap<TextLayoutDTO, TextLayout>();
-        CreateMap<ImageTextLayoutDTO, ImageTextLayout>();
         CreateMap<TextLayout, TextLayoutDTO>();
+        CreateMap<ImageTextLayoutDTO, ImageTextLayout>();
         CreateMap<ImageTextLayout, ImageTextLayoutDTO>();
+        CreateMap<ListLayoutDTO, ListLayout>();
+        CreateMap<ListLayout, ListLayoutDTO>();
+
+        // Tag
+        CreateMap<Tag, TagDTO>();
+        CreateMap<TagDTO, Tag>();
 
     }
     public MappingProfile(IPasswordHasher passwordHasher) : this()

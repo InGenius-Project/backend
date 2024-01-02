@@ -1,5 +1,4 @@
-﻿
-namespace IngBackend.Models.DTO;
+﻿namespace IngBackend.Models.DTO;
 public class AreaDTO
 {
     public Guid Id { get; set; }
@@ -7,6 +6,9 @@ public class AreaDTO
     public required bool IsDisplayed { get; set; }
     public TextLayoutDTO? TextLayout { get; set; }
     public ImageTextLayoutDTO? ImageTextLayout { get; set; }
+    public ListLayoutDTO? ListLayout { get; set; }
+
+
 }
 
 public class AreaPostDTO
@@ -17,6 +19,7 @@ public class AreaPostDTO
     public required bool IsDisplayed { get; set; }
     public TextLayoutDTO? TextLayout { get; set; }
     public ImageTextLayoutDTO? ImageTextLayout { get; set; }
+    public ListLayoutDTO? ListLayout { get; set; }
 }
 
 
@@ -36,6 +39,7 @@ public class TextLayoutDTO
     public required string Content { get; set; } = "";
 }
 
+
 public class ImageDTO
 {
     public Guid Id { get; set; }
@@ -52,3 +56,15 @@ public class ImageTextLayoutDTO
     public ImageDTO? Image { get; set; }
 
 }
+
+
+public class ListLayoutDTO
+{
+    public Guid Id { get; set; }
+    public string Title { get; set; } = "";
+    public string Arrangement { get; set; } = "LIST";
+    public string Type { get; set; } = "CUSTOM";
+    public List<TagDTO>? Items { get; set; }
+
+}
+
