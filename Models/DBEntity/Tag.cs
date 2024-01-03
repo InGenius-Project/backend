@@ -11,7 +11,8 @@ public class Tag : BaseEntity, IEntity<Guid>
     public required string Type { get; set; }
 
     [JsonIgnore]
-    public List<ListLayout>? ListLayouts { get; set; }
+    public ListLayout? ListLayouts { get; set; }
+    public Guid? ListLayoutId { get; set; }
 }
 
 

@@ -17,6 +17,9 @@ public class Area : BaseEntity, IEntity<Guid>
     [JsonIgnore]
     public Resume? Resume { get; set; }
     public Guid ResumeId { get; set; }
+    public required string Title { get; set; }
+    public required string Arrangement { get; set; }
+    public required string Type { get; set; }
 
     [JsonIgnore]
     public TextLayout? TextLayout { get; set; }
@@ -26,20 +29,11 @@ public class Area : BaseEntity, IEntity<Guid>
     public ListLayout? ListLayout { get; set; }
 }
 
-public interface ILayout
-{
-    string Title { get; set; }
-    string Arrangement { get; set; }
-    string Type { get; set; }
-}
 
-public class TextLayout : BaseEntity, ILayout, IEntity<Guid>
+public class TextLayout : BaseEntity, IEntity<Guid>
 {
     [Key]
     public Guid Id { get; set; }
-    public string Title { get; set; } = "";
-    public string Arrangement { get; set; } = "TEXT";
-    public string Type { get; set; } = "CUSTOM";
     public string Content { get; set; } = "";
 
     [JsonIgnore]
@@ -51,8 +45,6 @@ public class TextLayout : BaseEntity, ILayout, IEntity<Guid>
 }
 
 
-
-
 public class Image : BaseEntity, IEntity<Guid>
 {
     [Key]
@@ -60,13 +52,10 @@ public class Image : BaseEntity, IEntity<Guid>
     public required byte[] Content { get; set; }
 }
 
-public class ImageTextLayout : BaseEntity, ILayout, IEntity<Guid>
+public class ImageTextLayout : BaseEntity, IEntity<Guid>
 {
     [Key]
     public Guid Id { get; set; }
-    public string Title { get; set; } = "";
-    public string Arrangement { get; set; } = "IMAGETEXT";
-    public string Type { get; set; } = "CUSTOM";
     public string Content { get; set; } = "";
     public Image? Image { get; set; }
 
@@ -79,13 +68,10 @@ public class ImageTextLayout : BaseEntity, ILayout, IEntity<Guid>
 }
 
 
-public class ListLayout : BaseEntity, ILayout, IEntity<Guid>
+public class ListLayout : BaseEntity, IEntity<Guid>
 {
     [Key]
     public Guid Id { get; set; }
-    public string Title { get; set; } = "";
-    public string Arrangement { get; set; } = "LIST";
-    public string Type { get; set; } = "CUSTOM";
 
     [JsonIgnore]
     public List<Tag>? Items { get; set; }

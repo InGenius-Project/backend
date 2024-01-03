@@ -24,6 +24,7 @@ public class AreaService : Service<Area, Guid>
             .Include(a => a.TextLayout)
             .Include(a => a.ImageTextLayout)
             .Include(a => a.ListLayout)
+                .ThenInclude(l => l.Items)
             .FirstOrDefault();
         return area;
     }
