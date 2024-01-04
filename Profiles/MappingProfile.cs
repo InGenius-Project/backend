@@ -24,12 +24,20 @@ public class MappingProfile : Profile
         CreateMap<Area, AreaDTO>();
         CreateMap<AreaDTO, Area>();
         CreateMap<AreaPostDTO, Area>();
+        // TextLayout
         CreateMap<TextLayoutDTO, TextLayout>();
         CreateMap<TextLayout, TextLayoutDTO>();
+        // ImageLayout
         CreateMap<ImageTextLayoutDTO, ImageTextLayout>();
         CreateMap<ImageTextLayout, ImageTextLayoutDTO>();
+        // ListLayout
         CreateMap<ListLayoutDTO, ListLayout>();
         CreateMap<ListLayout, ListLayoutDTO>();
+        // KeyValueListLayout
+        CreateMap<KeyValueListLayoutDTO, KeyValueListLayout>();
+        CreateMap<KeyValueListLayout, KeyValueListLayoutDTO>();
+        CreateMap<KeyValueItem, KeyValueItemDTO>();
+        CreateMap<KeyValueItemDTO, KeyValueItem>();
 
         // Tag
         CreateMap<Tag, TagDTO>();
