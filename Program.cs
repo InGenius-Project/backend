@@ -13,12 +13,20 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using IngBackend.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// context
-string connectionString = builder.Configuration.GetConnectionString("Admin");
-
+// connectionString
+string? connectionString = builder.Configuration.GetConnectionString("Admin");
+// In Docker
+if (Helper.IsInDocker())
+{
+    connectionString = string.Format("{0}Password={1};",
+        builder.Configuration.GetConnectionString("Docker"),
+        Helper.GetSAPassword()
+        );
+}
 
 builder.Services.AddDbContext<IngDbContext>(options => options.UseSqlServer(connectionString));
 
@@ -111,7 +119,9 @@ builder.Services.AddCors(options =>
         name: devCorsPolicy,
         policy =>
         {
+            policy.WithOrigins("http://localhost:34004").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
             policy.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+            policy.WithOrigins("http://140.123.176.230:34004").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
         });
 });
 
@@ -126,7 +136,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-
 // Middleware
 app.UseMiddleware<ApiResponseMiddleware>();
 
@@ -137,5 +146,20 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Apply Migration
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    Console.WriteLine("READY To Applying Migrations");
+
+    var context = services.GetRequiredService<IngDbContext>();
+    if (context.Database.GetPendingMigrations().Any())
+    {
+        Console.WriteLine("Applying Migrations...");
+        context.Database.Migrate();
+    }
+}
 
 app.Run();
