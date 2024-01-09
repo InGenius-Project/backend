@@ -17,6 +17,11 @@ public class UserInfoDTO
     public List<ResumeDTO>? Resumes { get; set; }
 }
 
+public class UserInfoPostDTO
+{
+    public string Username { get; set; }
+}
+
 public class UserSignUpDTO
 {
     public string Email { get; set; }
