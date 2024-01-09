@@ -17,27 +17,25 @@ public class Area : BaseEntity, IEntity<Guid>
     [JsonIgnore]
     public Resume? Resume { get; set; }
     public Guid ResumeId { get; set; }
+    public required string Title { get; set; }
+    public required string Arrangement { get; set; }
+    public required string Type { get; set; }
 
     [JsonIgnore]
     public TextLayout? TextLayout { get; set; }
     [JsonIgnore]
     public ImageTextLayout? ImageTextLayout { get; set; }
+    [JsonIgnore]
+    public ListLayout? ListLayout { get; set; }
+    [JsonIgnore]
+    public KeyValueListLayout? KeyValueListLayout { get; set; }
 }
 
-public interface ILayout
-{
-    string Title { get; set; }
-    string Arrangement { get; set; }
-    string Type { get; set; }
-}
 
-public class TextLayout : BaseEntity, ILayout, IEntity<Guid>
+public class TextLayout : BaseEntity, IEntity<Guid>
 {
     [Key]
     public Guid Id { get; set; }
-    public string Title { get; set; } = "";
-    public string Arrangement { get; set; } = "TEXT";
-    public string Type { get; set; } = "CUSTOM";
     public string Content { get; set; } = "";
 
     [JsonIgnore]
@@ -58,13 +56,10 @@ public class Image : BaseEntity, IEntity<Guid>
     public required byte[] Content { get; set; }
 }
 
-public class ImageTextLayout : BaseEntity, ILayout, IEntity<Guid>
+public class ImageTextLayout : BaseEntity, IEntity<Guid>
 {
     [Key]
     public Guid Id { get; set; }
-    public string Title { get; set; } = "";
-    public string Arrangement { get; set; } = "IMAGETEXT";
-    public string Type { get; set; } = "CUSTOM";
     public string Content { get; set; } = "";
     public Image? Image { get; set; }
 
@@ -75,3 +70,43 @@ public class ImageTextLayout : BaseEntity, ILayout, IEntity<Guid>
     [Required]
     public Guid AreaId;
 }
+
+
+public class ListLayout : BaseEntity, IEntity<Guid>
+{
+    [Key]
+    public Guid Id { get; set; }
+
+    public List<Tag>? Items { get; set; }
+
+    [JsonIgnore]
+    [Required]
+    public required Area Area { get; set; }
+    [ForeignKey("Area")]
+    [Required]
+    public Guid AreaId;
+}
+
+public class KeyValueListLayout : BaseEntity, IEntity<Guid>
+{
+    [Key]
+    public Guid Id { get; set; }
+    public List<KeyValueItem>? Items { get; set; }
+    [JsonIgnore]
+    [Required]
+    public required Area Area { get; set; }
+    [ForeignKey("Area")]
+    [Required]
+    public Guid AreaId;
+}
+
+public class KeyValueItem : BaseEntity, IEntity<Guid>
+{
+    [Key]
+    public Guid Id { get; set; }
+    public Tag? Key { get; set; }
+    public string Value { get; set; } = "";
+}
+
+
+
