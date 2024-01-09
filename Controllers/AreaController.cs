@@ -45,13 +45,14 @@ public class AreaController : BaseController
     }
 
 
-    [HttpPost("{areaId?}")]
-    public async Task<ActionResult<AreaDTO>> PostArea(Guid areaId, AreaPostDTO req)
+    [HttpPost("{areaId}")]
+    public async Task<ActionResult<AreaDTO>> PostArea(Guid? areaId, [FromForm] AreaFormDataDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
 
-        var area = _areaService.GetAreaIncludeAllById(areaId);
+        var parsedAreaId = areaId ?? Guid.Empty;
+        var area = _areaService.GetAreaIncludeAllById(parsedAreaId);
 
         // Add Area
         if (area == null)

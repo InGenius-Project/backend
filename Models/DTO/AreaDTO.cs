@@ -9,9 +9,17 @@ public class AreaDTO
     public ImageTextLayoutDTO? ImageTextLayout { get; set; }
 }
 
+
+public class AreaFormDataDTO
+{
+    public IFormFile? Image { get; set; }
+    public required AreaPostDTO AreaPost { get; set; }
+}
+
+// TODO: May change this class.
+// By Danny
 public class AreaPostDTO
 {
-    //public Guid? ProfileId ;
     public Guid? ResumeId { get; set; }
     public required int Sequence { get; set; }
     public required bool IsDisplayed { get; set; }
@@ -38,8 +46,7 @@ public class TextLayoutDTO
 
 public class ImageDTO
 {
-    public Guid Id { get; set; }
-    public required byte[] Content { get; set; }
+    public required IFormFile File { get; set; }
 }
 
 public class ImageTextLayoutDTO
@@ -50,5 +57,4 @@ public class ImageTextLayoutDTO
     public required string Type { get; set; }
     public required string Content { get; set; }
     public ImageDTO? Image { get; set; }
-
 }

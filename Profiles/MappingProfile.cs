@@ -28,7 +28,42 @@ public class MappingProfile : Profile
         CreateMap<ImageTextLayoutDTO, ImageTextLayout>();
         CreateMap<TextLayout, TextLayoutDTO>();
         CreateMap<ImageTextLayout, ImageTextLayoutDTO>();
+        CreateMap<AreaFormDataDTO, Area>()
+            .ForMember(
+                des => des.ResumeId,
+                opt => opt.MapFrom(s => s.AreaPost.ResumeId)
+            )
+            .ForMember(
+                des => des.TextLayout,
+                opt => opt.MapFrom(s => s.AreaPost.TextLayout)
+            )
+            .ForMember(
+                des => des.Sequence,
+                opt => opt.MapFrom(s => s.AreaPost.Sequence)
+            )
+            .ForMember(
+                des => des.IsDisplayed,
+                opt => opt.MapFrom(s => s.AreaPost.IsDisplayed)
+            )
+            .ForMember(
+                des => des.ImageTextLayout,
+                opt => {
+                    opt.Condition((s, d) => d.ImageTextLayout != null && s.AreaPost.ImageTextLayout != null && s.Image != null);
+                    opt.MapFrom(s => CombineImageTextLayout(s.AreaPost.ImageTextLayout, s.Image));
+                }
+            );
 
+        CreateMap<ImageDTO, Image>()
+            .ForMember(
+                dest => dest.Filename,
+                opt => opt.MapFrom(src => src.File.FileName)
+            ).ForMember(
+                dest => dest.ContentType,
+                opt => opt.MapFrom(src => src.File.ContentType)
+            ).ForMember(
+                dest => dest.Content,
+                opt => opt.MapFrom(src => GetImageArray(src.File))
+            );
     }
     public MappingProfile(IPasswordHasher passwordHasher) : this()
     {
@@ -37,5 +72,18 @@ public class MappingProfile : Profile
                 dest => dest.HashedPassword,
                 opt => opt.MapFrom(src => passwordHasher.HashPassword(src.Password)));
         CreateMap<User, UserInfoDTO>();
+    }
+
+    private static byte[] GetImageArray(IFormFile Image)
+    {
+        MemoryStream ms = new();
+        Image.CopyTo(ms);
+        return ms.ToArray();
+    }
+
+    private ImageTextLayoutDTO CombineImageTextLayout(ImageTextLayoutDTO itl, IFormFile image)
+    {
+        itl.Image = new ImageDTO() { File = image };
+        return itl;
     }
 }

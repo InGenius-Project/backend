@@ -53,6 +53,8 @@ public class Image : BaseEntity, IEntity<Guid>
 {
     [Key]
     public Guid Id { get; set; }
+    public required string Filename { get; set; }
+    public required string ContentType { get; set; }
     public required byte[] Content { get; set; }
 }
 
