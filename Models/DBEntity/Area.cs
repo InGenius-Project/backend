@@ -16,7 +16,10 @@ public class Area : BaseEntity, IEntity<Guid>
 
     [JsonIgnore]
     public Resume? Resume { get; set; }
-    public Guid ResumeId { get; set; }
+    [JsonIgnore]
+    public User? User { get; set; }
+
+
     public required string Title { get; set; }
     public required string Arrangement { get; set; }
     public required string Type { get; set; }

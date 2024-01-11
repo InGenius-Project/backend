@@ -13,13 +13,17 @@ public class UserInfoDTO
     public string Email { get; set; }
 
     public string Username { get; set; }
+    public List<AreaDTO> Areas { get; set; }
+    public List<TagDTO>? Tags { get; set; }
 
     public List<ResumeDTO>? Resumes { get; set; }
 }
 
 public class UserInfoPostDTO
 {
-    public string Username { get; set; }
+    public string? Username { get; set; }
+    public List<AreaDTO>? Areas { get; set; }
+    public List<TagDTO>? Tags { get; set; }
 }
 
 public class UserSignUpDTO
