@@ -14,6 +14,8 @@ public class Tag : BaseEntity, IEntity<Guid>
     public List<ListLayout>? ListLayouts { get; set; }
     [JsonIgnore]
     public List<KeyValueItem>? KeyValueItems { get; set; }
+    [JsonIgnore]
+    public List<User>? User { get; set; }
 
 }
 
