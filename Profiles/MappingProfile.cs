@@ -44,10 +44,6 @@ public class MappingProfile : Profile
         CreateMap<TagDTO, Tag>();
         CreateMap<AreaFormDataDTO, Area>()
             .ForMember(
-                des => des.ResumeId,
-                opt => opt.MapFrom(s => s.AreaPost.ResumeId)
-            )
-            .ForMember(
                 des => des.TextLayout,
                 opt => opt.MapFrom(s => s.AreaPost.TextLayout)
             )
@@ -61,7 +57,8 @@ public class MappingProfile : Profile
             )
             .ForMember(
                 des => des.ImageTextLayout,
-                opt => {
+                opt =>
+                {
                     opt.Condition((s, d) => d.ImageTextLayout != null && s.AreaPost.ImageTextLayout != null && s.Image != null);
                     opt.MapFrom(s => CombineImageTextLayout(s.AreaPost.ImageTextLayout, s.Image));
                 }
