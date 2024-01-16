@@ -65,7 +65,7 @@ public class ResumeController : BaseController
             await _userService.SaveChangesAsync();
             return _mapper.Map<ResumeDTO>(newResume);
         }
-       
+
         // Patch
         _mapper.Map(req, resume);
         _userService.Update(user);

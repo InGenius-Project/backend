@@ -57,12 +57,7 @@ public class UserController : BaseController
     public async Task<ActionResult<UserInfoDTO>> PostUser(UserInfoPostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.GetByIdAsync(userId);
-
-        if (user == null)
-        {
-            throw new UserNotFoundException();
-        }
+        var user = await _userService.CheckAndGetUserAsync(userId);
 
         _mapper.Map(req, user);
         _userService.Update(user);
@@ -70,7 +65,6 @@ public class UserController : BaseController
         await _userService.SaveChangesAsync();
         var userDTO = _mapper.Map<UserInfoDTO>(user);
         return userDTO;
-
     }
 
 

@@ -89,6 +89,19 @@ public class UserService : Service<User, Guid>
         return user;
     }
 
+
+    public async Task<User> CheckIsOwnerUserAsync(Guid userId, Guid ownerId, params Expression<Func<User, object>>[] includes)
+    {
+        var user = await GetByIdAsync(userId, includes) ?? throw new UserNotFoundException();
+
+        if (user.Id != ownerId)
+        {
+            throw new ForbiddenException();
+        }
+
+        return user;
+    }
+
     public async Task<IEnumerable<Resume>> GetUserResumes(Guid userId)
     {
         var user = await _userRepository.GetAll().Where(u => u.Id == userId)
