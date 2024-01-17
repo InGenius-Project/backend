@@ -1,4 +1,5 @@
-﻿namespace IngBackend.Models.DTO;
+﻿using IngBackend.Enum;
+namespace IngBackend.Models.DTO;
 
 public class UserDTO
 {

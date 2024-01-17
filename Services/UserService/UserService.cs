@@ -166,6 +166,15 @@ public class UserService : Service<User, Guid>
         return token;
     }
 
+    public bool VerifyEducationEmail(string email){
+        // TODO: Here need to service to handle
+        if (!email.Contains("edu")){
+          return false;
+        }
+
+        return true;
+    }
+
     public static bool IsEmailVerificationCodeAvailable(User user, string token)
     {
         if (user.EmailVerifications == null){

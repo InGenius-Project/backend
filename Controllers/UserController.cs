@@ -7,6 +7,7 @@ using IngBackend.Services.TokenServices;
 using IngBackend.Services.UserService;
 using IngBackend.Services;
 using IngBackend.Exceptions;
+using IngBackend.Enum;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Hangfire;
@@ -130,6 +131,14 @@ public class UserController : BaseController
         var user = _mapper.Map<User>(req);
         await _userService.AddAsync(user);
         await _userService.SaveChangesAsync();
+
+        // TODO: Add student verification function
+        if (user.Role == UserRole.Intern){
+            var eduResult = _userService.VerifyEducationEmail(user.Email);
+            if (!eduResult) {
+                throw new BadRequestException("實習生電子郵件驗證失敗");
+            }
+        }
 
         // TODO: send auth email
         var token = await _userService.GenerateEmailConfirmationTokenAsync(user);
