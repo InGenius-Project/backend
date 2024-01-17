@@ -14,6 +14,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using IngBackend.Helpers;
+using Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -125,6 +126,11 @@ builder.Services.AddCors(options =>
         });
 });
 
+// Hangfire (Memory Storage)
+builder.Services.AddHangfire(config => {
+    config.UseInMemoryStorage();
+});
+builder.Services.AddHangfireServer();
 
 
 var app = builder.Build();

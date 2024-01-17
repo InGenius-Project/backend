@@ -18,6 +18,8 @@ public class User : BaseEntity, IEntity<Guid>
     [Required]
     public required string Email { get; set; }
 
+    public bool Verified { get; set; } = false;
+
     public UserRole Role { get; set; }
 
     [MaxLength(124)]
@@ -55,4 +57,17 @@ public class Recruitment : BaseEntity, IEntity<Guid>
     [Required]
     public required User Publisher { get; set; }
     public required Guid PublisherId { get; set; }
+}
+
+public class VerificationCode : BaseEntity, IEntity<int>
+{
+  [Key]
+  public int Id { get; set; }
+  public Guid UserId { get; set; }
+  [Required]
+  public User User { get; set; }
+
+  [Column(TypeName = "char(6)")]
+  public string Code { get;set; }
+  public DateTime ExpiresTime { get; set; }
 }
