@@ -5,8 +5,11 @@ using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
 using IngBackend.Services.TokenServices;
 using IngBackend.Services.UserService;
+using IngBackend.Services;
+using IngBackend.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Hangfire;
 
 namespace IngBackend.Controllers;
 
@@ -19,13 +22,24 @@ public class UserController : BaseController
     private readonly UserService _userService;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IMapper _mapper;
+    private readonly IBackgroundJobClient _backgroundJobClient;
+    private readonly EmailService _emailService;
 
-    public UserController(TokenService tokenService, UserService userService, IMapper mapper, IPasswordHasher passwordHasher)
+    public UserController(
+        TokenService tokenService, 
+        UserService userService, 
+        IMapper mapper, 
+        IPasswordHasher passwordHasher,
+        IBackgroundJobClient backgroundJobClient,
+        EmailService emailService
+        )
     {
         _tokenService = tokenService;
         _userService = userService;
         _mapper = mapper;
         _passwordHasher = passwordHasher;
+        _backgroundJobClient = backgroundJobClient;
+        _emailService = emailService;
     }
 
     /// <summary>
@@ -70,9 +84,36 @@ public class UserController : BaseController
         await _userService.SaveChangesAsync();
         var userDTO = _mapper.Map<UserInfoDTO>(user);
         return userDTO;
-
     }
 
+    [HttpGet("verifyEmail")]
+    public async Task<ActionResult> VerifyEmail(string verifyCode)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        if (string.IsNullOrEmpty(verifyCode))
+        {
+            throw new BadRequestException("驗證碼不得為空");
+        }
+
+        var user = await _userService.GetByIdAsync(userId,
+            user => user.EmailVerifications);
+        if (user == null)
+        {
+            throw new UserNotFoundException();
+        }
+
+        var result = _userService.VerifyEmailVerificationCode(user, verifyCode);
+        if (!result)
+        { 
+            throw new BadRequestException("驗證碼不正確或已失效");
+        }
+
+        user.Verified = true;
+        _userService.Update(user);
+        await _userService.SaveChangesAsync();
+
+        return Ok("電子郵件驗證成功");
+    }
 
 
     [AllowAnonymous]
@@ -91,11 +132,17 @@ public class UserController : BaseController
         await _userService.SaveChangesAsync();
 
         // TODO: send auth email
+        var token = await _userService.GenerateEmailConfirmationTokenAsync(user);
+        var subject = "[noreply] InG 註冊驗證碼";
+        var message = $"<h1>您的驗證碼是: {token}，此驗證碼於10分鐘後失效</h1>";
+
 
         _userService.Update(user);
         await _userService.SaveChangesAsync();
 
         // TODO: add send email process to background job
+        _backgroundJobClient.Enqueue(() => _emailService.SendEmailAsync(user.Email, subject, message));
+        _backgroundJobClient.Enqueue(() => Console.WriteLine($"Email sent: {user.Email}"));
 
         //var userInfoDTO = _mapper.Map<UserInfoDTO>(user);
         var TokenDTO = _tokenService.GenerateToken(user);

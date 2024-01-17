@@ -39,6 +39,8 @@ public class User : BaseEntity, IEntity<Guid>
 
     [JsonIgnore]
     public List<Recruitment>? Recruitments { get; set; } = new List<Recruitment> { };
+
+    public List<VerificationCode>? EmailVerifications { get; set; }
 }
 
 

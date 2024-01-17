@@ -42,6 +42,7 @@ builder.Services.AddScoped<AreaService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ApiResponseMiddleware>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
+builder.Services.AddScoped<EmailService>();
 
 // Json Serializer
 builder.Services.AddControllers()
