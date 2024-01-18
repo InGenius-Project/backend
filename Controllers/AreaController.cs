@@ -44,9 +44,8 @@ public class AreaController : BaseController
         return areaDTO;
     }
 
-
-    [HttpPost("{areaId}")]
-    public async Task<ActionResult<AreaDTO>> PostArea(Guid? areaId, [FromForm] AreaFormDataDTO req)
+    [HttpPost]
+    public async Task<ActionResult<AreaDTO>> PostArea([FromQuery] Guid? areaId, [FromBody] AreaPostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
@@ -69,6 +68,26 @@ public class AreaController : BaseController
         _mapper.Map(req, area);
         _areaService.Update(area);
 
+        await _areaService.SaveChangesAsync();
+
+        var areaDTO = _mapper.Map<AreaDTO>(area);
+        return areaDTO;
+    }
+
+    [HttpPut("{areaId}")]
+    public async Task<ActionResult<AreaDTO>> PutArea(Guid areaId, [FromForm] AreaFormDataDTO req)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        var user = await _userService.CheckAndGetUserIncludeAllAsync(userId);
+
+        // 確定 area 所有權
+        _areaService.CheckAreaOwnership(areaId, user);
+        var area = _areaService.GetAreaIncludeAllById(areaId) ?? throw new NotFoundException("Area not found.");
+
+        // 清空 Entity
+        _areaService.ClearArea(area);
+        _mapper.Map(req, area);
+        _areaService.Update(area);
         await _areaService.SaveChangesAsync();
 
         var areaDTO = _mapper.Map<AreaDTO>(area);

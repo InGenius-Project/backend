@@ -137,7 +137,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // Middleware
-app.UseMiddleware<ApiResponseMiddleware>();
+// app.UseMiddleware<ApiResponseMiddleware>();
 
 app.UseCors(devCorsPolicy);
 app.UseHttpsRedirection();
