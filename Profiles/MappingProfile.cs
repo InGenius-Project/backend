@@ -12,9 +12,9 @@ public class MappingProfile : Profile
     {
         CreateMap<UserInfoDTO, UserDTO>()
             .ForMember(dest => dest.User, opt => opt.MapFrom(src => src));
+        CreateMap<UserInfoPostDTO, User>();
         CreateMap<TokenDTO, UserDTO>()
             .ForMember(dest => dest.Token, opt => opt.MapFrom(src => src));
-
 
         // Resume
         CreateMap<Resume, ResumeDTO>();

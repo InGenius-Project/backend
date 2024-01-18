@@ -39,7 +39,7 @@ public class UserController : BaseController
     public async Task<ActionResult<UserInfoDTO>> GetUser()
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.GetByIdAsync(userId);
+        var user = await _userService.GetUserByIdIncludeAll(userId);
 
         if (user == null)
         {
@@ -49,6 +49,31 @@ public class UserController : BaseController
         var userInfoDTO = _mapper.Map<UserInfoDTO>(user);
         return Ok(userInfoDTO);
     }
+
+    [HttpPost]
+    [ProducesResponseType(typeof(UserInfoDTO), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<UserInfoDTO>> PostUser(UserInfoPostDTO req)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        var user = await _userService.GetByIdAsync(userId);
+
+        if (user == null)
+        {
+            throw new UserNotFoundException();
+        }
+
+        _mapper.Map(req, user);
+        _userService.Update(user);
+
+        await _userService.SaveChangesAsync();
+        var userDTO = _mapper.Map<UserInfoDTO>(user);
+        return userDTO;
+
+    }
+
+
 
     [AllowAnonymous]
     [HttpPost("signup")]
@@ -111,6 +136,8 @@ public class UserController : BaseController
 
         return Ok(tokenDTO);
     }
+
+
 
 
 

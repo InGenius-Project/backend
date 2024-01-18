@@ -61,7 +61,7 @@ public class UserService : Service<User, Guid>
     public async Task<User> CheckAndGetUserAsync(Guid userId, params Expression<Func<User, object>>[] includes)
     {
         var user = await GetByIdAsync(userId, includes) ?? throw new UserNotFoundException();
-        return user ;
+        return user;
     }
 
     /// <summary>
@@ -75,8 +75,8 @@ public class UserService : Service<User, Guid>
     public async Task<User> CheckAndGetUserAsync(Guid userId, UserRole allowedRole, params Expression<Func<User, object>>[] includes)
     {
         var user = await GetByIdAsync(userId, includes) ?? throw new UserNotFoundException();
-        
-        if (user.Role != allowedRole) 
+
+        if (user.Role != allowedRole)
         {
             throw new ForbiddenException();
         }
@@ -129,4 +129,29 @@ public class UserService : Service<User, Guid>
         var resume = user.Resumes;
         return resume;
     }
+
+    public async Task<User> GetUserByIdIncludeAll(Guid userId)
+    {
+        var user = await _userRepository.GetAll().Where(u => u.Id == userId)
+            .Include(u => u.Areas)
+            .ThenInclude(a => a.TextLayout)
+            .Include(u => u.Areas)
+                .ThenInclude(a => a.ImageTextLayout)
+            .Include(u => u.Areas)
+                .ThenInclude(a => a.ListLayout)
+                    .ThenInclude(l => l.Items)
+            .Include(u => u.Areas)
+                .ThenInclude(a => a.KeyValueListLayout)
+                    .ThenInclude(kv => kv.Items)
+                    .ThenInclude(kvi => kvi.Key)
+            .FirstOrDefaultAsync();
+
+
+        if (user == null)
+        {
+            throw new UserNotFoundException();
+        }
+        return user;
+    }
 }
+

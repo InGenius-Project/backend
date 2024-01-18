@@ -28,6 +28,11 @@ public class User : BaseEntity, IEntity<Guid>
     public required string HashedPassword { get; set; }
 
     [JsonIgnore]
+    public List<Tag> Tags { get; set; } = new List<Tag> { };
+
+    [JsonIgnore]
+    public List<Area> Areas { get; set; } = new List<Area> { };
+    [JsonIgnore]
     public List<Resume> Resumes { get; set; } = new List<Resume> { };
 
     [JsonIgnore]
