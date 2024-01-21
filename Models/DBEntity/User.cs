@@ -45,9 +45,13 @@ public class Recruitment : BaseEntity, IEntity<Guid>
     [Key]
     public Guid Id { get; set; }
 
-    public required string JobName { get; set; }
-    public required string ContactEmail { get; set; }
-    public required string ContactName { get; set; }
+    [MaxLength(15)]
+    public string Name { get; set; }
+
+    public bool Enable { get; set; }
+
+    [JsonIgnore]
+    public List<Area> Areas { get; set; }
 
     [JsonIgnore]
     public IEnumerable<Resume> Resumes { get; set; } = new List<Resume>() { };
