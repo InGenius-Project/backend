@@ -1,4 +1,5 @@
-﻿using IngBackend.Interfaces.Repository;
+﻿using IngBackend.Exceptions;
+using IngBackend.Interfaces.Repository;
 using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Models.DBEntity;
 using Microsoft.EntityFrameworkCore;
@@ -32,4 +33,22 @@ public class AreaService : Service<Area, Guid>
         return area;
     }
 
+    public void CheckAreaOwnership(Guid areaId, User user) {
+        // 檢查 Resume 關聯
+        var result = user.Resumes.SelectMany(x => x.Areas.Where(a => a.Id == areaId)).Any();
+        if (result) {
+            throw new ForbiddenException();
+        } 
+    }
+
+    public void ClearArea(Area area){
+        var properties =  area.GetType().GetProperties();
+
+        foreach(var property in properties){
+            if (property.Name != "Id"){
+                property.SetValue(area, null);
+            }
+        }
+    }
+    
 }

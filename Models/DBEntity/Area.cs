@@ -57,7 +57,9 @@ public class Image : BaseEntity, IEntity<Guid>
     public Guid Id { get; set; }
     public required string Filename { get; set; }
     public required string ContentType { get; set; }
-    public required byte[] Content { get; set; }
+    
+    // Save as base64
+    public required string Content { get; set; }
 }
 
 public class ImageTextLayout : BaseEntity, IEntity<Guid>

@@ -5,6 +5,7 @@ using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Models.DBEntity;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 
 
 namespace IngBackend.Services.UserService;
@@ -19,6 +20,20 @@ public class UserService : Service<User, Guid>
     {
         _unitOfWork = unitOfWork;
         _userRepository = unitOfWork.Repository<User, Guid>();
+    }
+
+    public async Task<User?> GetUserIncludeAllAsync(Guid userId){
+        var user = await _userRepository.GetAll().Where(u => u.Id == userId)
+            .Include(u => u.Resumes)
+                .ThenInclude(r => r.Areas)
+                    .ThenInclude(a => a.TextLayout)
+            .Include(u => u.Resumes)
+                .ThenInclude(r => r.Areas)
+                    .ThenInclude(a => a.ImageTextLayout)
+            .Include(u => u.Recruitments)
+            .FirstOrDefaultAsync();
+        
+        return user;
     }
 
     /// <summary>
@@ -98,20 +113,25 @@ public class UserService : Service<User, Guid>
         {
             throw new ForbiddenException();
         }
+        return user;
+    }
 
+    public async Task<User> CheckAndGetUserIncludeAllAsync(Guid userId)
+    {
+        var user = await GetUserIncludeAllAsync(userId) ?? throw new UserNotFoundException();
         return user;
     }
 
     public async Task<IEnumerable<Resume>> GetUserResumes(Guid userId)
     {
         var user = await _userRepository.GetAll().Where(u => u.Id == userId)
-             .Include(u => u.Resumes)
-                 .ThenInclude(r => r.Areas)
-                     .ThenInclude(a => a.TextLayout)
-             .Include(u => u.Resumes)
-                 .ThenInclude(r => r.Areas)
-                     .ThenInclude(a => a.ImageTextLayout)
-                     .FirstOrDefaultAsync();
+            .Include(u => u.Resumes)
+                .ThenInclude(r => r.Areas)
+                    .ThenInclude(a => a.TextLayout)
+            .Include(u => u.Resumes)
+                .ThenInclude(r => r.Areas)
+                    .ThenInclude(a => a.ImageTextLayout)
+            .FirstOrDefaultAsync();
 
         if (user == null)
         {

@@ -373,3 +373,4 @@ Migrations/
 wwwroot/avatars/*
 !wwwroot/avatars/UserDefault.jpg
 # /appsettings.json
+.vscode
