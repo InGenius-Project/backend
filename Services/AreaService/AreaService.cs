@@ -32,8 +32,4 @@ public class AreaService : Service<Area, Guid>
         return area;
     }
 
-
-
-
-
 }

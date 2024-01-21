@@ -64,7 +64,7 @@ public class AreaController : BaseController
             var newAreaDTO = _mapper.Map<AreaDTO>(newArea);
             return newAreaDTO;
         }
-
+    
         // Patch Area
         _mapper.Map(req, area);
         _areaService.Update(area);

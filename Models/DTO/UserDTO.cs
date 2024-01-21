@@ -1,4 +1,5 @@
 ﻿using IngBackend.Enum;
+using IngBackend.Models.DBEntity;
 
 namespace IngBackend.Models.DTO;
 
@@ -20,6 +21,7 @@ public class UserInfoDTO
     public List<TagDTO>? Tags { get; set; }
 
     public List<ResumeDTO>? Resumes { get; set; }
+    public List<RecruitmentDTO>? Recruitments { get; set; }
 }
 
 public class UserInfoPostDTO

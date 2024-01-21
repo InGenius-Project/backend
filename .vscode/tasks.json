@@ -39,6 +39,25 @@
           "runOptions": {
             "runOn": "folderOpen"
           }
-      }
+      },
+      {
+        "label": "Add EF Migration",
+        "type": "shell",
+        "command": "dotnet ef migrations add ${input:migrationName}",
+        "problemMatcher": []
+      },
+    {
+      "label": "Update Database",
+      "type": "shell",
+      "command": "dotnet ef database update",
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "migrationName",
+      "type": "promptString",
+      "description": "Name of the migration."
+    }
   ]
 }

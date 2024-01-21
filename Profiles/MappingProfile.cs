@@ -20,28 +20,39 @@ public class MappingProfile : Profile
         CreateMap<Resume, ResumeDTO>();
         CreateMap<ResumePostDTO, Resume>();
 
+        // Recruitment
+        CreateMap<Recruitment, RecruitmentDTO>()
+            .ReverseMap();
+        CreateMap<RecruitmentPostDTO, Recruitment>()
+            .ForMember(rp => rp.Publisher, r => r.Ignore());
+
         // Area
-        CreateMap<Area, AreaDTO>();
-        CreateMap<AreaDTO, Area>();
+        CreateMap<Area, AreaDTO>()
+            .ReverseMap();
         CreateMap<AreaPostDTO, Area>();
+
         // TextLayout
-        CreateMap<TextLayoutDTO, TextLayout>();
-        CreateMap<TextLayout, TextLayoutDTO>();
+        CreateMap<TextLayoutDTO, TextLayout>()
+            .ReverseMap();
+
         // ImageLayout
-        CreateMap<ImageTextLayoutDTO, ImageTextLayout>();
-        CreateMap<ImageTextLayout, ImageTextLayoutDTO>();
+        CreateMap<ImageTextLayoutDTO, ImageTextLayout>()
+            .ReverseMap();
+
         // ListLayout
-        CreateMap<ListLayoutDTO, ListLayout>();
-        CreateMap<ListLayout, ListLayoutDTO>();
+        CreateMap<ListLayoutDTO, ListLayout>()
+            .ReverseMap();
+
         // KeyValueListLayout
-        CreateMap<KeyValueListLayoutDTO, KeyValueListLayout>();
-        CreateMap<KeyValueListLayout, KeyValueListLayoutDTO>();
-        CreateMap<KeyValueItem, KeyValueItemDTO>();
-        CreateMap<KeyValueItemDTO, KeyValueItem>();
+        CreateMap<KeyValueListLayoutDTO, KeyValueListLayout>()
+            .ReverseMap();
+        CreateMap<KeyValueItem, KeyValueItemDTO>()
+            .ReverseMap();
 
         // Tag
-        CreateMap<Tag, TagDTO>();
-        CreateMap<TagDTO, Tag>();
+        CreateMap<Tag, TagDTO>()
+            .ReverseMap();
+
         CreateMap<AreaFormDataDTO, Area>()
             .ForMember(
                 des => des.TextLayout,
@@ -68,10 +79,12 @@ public class MappingProfile : Profile
             .ForMember(
                 dest => dest.Filename,
                 opt => opt.MapFrom(src => src.File.FileName)
-            ).ForMember(
+            )
+            .ForMember(
                 dest => dest.ContentType,
                 opt => opt.MapFrom(src => src.File.ContentType)
-            ).ForMember(
+            )
+            .ForMember(
                 dest => dest.Content,
                 opt => opt.MapFrom(src => GetImageArray(src.File))
             );

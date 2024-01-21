@@ -14,6 +14,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using IngBackend.Helpers;
+using IngBackend.Services.RecruitmentService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +40,7 @@ builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<ResumeService>();
 builder.Services.AddScoped<AreaService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<RecruitmentService>();
 builder.Services.AddScoped<ApiResponseMiddleware>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
 
