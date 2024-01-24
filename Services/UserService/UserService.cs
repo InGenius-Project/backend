@@ -23,13 +23,16 @@ public class UserService : Service<User, Guid>
     }
 
     public async Task<User?> GetUserIncludeAllAsync(Guid userId){
-        var user = await _userRepository.GetAll().Where(u => u.Id == userId)
+        var user = await _userRepository
+            .GetAll()
+            .Where(u => u.Id == userId)
             .Include(u => u.Resumes)
                 .ThenInclude(r => r.Areas)
                     .ThenInclude(a => a.TextLayout)
             .Include(u => u.Resumes)
                 .ThenInclude(r => r.Areas)
                     .ThenInclude(a => a.ImageTextLayout)
+                        .ThenInclude(itl => itl.Image)
             .Include(u => u.Recruitments)
             .FirstOrDefaultAsync();
         
@@ -105,7 +108,7 @@ public class UserService : Service<User, Guid>
     }
 
 
-    public async Task<User> CheckIsOwnerUserAsync(Guid userId, Guid ownerId, params Expression<Func<User, object>>[] includes)
+    public async Task<User> CheckAreaOwnershipAsync(Guid userId, Guid ownerId, params Expression<Func<User, object>>[] includes)
     {
         var user = await GetByIdAsync(userId, includes) ?? throw new UserNotFoundException();
 
@@ -149,6 +152,7 @@ public class UserService : Service<User, Guid>
             .ThenInclude(a => a.TextLayout)
             .Include(u => u.Areas)
                 .ThenInclude(a => a.ImageTextLayout)
+                    .ThenInclude(itl => itl.Image)
             .Include(u => u.Areas)
                 .ThenInclude(a => a.ListLayout)
                     .ThenInclude(l => l.Items)

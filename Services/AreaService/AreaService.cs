@@ -24,6 +24,7 @@ public class AreaService : Service<Area, Guid>
             .Where(x => x.Id.Equals(areaId))
             .Include(a => a.TextLayout)
             .Include(a => a.ImageTextLayout)
+                .ThenInclude(it => it.Image)
             .Include(a => a.ListLayout)
                 .ThenInclude(l => l.Items)
              .Include(a => a.KeyValueListLayout)

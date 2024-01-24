@@ -38,6 +38,7 @@ public class ResumeService : Service<Resume, Guid>
                 .ThenInclude(a => a.TextLayout)
             .Include(r => r.Areas)
                 .ThenInclude(a => a.ImageTextLayout)
+                    .ThenInclude(it => it.Image)
             .Include(r => r.Areas)
                 .ThenInclude(a => a.ListLayout)
                     .ThenInclude(l => l.Items)

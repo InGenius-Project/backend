@@ -44,14 +44,15 @@ public class AreaController : BaseController
         return areaDTO;
     }
 
-    [HttpPost]
-    public async Task<ActionResult<AreaDTO>> PostArea([FromQuery] Guid? areaId, [FromBody] AreaPostDTO req)
+    [HttpPost("{areaId}")]
+    public async Task<ActionResult<AreaDTO>> PostArea(Guid? areaId, [FromBody] AreaPostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
 
         var parsedAreaId = areaId ?? Guid.Empty;
         var area = _areaService.GetAreaIncludeAllById(parsedAreaId);
+       
 
         // Add Area
         if (area == null)
@@ -65,6 +66,7 @@ public class AreaController : BaseController
         }
     
         // Patch Area
+        await _userService.CheckAreaOwnershipAsync(userId, area.User.Id);
         _mapper.Map(req, area);
         _areaService.Update(area);
 

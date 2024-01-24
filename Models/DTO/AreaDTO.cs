@@ -48,6 +48,7 @@ public class TextLayoutDTO
 
 public class ImageDTO
 {
+    public Guid Id { get; set; }
     public required string Filename {get;set;}
     public required string ContentType {get; set;}
     public required string Content { get; set; }

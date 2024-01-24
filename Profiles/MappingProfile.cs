@@ -38,6 +38,8 @@ public class MappingProfile : Profile
         // ImageLayout
         CreateMap<ImageTextLayoutDTO, ImageTextLayout>()
             .ReverseMap();
+        CreateMap<ImageDTO, Image>()
+            .ReverseMap();
 
         // ListLayout
         CreateMap<ListLayoutDTO, ListLayout>()
