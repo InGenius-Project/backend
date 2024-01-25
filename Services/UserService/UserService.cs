@@ -107,18 +107,6 @@ public class UserService : Service<User, Guid>
         return user;
     }
 
-
-    public async Task<User> CheckAreaOwnershipAsync(Guid userId, Guid ownerId, params Expression<Func<User, object>>[] includes)
-    {
-        var user = await GetByIdAsync(userId, includes) ?? throw new UserNotFoundException();
-
-        if (user.Id != ownerId)
-        {
-            throw new ForbiddenException();
-        }
-        return user;
-    }
-
     public async Task<User> CheckAndGetUserIncludeAllAsync(Guid userId)
     {
         var user = await GetUserIncludeAllAsync(userId) ?? throw new UserNotFoundException();

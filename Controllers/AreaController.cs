@@ -48,7 +48,7 @@ public class AreaController : BaseController
     public async Task<ActionResult<AreaDTO>> PostArea(Guid? areaId, [FromBody] AreaPostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        await _userService.CheckAndGetUserAsync(userId);
+        var user = await _userService.CheckAndGetUserAsync(userId);
 
         var parsedAreaId = areaId ?? Guid.Empty;
         var area = _areaService.GetAreaIncludeAllById(parsedAreaId);
@@ -66,7 +66,7 @@ public class AreaController : BaseController
         }
     
         // Patch Area
-        await _userService.CheckAreaOwnershipAsync(userId, area.User.Id);
+         _areaService.CheckAreaOwnership(area.Id, user );
         _mapper.Map(req, area);
         _areaService.Update(area);
 
