@@ -36,9 +36,14 @@ public class AreaService : Service<Area, Guid>
     public void CheckAreaOwnership(Guid areaId, User user) {
         // 檢查 Resume 關聯
         var result = user.Resumes.SelectMany(x => x.Areas.Where(a => a.Id == areaId)).Any();
-        if (result) {
+        if (!result) {
             throw new ForbiddenException();
         } 
+
+        var userResult = user.Areas.Where(a => a.Id == areaId).Any();
+        if (!userResult) {
+            throw new ForbiddenException();
+        }
     }
 
     public void ClearArea(Area area){
