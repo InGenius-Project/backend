@@ -20,6 +20,8 @@ public class User : BaseEntity, IEntity<Guid>
 
     public UserRole Role { get; set; }
 
+    public Image? Avatar { get; set; }
+
     [MaxLength(124)]
     [Required]
     public required string Username { get; set; }

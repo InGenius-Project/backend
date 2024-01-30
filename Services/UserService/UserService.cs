@@ -22,17 +22,24 @@ public class UserService : Service<User, Guid>
         _userRepository = unitOfWork.Repository<User, Guid>();
     }
 
+    
     public async Task<User?> GetUserIncludeAllAsync(Guid userId){
         var user = await _userRepository
             .GetAll()
             .Where(u => u.Id == userId)
-            .Include(u => u.Resumes)
-                .ThenInclude(r => r.Areas)
-                    .ThenInclude(a => a.TextLayout)
-            .Include(u => u.Resumes)
-                .ThenInclude(r => r.Areas)
-                    .ThenInclude(a => a.ImageTextLayout)
-                        .ThenInclude(itl => itl.Image)
+            .Include(u => u.Avatar)
+            .Include(u => u.Areas)
+                .ThenInclude(a => a.TextLayout)
+            .Include(u => u.Areas)
+                .ThenInclude(a => a.ImageTextLayout)
+                    .ThenInclude(itl => itl.Image)
+            .Include(u => u.Areas)
+                .ThenInclude(a => a.ListLayout)
+                    .ThenInclude(l => l.Items)
+            .Include(u => u.Areas)
+                .ThenInclude(a => a.KeyValueListLayout)
+                    .ThenInclude(kv => kv.Items)
+                    .ThenInclude(kvi => kvi.Key)
             .Include(u => u.Recruitments)
             .FirstOrDefaultAsync();
         
@@ -133,29 +140,8 @@ public class UserService : Service<User, Guid>
         return resume;
     }
 
-    public async Task<User> GetUserByIdIncludeAll(Guid userId)
-    {
-        var user = await _userRepository.GetAll().Where(u => u.Id == userId)
-            .Include(u => u.Areas)
-            .ThenInclude(a => a.TextLayout)
-            .Include(u => u.Areas)
-                .ThenInclude(a => a.ImageTextLayout)
-                    .ThenInclude(itl => itl.Image)
-            .Include(u => u.Areas)
-                .ThenInclude(a => a.ListLayout)
-                    .ThenInclude(l => l.Items)
-            .Include(u => u.Areas)
-                .ThenInclude(a => a.KeyValueListLayout)
-                    .ThenInclude(kv => kv.Items)
-                    .ThenInclude(kvi => kvi.Key)
-            .FirstOrDefaultAsync();
 
 
-        if (user == null)
-        {
-            throw new UserNotFoundException();
-        }
-        return user;
-    }
+
 }
 

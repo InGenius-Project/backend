@@ -16,6 +16,7 @@ public class UserInfoDTO
     public string Email { get; set; }
 
     public string Username { get; set; }
+    public ImageDTO Avatar { get; set; }
     public UserRole Role { get; set; }
     public List<AreaDTO> Areas { get; set; }
     public List<TagDTO>? Tags { get; set; }
@@ -26,6 +27,7 @@ public class UserInfoDTO
 
 public class UserInfoPostDTO
 {
+    public ImageDTO? Avatar { get; set; }
     public string? Username { get; set; }
     public List<AreaDTO>? Areas { get; set; }
     public List<TagDTO>? Tags { get; set; }

@@ -39,7 +39,7 @@ public class UserController : BaseController
     public async Task<ActionResult<UserInfoDTO>> GetUser()
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.GetUserByIdIncludeAll(userId);
+        var user = await _userService.GetUserIncludeAllAsync(userId);
 
         if (user == null)
         {

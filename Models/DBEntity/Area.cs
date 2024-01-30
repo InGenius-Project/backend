@@ -59,6 +59,8 @@ public class Image : BaseEntity, IEntity<Guid>
     public required string ContentType { get; set; }
     
     // Save as base64
+    // TODO: save as file
+    [Required]
     public required string Content { get; set; }
 }
 
