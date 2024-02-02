@@ -29,5 +29,11 @@ public class IngDbContext : DbContext
                 l => l.HasOne<Recruitment>().WithMany().OnDelete(DeleteBehavior.NoAction),
                 r => r.HasOne<Resume>().WithMany().OnDelete(DeleteBehavior.NoAction)
             );
+
+        modelBuilder.Entity<TagType>()
+            .HasIndex(t => t.Value).IsUnique();
+            
+
+
     }
 }

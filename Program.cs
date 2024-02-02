@@ -15,6 +15,7 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using IngBackend.Helpers;
 using IngBackend.Services.RecruitmentService;
+using IngBackend.Services.TagService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +41,7 @@ builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<ResumeService>();
 builder.Services.AddScoped<AreaService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<TagService>();
 builder.Services.AddScoped<RecruitmentService>();
 builder.Services.AddScoped<ApiResponseMiddleware>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();

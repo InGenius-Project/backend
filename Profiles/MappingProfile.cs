@@ -54,6 +54,8 @@ public class MappingProfile : Profile
         // Tag
         CreateMap<Tag, TagDTO>()
             .ReverseMap();
+        CreateMap<TagType,TagTypeDTO>()
+            .ReverseMap();
 
         CreateMap<AreaPostDTO, Area>();
     }
