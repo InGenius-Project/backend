@@ -32,8 +32,14 @@ public class IngDbContext : DbContext
 
         modelBuilder.Entity<TagType>()
             .HasIndex(t => t.Value).IsUnique();
+        modelBuilder.Entity<TagType>()
+            .Property(t => t.Id).ValueGeneratedOnAdd();
+
+        modelBuilder.Entity<AreaType>()
+            .HasIndex(t => t.Value).IsUnique();
+        modelBuilder.Entity<AreaType>()
+            .Property(t => t.Id).ValueGeneratedOnAdd();
+        
             
-
-
     }
 }

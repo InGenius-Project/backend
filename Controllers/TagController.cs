@@ -86,7 +86,7 @@ public class TagController : BaseController
     }
     
     [HttpGet("type/{id}")]
-    public async Task<ActionResult<TagTypeDTO>> GetTagType(Guid id)
+    public async Task<ActionResult<TagTypeDTO>> GetTagType(int id)
     {
         var tagType = await _tagService.GetTagTypeById(id)
             ?? throw new NotFoundException("Tag type not found");
@@ -125,7 +125,7 @@ public class TagController : BaseController
     }
 
     [HttpDelete("type")]
-    public async Task<IActionResult> DeleteTagTypes([FromBody] List<Guid> ids)
+    public async Task<IActionResult> DeleteTagTypes([FromBody] List<int> ids)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId, [UserRole.Admin, UserRole.InternalUser]);

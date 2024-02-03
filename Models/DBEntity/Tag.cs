@@ -12,7 +12,7 @@ public class Tag : BaseEntity, IEntity<Guid>
     public Guid Id { get; set; }
     public required string Name { get; set; }
 
-    public virtual required TagType Type { get; set; }
+    public required TagType Type { get; set; }
 
     public int Count { get; set; }
 
@@ -25,10 +25,10 @@ public class Tag : BaseEntity, IEntity<Guid>
 
 }
 
-public class TagType: BaseEntity, IEntity<Guid>
+public class TagType: BaseEntity, IEntity<int>
 {
     [Key]
-    public Guid Id { get; set; }
+    public int Id { get; set; }
     [StringLength(20)]
     public required string Name { get; set; }
 

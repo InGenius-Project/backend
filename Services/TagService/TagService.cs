@@ -10,13 +10,13 @@ public class TagService : Service<Tag, Guid>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IRepository<Tag, Guid> _tagRepository;
-    private readonly IRepository<TagType, Guid> _tagTypeRepository;
+    private readonly IRepository<TagType, int> _tagTypeRepository;
 
     public TagService(IUnitOfWork unitOfWork) : base(unitOfWork)
     {
         _unitOfWork = unitOfWork;
         _tagRepository = unitOfWork.Repository<Tag, Guid>();
-        _tagTypeRepository = unitOfWork.Repository<TagType, Guid>();
+        _tagTypeRepository = unitOfWork.Repository<TagType, int>();
     }   
 
     public async Task<List<Tag>> GetAllTagsByType(string? type)
@@ -38,7 +38,7 @@ public class TagService : Service<Tag, Guid>
         return tagTypes;
     }
 
-    public async Task<TagType> GetTagTypeById(Guid id)
+    public async Task<TagType> GetTagTypeById(int id)
     {
         var tagType = await _tagTypeRepository.GetByIdAsync(id);
         return tagType;

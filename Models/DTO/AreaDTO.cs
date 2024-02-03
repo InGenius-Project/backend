@@ -1,4 +1,5 @@
-﻿using IngBackend.Models.DBEntity;
+﻿using IngBackend.Enum;
+using IngBackend.Models.DBEntity;
 
 namespace IngBackend.Models.DTO;
 public class AreaDTO
@@ -7,13 +8,23 @@ public class AreaDTO
     public required int Sequence { get; set; }
     public required bool IsDisplayed { get; set; }
     public required string Title { get; set; }
-    public required string Arrangement { get; set; }
-    public required string Type { get; set; }
+    public LayoutType?  LayoutType { get; set; }
+    public AreaTypeDTO? AreaType { get; set; }
     public TextLayoutDTO? TextLayout { get; set; }
     public ImageTextLayoutDTO? ImageTextLayout { get; set; }
     public ListLayoutDTO? ListLayout { get; set; }
     public KeyValueListLayoutDTO? KeyValueListLayout { get; set; }
 
+}
+
+public class AreaTypeDTO
+{
+    public int Id { get; set; }
+    public required string Name { get; set; }
+    public required string Value { get; set; } // unique
+    public required string Description { get; set; }
+    public required List<UserRole> UserRole { get; set; }
+    public required LayoutType LayoutType { get; set; }
 }
 
 
@@ -30,8 +41,8 @@ public class AreaPostDTO
     public required int Sequence { get; set; }
     public required bool IsDisplayed { get; set; }
     public required string Title { get; set; }
-    public required string Arrangement { get; set; }
-    public required string Type { get; set; }
+    public LayoutType? Arrangement { get; set; }
+    public AreaTypeDTO? Type { get; set; }
     public TextLayoutDTO? TextLayout { get; set; }
     public ImageTextLayoutDTO? ImageTextLayout { get; set; }
     public ListLayoutDTO? ListLayout { get; set; }

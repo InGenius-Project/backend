@@ -1,4 +1,5 @@
-﻿using IngBackend.Interfaces.Repository;
+﻿using IngBackend.Enum;
+using IngBackend.Interfaces.Repository;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
@@ -13,7 +14,6 @@ public class Area : BaseEntity, IEntity<Guid>
     public required int Sequence { get; set; }
     public required bool IsDisplayed { get; set; }
 
-
     [JsonIgnore]
     public Resume? Resume { get; set; }
     [JsonIgnore]
@@ -22,9 +22,8 @@ public class Area : BaseEntity, IEntity<Guid>
     public Recruitment? Recruitment { get; set; }
 
     public required string Title { get; set; }
-    public required string Arrangement { get; set; }
-    public required string Type { get; set; }
-
+    public LayoutType? LayoutType { get; set; } // custom area
+    public AreaType? AreaType { get; set; } // default area
     [JsonIgnore]
     public TextLayout? TextLayout { get; set; }
     [JsonIgnore]
@@ -33,6 +32,20 @@ public class Area : BaseEntity, IEntity<Guid>
     public ListLayout? ListLayout { get; set; }
     [JsonIgnore]
     public KeyValueListLayout? KeyValueListLayout { get; set; }
+}
+
+public class AreaType : BaseEntity, IEntity<int>
+{
+    [Key]
+    public int Id { get; set; }
+    public required string Name { get; set; }
+    public required string Value { get; set; } // unique
+    public required string Description { get; set; }
+    public required List<UserRole> UserRole { get; set; } 
+    public required LayoutType LayoutType { get; set; }
+    [JsonIgnore]
+    public required List<Area> Areas { get; set; }
+    
 }
 
 
