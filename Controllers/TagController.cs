@@ -7,6 +7,7 @@ using IngBackend.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using IngBackend.Enum;
+using Microsoft.EntityFrameworkCore;
 
 namespace IngBackend.Controllers;
 
@@ -43,7 +44,7 @@ public class TagController : BaseController
         var tags = new List<Tag>();
         if(type == null)
         {
-           tags = _tagService.GetAll().ToList();
+           tags = [.. _tagService.GetAll().Include(t =>t.Type)];
         }
         else{
             tags =  await _tagService.GetAllTagsByType(type);
@@ -58,20 +59,32 @@ public class TagController : BaseController
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
 
-        var tag = _tagService.GetById(req.Id);
-        if(tag == null)
+        var tagType = await _tagService.GetTagTypeById(req.Type.Id);
+        if (tagType == null)
+        {
+            throw new NotFoundException("Tag type not found");
+        }
+
+        var existingTag = await _tagService.GetByIdAsync(req.Id);
+        if (existingTag == null)
         {
             var newTag = _mapper.Map<Tag>(req);
+            newTag.Type = tagType;
+
             await _tagService.AddAsync(newTag);
-            await _tagService.SaveChangesAsync();
-            return Ok();
         }
-        _mapper.Map(req, tag);
-        _tagService.Update(tag);
+        else
+        {
+            _mapper.Map(req, existingTag);
+            existingTag.Type = tagType;
+
+           _tagService.Update(existingTag);
+        }
+
         await _tagService.SaveChangesAsync();
         return Ok();
     }
-
+    
     [HttpGet("type/{id}")]
     public async Task<ActionResult<TagTypeDTO>> GetTagType(Guid id)
     {
