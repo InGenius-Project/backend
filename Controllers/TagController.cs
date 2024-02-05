@@ -51,7 +51,7 @@ public class TagController : BaseController
         }
         
         var tagsDTO = _mapper.Map<List<TagDTO>>(tags);
-        return tagsDTO;
+        return  Ok(tagsDTO);
     }
     [HttpPost]
     public async Task<IActionResult> PostTag([FromBody] TagDTO req)
@@ -93,7 +93,7 @@ public class TagController : BaseController
 
         var tagTypeDTO = _mapper.Map<TagTypeDTO>(tagType);
 
-        return tagTypeDTO;
+        return Ok(tagTypeDTO);
     }
 
     [HttpGet("type")]

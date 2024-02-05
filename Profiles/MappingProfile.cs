@@ -29,6 +29,8 @@ public class MappingProfile : Profile
         // Area
         CreateMap<Area, AreaDTO>()
             .ReverseMap();
+        CreateMap<AreaType, AreaTypeDTO>()
+            .ReverseMap();
         CreateMap<AreaPostDTO, Area>();
 
         // TextLayout

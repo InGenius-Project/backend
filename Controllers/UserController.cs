@@ -47,7 +47,7 @@ public class UserController : BaseController
         }
 
         var userInfoDTO = _mapper.Map<UserInfoDTO>(user);
-        return userInfoDTO;
+        return Ok(userInfoDTO);
     }
 
     [HttpPost]
