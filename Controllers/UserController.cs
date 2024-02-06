@@ -20,7 +20,12 @@ public class UserController : BaseController
     private readonly IPasswordHasher _passwordHasher;
     private readonly IMapper _mapper;
 
-    public UserController(TokenService tokenService, UserService userService, IMapper mapper, IPasswordHasher passwordHasher)
+    public UserController(
+        TokenService tokenService,
+        UserService userService,
+        IMapper mapper,
+        IPasswordHasher passwordHasher
+    )
     {
         _tokenService = tokenService;
         _userService = userService;
@@ -70,10 +75,7 @@ public class UserController : BaseController
         await _userService.SaveChangesAsync();
         var userDTO = _mapper.Map<UserInfoDTO>(user);
         return userDTO;
-
     }
-
-
 
     [AllowAnonymous]
     [HttpPost("signup")]
@@ -92,8 +94,8 @@ public class UserController : BaseController
 
         // TODO: send auth email
 
-        _userService.Update(user);
-        await _userService.SaveChangesAsync();
+        // _userService.Update(user);
+        // await _userService.SaveChangesAsync();
 
         // TODO: add send email process to background job
 
@@ -103,9 +105,7 @@ public class UserController : BaseController
         //_mapper.Map(TokenDTO, userDTO);
 
         return TokenDTO;
-
     }
-
 
     [AllowAnonymous]
     [HttpPost("login")]
@@ -136,10 +136,4 @@ public class UserController : BaseController
 
         return Ok(tokenDTO);
     }
-
-
-
-
-
-
 }

@@ -6,7 +6,6 @@ using IngBackend.Models.DTO;
 namespace IngBackend.Profiles;
 
 public class MappingProfile : Profile
-
 {
     public MappingProfile()
     {
@@ -45,12 +44,15 @@ public class MappingProfile : Profile
 
         CreateMap<AreaPostDTO, Area>();
     }
-    public MappingProfile(IPasswordHasher passwordHasher) : this()
+
+    public MappingProfile(IPasswordHasher passwordHasher)
+        : this()
     {
         CreateMap<UserSignUpDTO, User>()
-           .ForMember(
+            .ForMember(
                 dest => dest.HashedPassword,
-                opt => opt.MapFrom(src => passwordHasher.HashPassword(src.Password)));
+                opt => opt.MapFrom(src => passwordHasher.HashPassword(src.Password))
+            );
         CreateMap<User, UserInfoDTO>();
     }
 }
