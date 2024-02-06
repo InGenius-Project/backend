@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using AutoWrapper.Models;
+using AutoWrapper.Wrappers;
 using IngBackend.Exceptions;
 using IngBackend.Interfaces.Service;
 using IngBackend.Models.DBEntity;
@@ -33,10 +35,8 @@ public class UserController : BaseController
     /// </summary>
     /// <returns>使用者資訊</returns>
     [HttpGet]
-    [ProducesResponseType(typeof(UserInfoDTO), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<UserInfoDTO>> GetUser()
+    [ProducesResponseType(typeof(ResponseDTO<UserInfoDTO>), StatusCodes.Status200OK)]
+    public async Task<UserInfoDTO> GetUser()
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         var user = await _userService.GetUserIncludeAllAsync(userId);
@@ -47,14 +47,12 @@ public class UserController : BaseController
         }
 
         var userInfoDTO = _mapper.Map<UserInfoDTO>(user);
-        return Ok(userInfoDTO);
+        return userInfoDTO;
     }
 
     [HttpPost]
-    [ProducesResponseType(typeof(UserInfoDTO), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<UserInfoDTO>> PostUser(UserInfoPostDTO req)
+    [ProducesResponseType(typeof(ResponseDTO<UserInfoDTO>), StatusCodes.Status200OK)]
+    public async Task<UserInfoDTO> PostUser(UserInfoPostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         var user = await _userService.CheckAndGetUserAsync(userId);
@@ -71,9 +69,8 @@ public class UserController : BaseController
 
     [AllowAnonymous]
     [HttpPost("signup")]
-    [ProducesResponseType(typeof(UserDTO), 201)]
-    [ProducesResponseType(typeof(string), 400)]
-    public async Task<ActionResult<TokenDTO>> SignUp([FromBody] UserSignUpDTO req)
+    [ProducesResponseType(typeof(ResponseDTO<TokenDTO>), StatusCodes.Status200OK)]
+    public async Task<TokenDTO> SignUp([FromBody] UserSignUpDTO req)
     {
         if (await _userService.GetUserByEmailAsync(req.Email.ToLower()) != null)
         {
@@ -103,9 +100,8 @@ public class UserController : BaseController
 
     [AllowAnonymous]
     [HttpPost("login")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<HttpResponseMessage>> Login(UserSignInDTO req)
+    [ProducesResponseType(typeof(ResponseDTO<TokenDTO>), StatusCodes.Status200OK)]
+    public async Task<TokenDTO> Login(UserSignInDTO req)
     {
         // 從資料庫中尋找使用者
         var user = await _userService.GetUserByEmailAsync(req.Email.ToLower());
@@ -118,17 +114,12 @@ public class UserController : BaseController
         var passwordValid = _passwordHasher.VerifyHashedPassword(user.HashedPassword, req.Password);
         if (!passwordValid)
         {
-            throw new UnauthorizedException("帳號或密碼錯誤");
+            throw new BadRequestException("帳號或密碼錯誤");
         }
 
         // 轉換為 UserDTO 回傳
-        //var userInfoDTO = _mapper.Map<UserInfoDTO>(user);
         var tokenDTO = _tokenService.GenerateToken(user);
-        //var userDTO = _mapper.Map<UserDTO>(userInfoDTO);
-        //_mapper.Map(TokenDTO, userDTO);
-
-
-        return Ok(tokenDTO);
+        return tokenDTO;
     }
 
 

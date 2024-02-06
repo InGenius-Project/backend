@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoWrapper.Wrappers;
 using IngBackend.Exceptions;
 using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
@@ -26,7 +27,8 @@ public class ResumeController : BaseController
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<ResumeDTO>>> GetResumes()
+    [ProducesResponseType(typeof(ResponseDTO<ResumeDTO>), StatusCodes.Status200OK)]
+    public async Task<List<ResumeDTO>> GetResumes()
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
@@ -37,6 +39,7 @@ public class ResumeController : BaseController
     }
 
     [HttpGet("{resumeId}")]
+    [ProducesResponseType(typeof(ResponseDTO<ResumeDTO>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ResumeDTO>> GetResume(Guid resumeId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
@@ -49,7 +52,8 @@ public class ResumeController : BaseController
     }
 
     [HttpPost]
-    public async Task<ActionResult<ResumeDTO>> PostResume([FromBody] ResumePostDTO req)
+    [ProducesResponseType(typeof(ResponseDTO<ResumeDTO>), StatusCodes.Status200OK)]
+    public async Task<ResumeDTO> PostResume([FromBody] ResumePostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         var user = await _userService.CheckAndGetUserAsync(userId, u => u.Resumes);
@@ -75,14 +79,14 @@ public class ResumeController : BaseController
     }
 
     [HttpDelete("{resumeId}")]
-    public async Task<IActionResult> DeleteResume(Guid resumeId)
+    public async Task<ApiResponse> DeleteResume(Guid resumeId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         var user = await _userService.CheckAndGetUserAsync(userId, u => u.Resumes);
 
         if (user.Resumes == null)
         {
-            throw new NotFoundException("找不到履歷");
+            throw new NotFoundException("履歷");
         }
 
         var existResume = user.Resumes.FirstOrDefault(x => x.Id == resumeId) ?? throw new NotFoundException("找不到履歷");
@@ -90,7 +94,7 @@ public class ResumeController : BaseController
         user.Resumes.Remove(existResume);
         _userService.Update(user);
         await _userService.SaveChangesAsync();
-        return Ok();
+        return new ApiResponse("刪除成功");
     }
 
 }

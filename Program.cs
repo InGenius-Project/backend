@@ -4,7 +4,6 @@ using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Profiles;
 using IngBackend.Services;
 using IngBackend.Services.AreaService;
-using IngBackend.Services.Middlewares;
 using IngBackend.Services.TokenServices;
 using IngBackend.Services.UnitOfWork;
 using IngBackend.Services.UserService;
@@ -13,9 +12,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using AutoWrapper;
 using IngBackend.Helpers;
 using IngBackend.Services.RecruitmentService;
 using IngBackend.Services.TagService;
+using Azure;
+using IngBackend.Models.DTO;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,7 +45,7 @@ builder.Services.AddScoped<AreaService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<TagService>();
 builder.Services.AddScoped<RecruitmentService>();
-builder.Services.AddScoped<ApiResponseMiddleware>();
+// builder.Services.AddScoped<ApiResponseMiddleware>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
 
 // Json Serializer
@@ -141,7 +143,13 @@ if (app.Environment.IsDevelopment())
 }
 
 // Middleware
-app.UseMiddleware<ApiResponseMiddleware>();
+// app.UseMiddleware<ApiResponseMiddleware>();
+app.UseApiResponseAndExceptionWrapper(new AutoWrapperOptions
+{
+    // UseApiProblemDetailsException = true,
+    ShowIsErrorFlagForSuccessfulResponse = true,
+    ShowStatusCode = true,
+});
 
 app.UseCors(devCorsPolicy);
 app.UseHttpsRedirection();
