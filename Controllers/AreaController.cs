@@ -20,9 +20,12 @@ public class AreaController : BaseController
     private readonly AreaService _areaService;
     private readonly IMapper _mapper;
 
-
-
-    public AreaController(IMapper mapper, UserService userService, ResumeService resumeService, AreaService areaService)
+    public AreaController(
+        IMapper mapper,
+        UserService userService,
+        ResumeService resumeService,
+        AreaService areaService
+    )
     {
         _resumeService = resumeService;
         _userService = userService;
@@ -33,19 +36,21 @@ public class AreaController : BaseController
     [HttpGet("{areaId}")]
     public async Task<ActionResult<AreaDTO>> GetAreaById(Guid areaId)
     {
-
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
 
-        var area = _areaService.GetAreaIncludeAllById(areaId)
-            ?? throw new NotFoundException("找不到區塊");
+        var area =
+            _areaService.GetAreaIncludeAllById(areaId) ?? throw new NotFoundException("找不到區塊");
 
         var areaDTO = _mapper.Map<AreaDTO>(area);
         return areaDTO;
     }
 
     [HttpPost]
-    public async Task<ActionResult<AreaDTO>> PostArea([FromQuery] Guid? areaId, [FromBody] AreaPostDTO req)
+    public async Task<ActionResult<AreaDTO>> PostArea(
+        [FromQuery] Guid? areaId,
+        [FromBody] AreaPostDTO req
+    )
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
@@ -82,7 +87,9 @@ public class AreaController : BaseController
 
         // 確定 area 所有權
         _areaService.CheckAreaOwnership(areaId, user);
-        var area = _areaService.GetAreaIncludeAllById(areaId) ?? throw new NotFoundException("Area not found.");
+        var area =
+            _areaService.GetAreaIncludeAllById(areaId)
+            ?? throw new NotFoundException("Area not found.");
 
         // 清空 Entity
         _areaService.ClearArea(area);
@@ -99,12 +106,11 @@ public class AreaController : BaseController
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
- 
+
         var area = await _areaService.GetByIdAsync(areaId) ?? throw new NotFoundException("找不到區塊");
         _areaService.Delete(area);
         await _areaService.SaveChangesAsync();
 
         return Ok();
     }
-
 }

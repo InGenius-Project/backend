@@ -1,3 +1,4 @@
+using System.Text;
 using IngBackend.Context;
 using IngBackend.Interfaces.Service;
 using IngBackend.Interfaces.UnitOfWork;
@@ -19,17 +20,35 @@ using Hangfire;
 var builder = WebApplication.CreateBuilder(args);
 
 // connectionString
-string? connectionString = builder.Configuration.GetConnectionString("Admin");
-// In Docker
-if (Helper.IsInDocker())
+builder.Configuration.AddJsonFile("appsettings.Secrets.json");
+string? jwtSecretKey = builder.Configuration["Secrets:JwtSecretKey"];
+_ = jwtSecretKey ?? throw new Exception("Secret file not found or JwtSecretKey not set.");
+
+IWebHostEnvironment env = builder.Environment;
+
+// Development
+if (env.IsDevelopment())
 {
-    connectionString = string.Format("{0}Password={1};",
-        builder.Configuration.GetConnectionString("Docker"),
-        Helper.GetSAPassword()
-        );
+  builder.Configuration.AddJsonFile("appsettings.Development.json");
 }
 
-builder.Services.AddDbContext<IngDbContext>(options => options.UseSqlServer(connectionString));
+// Production
+if (env.IsProduction())
+{
+  builder.Configuration.AddJsonFile("appsettings.Production.json");
+}
+
+// Connnect to database
+string? connectionString = builder.Configuration.GetConnectionString("Default");
+
+if (env.IsDevelopment())
+{
+  builder.Services.AddDbContext<IngDbContext>(options => options.UseSqlite(connectionString));
+}
+else
+{
+  builder.Services.AddDbContext<IngDbContext>(options => options.UseSqlServer(connectionString));
+}
 
 // Add services to the container.
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -45,86 +64,104 @@ builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<EmailService>();
 
 // Json Serializer
-builder.Services.AddControllers()
-       .AddJsonOptions(options =>
-       {
-           options.JsonSerializerOptions.PropertyNamingPolicy = null;
-       });
+builder
+    .Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+      options.JsonSerializerOptions.PropertyNamingPolicy = null;
+    });
 
 // Add Logger
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 
-
 // Add Swagger
 builder.Services.AddSwaggerGen(c =>
 {
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
+  c.AddSecurityDefinition(
+      "Bearer",
+      new OpenApiSecurityScheme
+      {
         Description = "JWT Authorization header using the Bearer scheme",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
         Scheme = "bearer",
         BearerFormat = "JWT"
-    });
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
+      }
+  );
+  c.AddSecurityRequirement(
+      new OpenApiSecurityRequirement
+      {
             {
-                Reference = new OpenApiReference
+                new OpenApiSecurityScheme
                 {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
-    });
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                new string[] { }
+            }
+      }
+  );
 });
 
 // AutoMapper
 builder.Services.AddAutoMapper(
-    cfg => cfg.AddProfile(new MappingProfile(
-        builder.Services.BuildServiceProvider().GetService<IPasswordHasher>()
-        )),
-        AppDomain.CurrentDomain.GetAssemblies()
+    cfg =>
+        cfg.AddProfile(
+            new MappingProfile(
+                builder.Services.BuildServiceProvider().GetService<IPasswordHasher>()
+            )
+        ),
+    AppDomain.CurrentDomain.GetAssemblies()
 );
 
-
-
-
-
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder
+    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]))
-        };
+      options.TokenValidationParameters = new TokenValidationParameters
+      {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(
+              Encoding.UTF8.GetBytes(builder.Configuration["Secrets:JwtSecretKey"])
+          )
+      };
     });
-
 
 // CORS
 var devCorsPolicy = "_devCorsPolicy";
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(
-        name: devCorsPolicy,
-        policy =>
-        {
-            policy.WithOrigins("http://localhost:34004").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
-            policy.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
-            policy.WithOrigins("http://140.123.176.230:34004").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
-        });
+  options.AddPolicy(
+      name: devCorsPolicy,
+      policy =>
+      {
+        policy
+              .WithOrigins("http://localhost:34004")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+        policy
+              .WithOrigins("http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+        policy
+              .WithOrigins("http://140.123.176.230:34004")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+      }
+  );
 });
 
 // Hangfire (Memory Storage)
@@ -139,12 +176,12 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+  app.UseSwagger();
+  app.UseSwaggerUI();
 }
 
 // Middleware
-// app.UseMiddleware<ApiResponseMiddleware>();
+app.UseMiddleware<ApiResponseMiddleware>();
 
 app.UseCors(devCorsPolicy);
 app.UseHttpsRedirection();
@@ -157,16 +194,16 @@ app.MapControllers();
 // Apply Migration
 using (var scope = app.Services.CreateScope())
 {
-    var services = scope.ServiceProvider;
+  var services = scope.ServiceProvider;
 
-    Console.WriteLine("READY To Applying Migrations");
+  Console.WriteLine("READY To Applying Migrations");
 
-    var context = services.GetRequiredService<IngDbContext>();
-    if (context.Database.GetPendingMigrations().Any())
-    {
-        Console.WriteLine("Applying Migrations...");
-        context.Database.Migrate();
-    }
+  var context = services.GetRequiredService<IngDbContext>();
+  if (context.Database.GetPendingMigrations().Any())
+  {
+    Console.WriteLine("Applying Migrations...");
+    context.Database.Migrate();
+  }
 }
 
 app.Run();

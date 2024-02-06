@@ -146,8 +146,8 @@ public class UserController : BaseController
         var message = $"<h1>您的驗證碼是: {token}，此驗證碼於10分鐘後失效</h1>";
 
 
-        _userService.Update(user);
-        await _userService.SaveChangesAsync();
+        // _userService.Update(user);
+        // await _userService.SaveChangesAsync();
 
         // TODO: add send email process to background job
         _backgroundJobClient.Enqueue(() => _emailService.SendEmailAsync(user.Email, subject, message));
@@ -159,9 +159,7 @@ public class UserController : BaseController
         //_mapper.Map(TokenDTO, userDTO);
 
         return TokenDTO;
-
     }
-
 
     [AllowAnonymous]
     [HttpPost("login")]
@@ -192,10 +190,4 @@ public class UserController : BaseController
 
         return Ok(tokenDTO);
     }
-
-
-
-
-
-
 }
