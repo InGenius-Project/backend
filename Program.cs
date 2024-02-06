@@ -14,6 +14,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using IngBackend.Helpers;
+using Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +42,7 @@ builder.Services.AddScoped<AreaService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ApiResponseMiddleware>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
+builder.Services.AddScoped<EmailService>();
 
 // Json Serializer
 builder.Services.AddControllers()
@@ -125,6 +127,11 @@ builder.Services.AddCors(options =>
         });
 });
 
+// Hangfire (Memory Storage)
+builder.Services.AddHangfire(config => {
+    config.UseInMemoryStorage();
+});
+builder.Services.AddHangfireServer();
 
 
 var app = builder.Build();
