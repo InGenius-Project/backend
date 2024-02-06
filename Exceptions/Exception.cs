@@ -1,90 +1,88 @@
-﻿namespace IngBackend.Exceptions;
+﻿using AutoWrapper.Wrappers;
+using static Microsoft.AspNetCore.Http.StatusCodes;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
-public class NotFoundException : Exception
+namespace IngBackend.Exceptions;
+
+// 400
+public class BadRequestException : ApplicationException
 {
-    public NotFoundException(string message) : base(message)
+    public BadRequestException() : base()
     {
-
+        throw new ApiException("請求錯誤", Status400BadRequest);
     }
 
-    public NotFoundException(string message, Exception innerException) : base(message, innerException)
+    public BadRequestException(string message) : base(message)
     {
+        throw new ApiException(message, Status400BadRequest);
+    }
 
+    public BadRequestException(Exception ex)
+    {
+        throw new ApiException(ex, Status400BadRequest);
     }
 }
 
-public class UnauthorizedException : Exception
+// 401
+public class UnauthorizedException : ApplicationException
 {
-    public UnauthorizedException() : base()
+    public UnauthorizedException() : base("未經授權")
     {
-
+        throw new ApiException("未經授權", Status401Unauthorized);
     }
 
-    public UnauthorizedException(string message) : base(message)
+    public UnauthorizedException(string message)
     {
-
+        throw new ApiException(message, Status401Unauthorized);
     }
 
-    public UnauthorizedException(string message, Exception innerException) : base(message, innerException)
+    public UnauthorizedException(Exception ex)
     {
+        throw new ApiException(ex, Status401Unauthorized);
     }
 }
 
+// 403 
 public class ForbiddenException : Exception
 {
     public ForbiddenException() : base("拒絕存取")
     {
-
+        throw new ApiException("拒絕存取", Status403Forbidden);
     }
 
-    public ForbiddenException (string message) : base(message)
+    public ForbiddenException(string message) : base(message)
     {
-
+        throw new ApiException(message, Status403Forbidden);
     }
 
-    public ForbiddenException(string message, Exception innerException) : base(message, innerException)
+    public ForbiddenException(Exception ex)
     {
-
+        throw new ApiException(ex, Status403Forbidden);
     }
 }
 
-public class BadRequestException : Exception
+// 404
+public class NotFoundException : ApplicationException
 {
-    public BadRequestException(string message) : base(message)
+    public NotFoundException() : base()
     {
-
+        throw new ApiException("資料不存在", Status404NotFound);
     }
 
-    public BadRequestException(string message, Exception innerException) : base(message, innerException)
+    public NotFoundException(string message) : base(message)
     {
+        throw new ApiException($"{message}不存在", Status404NotFound);
     }
 }
 
 public class UserNotFoundException : NotFoundException
 {
-    public UserNotFoundException() : base("使用者不存在")
-    {
-    }
-
-    public UserNotFoundException(string message) : base(message)
-    {
-    }
-
-    public UserNotFoundException(string message, Exception innerException) : base(message, innerException)
-    {
-    }
+    public UserNotFoundException() : base("使用者") { }
 }
 
 public class TagNotFoundException : NotFoundException
 {
-    public TagNotFoundException(int tagId) : base($"Tag Id: {tagId} 不存在")
-    {
-
-    }
-    public TagNotFoundException(int tagId, Exception innerException) : base($"Tag Id: {tagId} 不存在", innerException)
-    {
-
-    }
+    public TagNotFoundException(string tagId) : base($"標籤: {tagId}") { }
 }
 
 

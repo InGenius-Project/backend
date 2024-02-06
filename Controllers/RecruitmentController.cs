@@ -9,6 +9,7 @@ using IngBackend.Models.DBEntity;
 using Microsoft.EntityFrameworkCore;
 using IngBackend.Exceptions;
 using IngBackend.Services.AreaService;
+using AutoWrapper.Wrappers;
 
 namespace IngBackend.Controllers
 {
@@ -22,7 +23,7 @@ namespace IngBackend.Controllers
         private readonly RecruitmentService _recruitmentService;
         private readonly AreaService _areaService;
 
-        public RecruitmentController(IMapper mapper,AreaService areaService, UserService userService, RecruitmentService recruitmentService)
+        public RecruitmentController(IMapper mapper, AreaService areaService, UserService userService, RecruitmentService recruitmentService)
         {
             _mapper = mapper;
             _areaService = areaService;
@@ -32,6 +33,7 @@ namespace IngBackend.Controllers
 
 
         [HttpGet]
+        [ProducesResponseType(typeof(List<RecruitmentDTO>), 200)]
         public async Task<List<RecruitmentDTO>> GetRecruitmentsByUser()
         {
             var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
@@ -45,19 +47,21 @@ namespace IngBackend.Controllers
 
 
         [HttpGet("{recruitmentId}")]
-        public async Task<ActionResult<RecruitmentDTO>> GetRecruitmentById(Guid recruitmentId)
+        [ProducesResponseType(typeof(RecruitmentDTO), 200)]
+        public async Task<RecruitmentDTO> GetRecruitmentById(Guid recruitmentId)
         {
             var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
 
             var user = await _userService.CheckAndGetUserAsync(userId);
-            var recruitment =  _recruitmentService.GetRecruitmentIncludeAllById(recruitmentId);
+            var recruitment = _recruitmentService.GetRecruitmentIncludeAllById(recruitmentId);
 
             var recruitmentDTO = _mapper.Map<RecruitmentDTO>(recruitment);
             return recruitmentDTO;
         }
 
         [HttpPost]
-        public async Task<ActionResult<RecruitmentDTO>> PostRecruitment([FromBody] RecruitmentPostDTO req)
+        [ProducesResponseType(typeof(ResponseDTO<RecruitmentDTO>), StatusCodes.Status200OK)]
+        public async Task<RecruitmentDTO> PostRecruitment([FromBody] RecruitmentPostDTO req)
         {
             var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
             var user = await _userService.CheckAndGetUserAsync(userId, u => u.Recruitments);
@@ -84,7 +88,8 @@ namespace IngBackend.Controllers
         }
 
         [HttpDelete("{recruitmentId}")]
-        public async Task<IActionResult> DeleteRecruitment(Guid recruitmentId)
+        [ProducesResponseType(typeof(ResponseDTO<>), StatusCodes.Status200OK)]
+        public async Task<ApiResponse> DeleteRecruitment(Guid recruitmentId)
         {
             var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
             var user = await _userService.CheckAndGetUserAsync(userId, u => u.Recruitments);
@@ -99,7 +104,7 @@ namespace IngBackend.Controllers
             user.Recruitments.Remove(existRecruitment);
             _userService.Update(user);
             await _userService.SaveChangesAsync();
-            return Ok();
+            return new ApiResponse("刪除成功");
         }
 
 

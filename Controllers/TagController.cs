@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using IngBackend.Enum;
 using Microsoft.EntityFrameworkCore;
+using AutoWrapper.Wrappers;
 
 namespace IngBackend.Controllers;
 
@@ -29,32 +30,36 @@ public class TagController : BaseController
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<TagDTO>> GetTag(Guid id)
+    [ProducesResponseType(typeof(ResponseDTO<TagDTO>), StatusCodes.Status200OK)]
+    public async Task<TagDTO> GetTag(Guid id)
     {
         var tag = await _tagService.GetByIdAsync(id)
          ?? throw new NotFoundException("標籤不存在");
-        
-        var tagDTO = _mapper.Map<TagDTO>(tag) ;
-        
+
+        var tagDTO = _mapper.Map<TagDTO>(tag);
+
         return tagDTO;
     }
     [HttpGet]
-    public async Task<ActionResult<List<TagDTO>>> GetTags([FromQuery] string? type)
+    [ProducesResponseType(typeof(ResponseDTO<List<TagDTO>>), StatusCodes.Status200OK)]
+    public async Task<List<TagDTO>> GetTags([FromQuery] string? type)
     {
         var tags = new List<Tag>();
-        if(type == null)
+        if (type == null)
         {
-           tags = [.. _tagService.GetAll().Include(t =>t.Type)];
+            tags = [.. _tagService.GetAll().Include(t => t.Type)];
         }
-        else{
-            tags =  await _tagService.GetAllTagsByType(type);
+        else
+        {
+            tags = await _tagService.GetAllTagsByType(type);
         }
-        
+
         var tagsDTO = _mapper.Map<List<TagDTO>>(tags);
-        return  Ok(tagsDTO);
+        return tagsDTO;
     }
     [HttpPost]
-    public async Task<IActionResult> PostTag([FromBody] TagDTO req)
+    [ProducesResponseType(typeof(ResponseDTO<>), StatusCodes.Status200OK)]
+    public async Task<ApiResponse> PostTag([FromBody] TagDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
@@ -62,7 +67,7 @@ public class TagController : BaseController
         var tagType = await _tagService.GetTagTypeById(req.Type.Id);
         if (tagType == null)
         {
-            throw new NotFoundException("Tag type not found");
+            throw new TagNotFoundException(req.Id.ToString());
         }
 
         var existingTag = await _tagService.GetByIdAsync(req.Id);
@@ -78,26 +83,28 @@ public class TagController : BaseController
             _mapper.Map(req, existingTag);
             existingTag.Type = tagType;
 
-           _tagService.Update(existingTag);
+            _tagService.Update(existingTag);
         }
 
         await _tagService.SaveChangesAsync();
-        return Ok();
+        return new ApiResponse("標籤已新增");
     }
-    
+
     [HttpGet("type/{id}")]
-    public async Task<ActionResult<TagTypeDTO>> GetTagType(int id)
+    [ProducesResponseType(typeof(ResponseDTO<TagTypeDTO>), StatusCodes.Status200OK)]
+    public async Task<TagTypeDTO> GetTagType(int id)
     {
         var tagType = await _tagService.GetTagTypeById(id)
-            ?? throw new NotFoundException("Tag type not found");
+            ?? throw new NotFoundException("標籤");
 
         var tagTypeDTO = _mapper.Map<TagTypeDTO>(tagType);
 
-        return Ok(tagTypeDTO);
+        return tagTypeDTO;
     }
 
     [HttpGet("type")]
-    public async Task<ActionResult<List<TagTypeDTO>>> GetTagTypes()
+    [ProducesResponseType(typeof(ResponseDTO<List<TagTypeDTO>>), StatusCodes.Status200OK)]
+    public async Task<List<TagTypeDTO>> GetTagTypes()
     {
         var tagTypes = await _tagService.GetAllTagTypes();
         var tagTypesDTO = _mapper.Map<List<TagTypeDTO>>(tagTypes);
@@ -105,27 +112,29 @@ public class TagController : BaseController
     }
 
     [HttpPost("type")]
-    public async Task<IActionResult> PostTagType([FromBody] TagTypeDTO req)
+    [ProducesResponseType(typeof(ResponseDTO<>), StatusCodes.Status200OK)]
+    public async Task<ApiResponse> PostTagType([FromBody] TagTypeDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId, [UserRole.Admin, UserRole.InternalUser]);
 
         var tagType = await _tagService.GetTagTypeById(req.Id);
-        if(tagType == null)
+        if (tagType == null)
         {
             var newTagType = _mapper.Map<TagType>(req);
             await _tagService.AddTagTypeAsync(newTagType);
             await _tagService.SaveChangesAsync();
-            return Ok();
+            return new ApiResponse("新增成功");
         }
         _mapper.Map(req, tagType);
         await _tagService.UpdateTagTypeAsync(tagType);
         await _tagService.SaveChangesAsync();
-        return Ok();
+        return new ApiResponse("更新成功");
     }
 
     [HttpDelete("type")]
-    public async Task<IActionResult> DeleteTagTypes([FromBody] List<int> ids)
+    [ProducesResponseType(typeof(ResponseDTO<>), StatusCodes.Status200OK)]
+    public async Task<ApiResponse> DeleteTagTypes([FromBody] List<int> ids)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId, [UserRole.Admin, UserRole.InternalUser]);
@@ -140,8 +149,8 @@ public class TagController : BaseController
         }
 
         await _tagService.SaveChangesAsync();
-        return Ok();
-}
+        return new ApiResponse("刪除成功");
+    }
 
 
 
