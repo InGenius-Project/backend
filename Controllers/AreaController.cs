@@ -53,15 +53,16 @@ public class AreaController : BaseController
     )
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        await _userService.CheckAndGetUserAsync(userId);
+        var user = await _userService.CheckAndGetUserIncludeAllAsync(userId);
 
         var parsedAreaId = areaId ?? Guid.Empty;
-        var area = _areaService.GetAreaIncludeAllById(parsedAreaId);
+        var area = await _areaService.GetByIdAsync(parsedAreaId);
 
         // Add Area
         if (area == null)
         {
             var newArea = _mapper.Map<Area>(req);
+            newArea.User = user;
             await _areaService.AddAsync(newArea);
             await _areaService.SaveChangesAsync();
 
@@ -69,7 +70,10 @@ public class AreaController : BaseController
             return newAreaDTO;
         }
 
-        // Patch Area
+        // Check Area Ownership
+        _areaService.CheckAreaOwnership(parsedAreaId, user);
+
+        // Update Area
         _mapper.Map(req, area);
         _areaService.Update(area);
 
@@ -112,5 +116,61 @@ public class AreaController : BaseController
         await _areaService.SaveChangesAsync();
 
         return Ok();
+    }
+
+    [HttpPost("image")]
+    public async Task<IActionResult> UploadAreaImage([FromQuery] Guid areaId, IFormFile image)
+    {
+        Guid userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        User user = await _userService.CheckAndGetUserIncludeAllAsync(userId);
+
+        // Check CheckAreaOwnership
+        _areaService.CheckAreaOwnership(areaId, user);
+
+        var area =
+            _areaService.GetAreaIncludeAllById(areaId) ?? throw new NotFoundException("area 不存在");
+
+        if (area.ImageTextLayout == null)
+        {
+            throw new BadRequestException("此 Area 沒有 Image Text Layout");
+        }
+
+        byte[] imageData;
+        using (MemoryStream memoryStream = new())
+        {
+            await image.CopyToAsync(memoryStream);
+            imageData = memoryStream.ToArray();
+        }
+
+        area.ImageTextLayout.Image = new Image()
+        {
+            Filename = image.FileName,
+            ContentType = image.ContentType,
+            Data = imageData
+        };
+
+        _areaService.Update(area);
+        await _areaService.SaveChangesAsync();
+
+        return Accepted();
+    }
+
+    [HttpGet("image")]
+    public async Task<IActionResult> GetImage([FromQuery] Guid areaId)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        var user = await _userService.CheckAndGetUserIncludeAllAsync(userId);
+
+        // Check CheckAreaOwnership
+        _areaService.CheckAreaOwnership(areaId, user);
+
+        Area? area =
+            _areaService.GetAreaIncludeAllById(areaId) ?? throw new NotFoundException("area 不存在");
+
+        _ = area.ImageTextLayout ?? throw new BadRequestException("此 Area 沒有 Image Text Layout");
+        Image? image = area.ImageTextLayout.Image ?? throw new NotFoundException("沒有圖片資料");
+
+        MemoryStream imageStream = new(image.Data);
+        return File(imageStream, image.ContentType);
     }
 }

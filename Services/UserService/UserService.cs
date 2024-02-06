@@ -27,6 +27,7 @@ public class UserService : Service<User, Guid>
         var user = await _userRepository
             .GetAll()
             .Where(u => u.Id == userId)
+            .Include(u => u.Areas)
             .Include(u => u.Resumes)
             .ThenInclude(r => r.Areas)
             .ThenInclude(a => a.TextLayout)

@@ -18,6 +18,7 @@ public class Area : BaseEntity, IEntity<Guid>
 
     [JsonIgnore]
     public User? User { get; set; }
+    public Guid UserId { get; set; }
 
     public required string Title { get; set; }
     public required string Arrangement { get; set; }
