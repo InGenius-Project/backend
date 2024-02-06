@@ -1,6 +1,6 @@
-﻿using IngBackend.Interfaces.Service;
-using System.Collections;
+﻿using System.Collections;
 using System.Security.Cryptography;
+using IngBackend.Interfaces.Service;
 
 namespace IngBackend.Services;
 
@@ -43,3 +43,4 @@ public class PasswordHasher : IPasswordHasher
         return StructuralComparisons.StructuralEqualityComparer.Equals(keyToCheck, key);
     }
 }
+

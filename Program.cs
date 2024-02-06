@@ -1,4 +1,5 @@
 using System.Text;
+using Hangfire;
 using IngBackend.Context;
 using IngBackend.Interfaces.Service;
 using IngBackend.Interfaces.UnitOfWork;
@@ -13,29 +14,23 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Text;
-using IngBackend.Helpers;
-using Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// connectionString
 builder.Configuration.AddJsonFile("appsettings.Secrets.json");
-string? jwtSecretKey = builder.Configuration["Secrets:JwtSecretKey"];
-_ = jwtSecretKey ?? throw new Exception("Secret file not found or JwtSecretKey not set.");
 
 IWebHostEnvironment env = builder.Environment;
 
 // Development
 if (env.IsDevelopment())
 {
-  builder.Configuration.AddJsonFile("appsettings.Development.json");
+    builder.Configuration.AddJsonFile("appsettings.Development.json");
 }
 
 // Production
 if (env.IsProduction())
 {
-  builder.Configuration.AddJsonFile("appsettings.Production.json");
+    builder.Configuration.AddJsonFile("appsettings.Production.json");
 }
 
 // Connnect to database
@@ -43,11 +38,11 @@ string? connectionString = builder.Configuration.GetConnectionString("Default");
 
 if (env.IsDevelopment())
 {
-  builder.Services.AddDbContext<IngDbContext>(options => options.UseSqlite(connectionString));
+    builder.Services.AddDbContext<IngDbContext>(options => options.UseSqlite(connectionString));
 }
 else
 {
-  builder.Services.AddDbContext<IngDbContext>(options => options.UseSqlServer(connectionString));
+    builder.Services.AddDbContext<IngDbContext>(options => options.UseSqlServer(connectionString));
 }
 
 // Add services to the container.
@@ -68,7 +63,7 @@ builder
     .Services.AddControllers()
     .AddJsonOptions(options =>
     {
-      options.JsonSerializerOptions.PropertyNamingPolicy = null;
+        options.JsonSerializerOptions.PropertyNamingPolicy = null;
     });
 
 // Add Logger
@@ -78,21 +73,21 @@ builder.Logging.AddConsole();
 // Add Swagger
 builder.Services.AddSwaggerGen(c =>
 {
-  c.AddSecurityDefinition(
-      "Bearer",
-      new OpenApiSecurityScheme
-      {
-        Description = "JWT Authorization header using the Bearer scheme",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT"
-      }
-  );
-  c.AddSecurityRequirement(
-      new OpenApiSecurityRequirement
-      {
+    c.AddSecurityDefinition(
+        "Bearer",
+        new OpenApiSecurityScheme
+        {
+            Description = "JWT Authorization header using the Bearer scheme",
+            Name = "Authorization",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT"
+        }
+    );
+    c.AddSecurityRequirement(
+        new OpenApiSecurityRequirement
+        {
             {
                 new OpenApiSecurityScheme
                 {
@@ -104,8 +99,8 @@ builder.Services.AddSwaggerGen(c =>
                 },
                 new string[] { }
             }
-      }
-  );
+        }
+    );
 });
 
 // AutoMapper
@@ -123,61 +118,61 @@ builder
     .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-      options.TokenValidationParameters = new TokenValidationParameters
-      {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(
-              Encoding.UTF8.GetBytes(builder.Configuration["Secrets:JwtSecretKey"])
-          )
-      };
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Secrets:JwtSecretKey"])
+            )
+        };
     });
 
 // CORS
 var devCorsPolicy = "_devCorsPolicy";
 builder.Services.AddCors(options =>
 {
-  options.AddPolicy(
-      name: devCorsPolicy,
-      policy =>
-      {
-        policy
-              .WithOrigins("http://localhost:34004")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
-        policy
-              .WithOrigins("http://localhost:3000")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
-        policy
-              .WithOrigins("http://140.123.176.230:34004")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
-      }
-  );
+    options.AddPolicy(
+        name: devCorsPolicy,
+        policy =>
+        {
+            policy
+                .WithOrigins("http://localhost:34004")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+            policy
+                .WithOrigins("http://localhost:3000")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+            policy
+                .WithOrigins("http://140.123.176.230:34004")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        }
+    );
 });
 
 // Hangfire (Memory Storage)
-builder.Services.AddHangfire(config => {
+builder.Services.AddHangfire(config =>
+{
     config.UseInMemoryStorage();
 });
 builder.Services.AddHangfireServer();
-
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-  app.UseSwagger();
-  app.UseSwaggerUI();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 // Middleware
@@ -194,16 +189,16 @@ app.MapControllers();
 // Apply Migration
 using (var scope = app.Services.CreateScope())
 {
-  var services = scope.ServiceProvider;
+    var services = scope.ServiceProvider;
 
-  Console.WriteLine("READY To Applying Migrations");
+    Console.WriteLine("READY To Applying Migrations");
 
-  var context = services.GetRequiredService<IngDbContext>();
-  if (context.Database.GetPendingMigrations().Any())
-  {
-    Console.WriteLine("Applying Migrations...");
-    context.Database.Migrate();
-  }
+    var context = services.GetRequiredService<IngDbContext>();
+    if (context.Database.GetPendingMigrations().Any())
+    {
+        Console.WriteLine("Applying Migrations...");
+        context.Database.Migrate();
+    }
 }
 
 app.Run();

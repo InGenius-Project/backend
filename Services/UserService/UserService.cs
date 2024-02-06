@@ -178,14 +178,18 @@ public class UserService : Service<User, Guid>
     {
         if (user.EmailVerifications == null)
             return false;
-        var result = user.EmailVerifications.Any(e => e.Code == token && e.ExpiresTime > DateTime.UtcNow);
+        var result = user.EmailVerifications.Any(e =>
+            e.Code == token && e.ExpiresTime > DateTime.UtcNow
+        );
 
         if (result)
         {
-            user.EmailVerifications.RemoveAll(e => e.Code == token || e.ExpiresTime > DateTime.UtcNow);
+            user.EmailVerifications.RemoveAll(e =>
+                e.Code == token || e.ExpiresTime > DateTime.UtcNow
+            );
         }
         return result;
-    } 
+    }
 
     public async Task<string> GenerateEmailConfirmationTokenAsync(User user)
     {
@@ -196,21 +200,24 @@ public class UserService : Service<User, Guid>
 
         do
         {
-          token = new String(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
+            token = new String(
+                Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray()
+            );
         } while (!IsEmailVerificationCodeAvailable(user, token));
 
-        user.EmailVerifications ??= new List<VerificationCode>(){};
-        user.EmailVerifications.Add(new VerificationCode {
-            Code = token,
-            ExpiresTime = DateTime.UtcNow.AddMinutes(10)
-        });
+        user.EmailVerifications ??= new List<VerificationCode>() { };
+        user.EmailVerifications.Add(
+            new VerificationCode { Code = token, ExpiresTime = DateTime.UtcNow.AddMinutes(10) }
+        );
         return token;
     }
 
-    public bool VerifyEducationEmail(string email){
-        // TODO: Here need to service to handle
-        if (!email.Contains("edu")){
-          return false;
+    public bool VerifyEducationEmail(string email)
+    {
+        // TODO: need third-party service to handle
+        if (!email.Contains("edu"))
+        {
+            return false;
         }
 
         return true;
@@ -218,8 +225,9 @@ public class UserService : Service<User, Guid>
 
     public static bool IsEmailVerificationCodeAvailable(User user, string token)
     {
-        if (user.EmailVerifications == null){
-          return true;
+        if (user.EmailVerifications == null)
+        {
+            return true;
         }
 
         return !user.EmailVerifications.Any(e => e.Code == token);

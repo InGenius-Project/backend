@@ -6,14 +6,11 @@ namespace IngBackend.Context;
 
 public class IngDbContext : DbContext
 {
-    public IngDbContext(DbContextOptions<IngDbContext> options) : base(options)
-    {
-
-    }
+    public IngDbContext(DbContextOptions<IngDbContext> options)
+        : base(options) { }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.EnableSensitiveDataLogging();
         base.OnConfiguring(optionsBuilder);
     }
 
@@ -21,7 +18,8 @@ public class IngDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Resume>()
+        modelBuilder
+            .Entity<Resume>()
             .HasMany(e => e.Recruitments)
             .WithMany(e => e.Resumes)
             .UsingEntity<Dictionary<string, object>>(
