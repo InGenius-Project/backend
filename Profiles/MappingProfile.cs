@@ -52,7 +52,9 @@ public class MappingProfile : Profile
             .ForMember(
                 dest => dest.HashedPassword,
                 opt => opt.MapFrom(src => passwordHasher.HashPassword(src.Password))
-            );
+            )
+            .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email.ToLower()));
+
         CreateMap<User, UserInfoDTO>();
     }
 }
