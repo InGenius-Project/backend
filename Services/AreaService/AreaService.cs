@@ -1,4 +1,5 @@
-﻿using IngBackend.Exceptions;
+﻿using IngBackend.Enum;
+using IngBackend.Exceptions;
 using IngBackend.Interfaces.Repository;
 using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Models.DBEntity;
@@ -61,9 +62,12 @@ public class AreaService : Service<Area, Guid>
     }
 
 
-    public List<AreaType> GetAllAreaTypes()
+    public List<AreaType> GetAllAreaTypes(UserRole[]? userRoles)
     {
-        var areaTypes =  _areaTypeRepository.GetAll().ToList();
+        var areaTypes = _areaTypeRepository
+            .GetAll()
+            .Where(a => a.UserRole.Any(ur => userRoles.Contains(ur)))
+            .ToList();
         return areaTypes;
     }
 

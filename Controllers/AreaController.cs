@@ -115,29 +115,29 @@ public class AreaController : BaseController
     }
 
     [HttpGet("type/{id}")]
-    [ProducesResponseType(typeof(ResponseDTO<TagTypeDTO>), StatusCodes.Status200OK)]
-    public async Task<TagTypeDTO> GetAreaType(int id)
+    [ProducesResponseType(typeof(ResponseDTO<AreaTypeDTO>), StatusCodes.Status200OK)]
+    public async Task<AreaTypeDTO> GetAreaType(int id)
     {
         var areaType = await _areaService.GetAreaTypeById(id)
             ?? throw new NotFoundException("Area type not found");
 
-        var areaTypeDTO = _mapper.Map<TagTypeDTO>(areaType);
+        var areaTypeDTO = _mapper.Map<AreaTypeDTO>(areaType);
 
         return areaTypeDTO;
     }
 
     [HttpGet("type")]
-    [ProducesResponseType(typeof(ResponseDTO<List<TagTypeDTO>>), StatusCodes.Status200OK)]
-    public List<TagTypeDTO> GetAreaTypes()
+    [ProducesResponseType(typeof(ResponseDTO<List<AreaTypeDTO>>), StatusCodes.Status200OK)]
+    public List<AreaTypeDTO> GetAreaTypes([FromQuery] UserRole[]? userRoles)
     {
-        var areaTypes = _areaService.GetAllAreaTypes();
-        var areaTypesDTO = _mapper.Map<List<TagTypeDTO>>(areaTypes);
+        var areaTypes = _areaService.GetAllAreaTypes(userRoles);
+        var areaTypesDTO = _mapper.Map<List<AreaTypeDTO>>(areaTypes);
         return areaTypesDTO;
     }
 
     [HttpPost("type")]
     [ProducesResponseType(typeof(ResponseDTO<>), StatusCodes.Status200OK)]
-    public async Task<ApiResponse> PostAreaType([FromBody] TagTypeDTO req)
+    public async Task<ApiResponse> PostAreaType([FromBody] AreaTypeDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId, [UserRole.Admin, UserRole.InternalUser]);
