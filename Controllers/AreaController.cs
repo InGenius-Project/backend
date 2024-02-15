@@ -128,9 +128,9 @@ public class AreaController : BaseController
 
     [HttpGet("type")]
     [ProducesResponseType(typeof(ResponseDTO<List<AreaTypeDTO>>), StatusCodes.Status200OK)]
-    public List<AreaTypeDTO> GetAreaTypes([FromQuery] UserRole[]? userRoles)
+    public List<AreaTypeDTO> GetAreaTypes([FromQuery] UserRole[]? roles)
     {
-        var areaTypes = _areaService.GetAllAreaTypes(userRoles);
+        var areaTypes = _areaService.GetAllAreaTypes(roles);
         var areaTypesDTO = _mapper.Map<List<AreaTypeDTO>>(areaTypes);
         return areaTypesDTO;
     }

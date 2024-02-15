@@ -22,8 +22,9 @@ public class UserService : Service<User, Guid>
         _userRepository = unitOfWork.Repository<User, Guid>();
     }
 
-    
-    public async Task<User?> GetUserIncludeAllAsync(Guid userId){
+
+    public async Task<User?> GetUserIncludeAllAsync(Guid userId)
+    {
         var user = await _userRepository
             .GetAll()
             .Where(u => u.Id == userId)
@@ -40,9 +41,11 @@ public class UserService : Service<User, Guid>
                 .ThenInclude(a => a.KeyValueListLayout)
                     .ThenInclude(kv => kv.Items)
                     .ThenInclude(kvi => kvi.Key)
+            .Include(u => u.Areas)
+                .ThenInclude(a => a.AreaType)
             .Include(u => u.Recruitments)
             .FirstOrDefaultAsync();
-        
+
         return user;
     }
 

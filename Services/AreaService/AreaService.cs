@@ -34,6 +34,7 @@ public class AreaService : Service<Area, Guid>
              .Include(a => a.KeyValueListLayout)
                 .ThenInclude(kv => kv.Items)
                     .ThenInclude(kvi => kvi.Key)
+            .Include(a => a.AreaType)
             .FirstOrDefault();
         return area;
     }

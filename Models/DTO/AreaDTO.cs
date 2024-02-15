@@ -8,7 +8,7 @@ public class AreaDTO
     public required int Sequence { get; set; }
     public required bool IsDisplayed { get; set; }
     public required string Title { get; set; }
-    public LayoutType?  LayoutType { get; set; }
+    public LayoutType? LayoutType { get; set; }
     public AreaTypeDTO? AreaType { get; set; }
     public TextLayoutDTO? TextLayout { get; set; }
     public ImageTextLayoutDTO? ImageTextLayout { get; set; }
@@ -25,6 +25,7 @@ public class AreaTypeDTO
     public required string Description { get; set; }
     public required List<UserRole> UserRole { get; set; }
     public required LayoutType LayoutType { get; set; }
+    public required List<TagTypeDTO>? ListTagTypes { get; set; }
 }
 
 
@@ -60,8 +61,8 @@ public class TextLayoutDTO
 public class ImageDTO
 {
     public Guid Id { get; set; }
-    public required string Filename {get;set;}
-    public required string ContentType {get; set;}
+    public required string Filename { get; set; }
+    public required string ContentType { get; set; }
     public required string Content { get; set; }
 }
 

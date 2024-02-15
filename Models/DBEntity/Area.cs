@@ -41,12 +41,16 @@ public class AreaType : BaseEntity, IEntity<int>
     public required string Name { get; set; }
     public required string Value { get; set; } // unique
     public required string Description { get; set; }
-    public required List<UserRole> UserRole { get; set; } 
+    public required List<UserRole> UserRole { get; set; }
     public required LayoutType LayoutType { get; set; }
     [JsonIgnore]
     public required List<Area> Areas { get; set; }
-    
+
+    [JsonIgnore]
+    public List<TagType>? ListTagTypes { get; set; }
 }
+
+
 
 
 public class TextLayout : BaseEntity, IEntity<Guid>
@@ -70,7 +74,7 @@ public class Image : BaseEntity, IEntity<Guid>
     public Guid Id { get; set; }
     public required string Filename { get; set; }
     public required string ContentType { get; set; }
-    
+
     // Save as base64
     // TODO: save as file
     [Required]
@@ -91,6 +95,7 @@ public class ImageTextLayout : BaseEntity, IEntity<Guid>
     [Required]
     public Guid AreaId;
 }
+
 
 
 public class ListLayout : BaseEntity, IEntity<Guid>
