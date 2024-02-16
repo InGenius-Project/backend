@@ -25,7 +25,7 @@ public class Tag : BaseEntity, IEntity<Guid>
 
 }
 
-public class TagType: BaseEntity, IEntity<int>
+public class TagType : BaseEntity, IEntity<int>
 {
     [Key]
     public int Id { get; set; }
@@ -33,9 +33,11 @@ public class TagType: BaseEntity, IEntity<int>
     public required string Name { get; set; }
 
     [StringLength(20)]
-    public required string Value{ get; set; } // unique
+    public required string Value { get; set; } // unique
     public required string Color { get; set; }
 
+    [JsonIgnore]
+    public List<AreaType>? AreaTypes { get; set; }
 
 }
 

@@ -5,6 +5,7 @@ using IngBackend.Exceptions;
 using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
 using IngBackend.Services.AreaService;
+using IngBackend.Services.TagService;
 using IngBackend.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Connections.Features;
@@ -20,15 +21,15 @@ public class AreaController : BaseController
     private readonly ResumeService _resumeService;
     private readonly UserService _userService;
     private readonly AreaService _areaService;
+    private readonly TagService _tagService;
     private readonly IMapper _mapper;
 
-
-
-    public AreaController(IMapper mapper, UserService userService, ResumeService resumeService, AreaService areaService)
+    public AreaController(IMapper mapper, UserService userService, ResumeService resumeService, AreaService areaService, TagService tagService)
     {
         _resumeService = resumeService;
         _userService = userService;
         _areaService = areaService;
+        _tagService = tagService;
         _mapper = mapper;
     }
 
@@ -132,12 +133,13 @@ public class AreaController : BaseController
     {
         var areaTypes = _areaService.GetAllAreaTypes(roles);
         var areaTypesDTO = _mapper.Map<List<AreaTypeDTO>>(areaTypes);
+
         return areaTypesDTO;
     }
 
     [HttpPost("type")]
     [ProducesResponseType(typeof(ResponseDTO<>), StatusCodes.Status200OK)]
-    public async Task<ApiResponse> PostAreaType([FromBody] AreaTypeDTO req)
+    public async Task<ApiResponse> PostAreaType([FromBody] AreaTypePostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId, [UserRole.Admin, UserRole.InternalUser]);
@@ -150,7 +152,10 @@ public class AreaController : BaseController
             await _areaService.SaveChangesAsync();
             return new ApiResponse("新增成功");
         }
+
         _mapper.Map(req, areaType);
+        areaType.ListTagTypes = await _tagService.GetTagTypesByIds(req.ListTagTypeIds);
+
         await _areaService.UpdateAreaTypeAsync(areaType);
         await _areaService.SaveChangesAsync();
         return new ApiResponse("更新成功");

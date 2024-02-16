@@ -43,8 +43,6 @@ public class AreaType : BaseEntity, IEntity<int>
     public required string Description { get; set; }
     public required List<UserRole> UserRole { get; set; }
     public required LayoutType LayoutType { get; set; }
-    [JsonIgnore]
-    public required List<Area> Areas { get; set; }
 
     [JsonIgnore]
     public List<TagType>? ListTagTypes { get; set; }

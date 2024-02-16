@@ -17,7 +17,7 @@ public class TagService : Service<Tag, Guid>
         _unitOfWork = unitOfWork;
         _tagRepository = unitOfWork.Repository<Tag, Guid>();
         _tagTypeRepository = unitOfWork.Repository<TagType, int>();
-    }   
+    }
 
     public async Task<List<Tag>> GetAllTagsByType(string? type)
     {
@@ -25,8 +25,8 @@ public class TagService : Service<Tag, Guid>
         .Where(t => t.Type.Value == type)
         .Include(t => t.Type)
         .ToListAsync();
-        
-        if( tags == null)
+
+        if (tags == null)
         {
             return new List<Tag>();
         }
@@ -43,7 +43,16 @@ public class TagService : Service<Tag, Guid>
         var tagType = await _tagTypeRepository.GetByIdAsync(id);
         return tagType;
     }
-        
+
+    // get tagtypes by ids from request body
+    public async Task<List<TagType>> GetTagTypesByIds(List<int> ids)
+    {
+        var tagTypes = await _tagTypeRepository.GetAll().Where(t => ids.Contains(t.Id)).ToListAsync();
+        return tagTypes;
+    }
+
+
+
     public async Task<TagType> AddTagTypeAsync(TagType tagType)
     {
         await _tagTypeRepository.AddAsync(tagType);
@@ -51,10 +60,10 @@ public class TagService : Service<Tag, Guid>
         return tagType;
     }
 
-        
+
     public async Task<TagType> UpdateTagTypeAsync(TagType tagType)
     {
-       _tagTypeRepository.Update(tagType);
+        _tagTypeRepository.Update(tagType);
         await _unitOfWork.SaveChangesAsync();
         return tagType;
     }
@@ -69,4 +78,3 @@ public class TagService : Service<Tag, Guid>
     }
 }
 
-    

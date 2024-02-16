@@ -15,13 +15,14 @@ public class AreaService : Service<Area, Guid>
     private readonly IRepository<Area, Guid> _areaRepository;
     private readonly IRepository<AreaType, int> _areaTypeRepository;
 
+
     public AreaService(IUnitOfWork unitOfWork) : base(unitOfWork)
     {
         _unitOfWork = unitOfWork;
         _areaRepository = unitOfWork.Repository<Area, Guid>();
         _areaTypeRepository = unitOfWork.Repository<AreaType, int>();
-    }
 
+    }
     public Area? GetAreaIncludeAllById(Guid areaId)
     {
         var area = _areaRepository.GetAll()
@@ -75,7 +76,11 @@ public class AreaService : Service<Area, Guid>
 
     public async Task<AreaType> GetAreaTypeById(int id)
     {
-        var areaType = await _areaTypeRepository.GetByIdAsync(id);
+        var areaType = await _areaTypeRepository
+            .GetAll()
+            .Where(x => x.Id == id)
+            .Include(x => x.ListTagTypes)
+            .FirstOrDefaultAsync();
         return areaType;
     }
 
@@ -102,4 +107,5 @@ public class AreaService : Service<Area, Guid>
             await _unitOfWork.SaveChangesAsync();
         }
     }
+
 }

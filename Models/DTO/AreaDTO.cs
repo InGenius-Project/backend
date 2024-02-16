@@ -25,7 +25,12 @@ public class AreaTypeDTO
     public required string Description { get; set; }
     public required List<UserRole> UserRole { get; set; }
     public required LayoutType LayoutType { get; set; }
-    public required List<TagTypeDTO>? ListTagTypes { get; set; }
+    public List<TagTypeDTO>? ListTagTypes { get; set; }
+}
+
+public class AreaTypePostDTO : AreaType
+{
+    public List<int> ListTagTypeIds { get; set; } = new List<int>();
 }
 
 

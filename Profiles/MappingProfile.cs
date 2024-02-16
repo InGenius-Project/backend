@@ -29,8 +29,12 @@ public class MappingProfile : Profile
         // Area
         CreateMap<Area, AreaDTO>()
             .ReverseMap();
-        CreateMap<AreaType, AreaTypeDTO>()
-            .ReverseMap();
+        CreateMap<AreaType, AreaTypeDTO>();
+        CreateMap<AreaTypeDTO, AreaType>()
+            .ForMember(dest => dest.ListTagTypes, opt => opt.Ignore());
+        CreateMap<AreaTypePostDTO, AreaType>()
+            .ForMember(dest => dest.ListTagTypes, opt => opt.Ignore());
+
         CreateMap<AreaPostDTO, Area>();
 
         // TextLayout
@@ -56,7 +60,7 @@ public class MappingProfile : Profile
         // Tag
         CreateMap<Tag, TagDTO>()
             .ReverseMap();
-        CreateMap<TagType,TagTypeDTO>()
+        CreateMap<TagType, TagTypeDTO>()
             .ReverseMap();
 
         CreateMap<AreaPostDTO, Area>();
