@@ -39,15 +39,14 @@ public class UserController : BaseController
     public async Task<UserInfoDTO> GetUser()
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.GetUserIncludeAllAsync(userId);
+        var user = await _userService.GetUserById(userId);
 
         if (user == null)
         {
             throw new UserNotFoundException();
         }
 
-        var userInfoDTO = _mapper.Map<UserInfoDTO>(user);
-        return userInfoDTO;
+        return user;
     }
 
     [HttpPost]

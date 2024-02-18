@@ -12,6 +12,9 @@ public class MappingProfile : Profile
     {
         CreateMap<UserInfoDTO, UserDTO>()
             .ForMember(dest => dest.User, opt => opt.MapFrom(src => src));
+        CreateMap<User, UserInfoDTO>();
+        CreateMap<User, UserInfoPostDTO>();
+        CreateProjection<User, UserInfoDTO>();
         CreateMap<UserInfoPostDTO, User>();
         CreateMap<TokenDTO, UserDTO>()
             .ForMember(dest => dest.Token, opt => opt.MapFrom(src => src));
@@ -27,15 +30,17 @@ public class MappingProfile : Profile
             .ForMember(rp => rp.Publisher, r => r.Ignore());
 
         // Area
-        CreateMap<Area, AreaDTO>()
-            .ReverseMap();
+        CreateMap<Area, AreaDTO>().ReverseMap();
         CreateMap<AreaType, AreaTypeDTO>();
         CreateMap<AreaTypeDTO, AreaType>()
             .ForMember(dest => dest.ListTagTypes, opt => opt.Ignore());
         CreateMap<AreaTypePostDTO, AreaType>()
             .ForMember(dest => dest.ListTagTypes, opt => opt.Ignore());
 
-        CreateMap<AreaPostDTO, Area>();
+        CreateMap<AreaPostDTO, Area>()
+            .ForMember(dest => dest.AreaType, opt => opt.MapFrom(src => src.AreaType));
+        // CreateProjection<Area, AreaDTO>();
+
 
         // TextLayout
         CreateMap<TextLayoutDTO, TextLayout>()
@@ -63,7 +68,6 @@ public class MappingProfile : Profile
         CreateMap<TagType, TagTypeDTO>()
             .ReverseMap();
 
-        CreateMap<AreaPostDTO, Area>();
     }
     public MappingProfile(IPasswordHasher passwordHasher) : this()
     {

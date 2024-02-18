@@ -1,8 +1,11 @@
-﻿using IngBackend.Enum;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using IngBackend.Enum;
 using IngBackend.Exceptions;
 using IngBackend.Interfaces.Repository;
 using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Models.DBEntity;
+using IngBackend.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
@@ -15,38 +18,21 @@ public class UserService : Service<User, Guid>
     private readonly IUnitOfWork _unitOfWork;
 
     private readonly IRepository<User, Guid> _userRepository;
+    private readonly IMapper _mapper;
+    private readonly IRepositoryWrapper _repository;
 
-    public UserService(IUnitOfWork unitOfWork) : base(unitOfWork)
+    public UserService(IUnitOfWork unitOfWork, IRepositoryWrapper repository, IMapper mapper) : base(unitOfWork)
     {
         _unitOfWork = unitOfWork;
         _userRepository = unitOfWork.Repository<User, Guid>();
+        _mapper = mapper;
+        _repository = repository;
     }
 
-
-    public async Task<User?> GetUserIncludeAllAsync(Guid userId)
+    public async Task<UserInfoDTO?> GetUserById(Guid userId)
     {
-        var user = await _userRepository
-            .GetAll()
-            .Where(u => u.Id == userId)
-            .Include(u => u.Avatar)
-            .Include(u => u.Areas)
-                .ThenInclude(a => a.TextLayout)
-            .Include(u => u.Areas)
-                .ThenInclude(a => a.ImageTextLayout)
-                    .ThenInclude(itl => itl.Image)
-            .Include(u => u.Areas)
-                .ThenInclude(a => a.ListLayout)
-                    .ThenInclude(l => l.Items)
-            .Include(u => u.Areas)
-                .ThenInclude(a => a.KeyValueListLayout)
-                    .ThenInclude(kv => kv.Items)
-                    .ThenInclude(kvi => kvi.Key)
-            .Include(u => u.Areas)
-                .ThenInclude(a => a.AreaType)
-            .Include(u => u.Recruitments)
-            .FirstOrDefaultAsync();
-
-        return user;
+        var user = _repository.User.GetUserById(userId);
+        return await _mapper.ProjectTo<UserInfoDTO>(user).FirstOrDefaultAsync(); ;
     }
 
     /// <summary>
@@ -55,14 +41,14 @@ public class UserService : Service<User, Guid>
     /// <param name="email">The email address of the user to retrieve</param>
     /// <param name="includes">(optional) A list of related properties to retrieve</param>
     /// <returns>A `User` object containing the user information that matches the email address `email`, or null if no matching user exists</returns>
-    public async Task<User?> GetUserByEmailAsync(string email, params Expression<Func<User, object>>[] includes)
+    public async Task<UserInfoDTO?> GetUserByEmailAsync(string email, params Expression<Func<User, object>>[] includes)
     {
-        var query = _userRepository.GetAll();
+        var query = _repository.User.GetAll();
         foreach (var include in includes)
         {
             query = query.Include(include);
         }
-        return await query.FirstOrDefaultAsync(e => e.Email == email);
+        return await _mapper.ProjectTo<UserInfoDTO>(query).FirstOrDefaultAsync(e => e.Email == email);
     }
 
     /// <summary>
@@ -119,7 +105,7 @@ public class UserService : Service<User, Guid>
 
     public async Task<User> CheckAndGetUserIncludeAllAsync(Guid userId)
     {
-        var user = await GetUserIncludeAllAsync(userId) ?? throw new UserNotFoundException();
+        var user = await _repository.User.GetUserById(userId).FirstOrDefaultAsync() ?? throw new UserNotFoundException();
         return user;
     }
 

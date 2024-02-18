@@ -18,6 +18,8 @@ using IngBackend.Services.RecruitmentService;
 using IngBackend.Services.TagService;
 using Azure;
 using IngBackend.Models.DTO;
+using IngBackend.Interfaces.Repository;
+using IngBackend.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,7 +38,8 @@ builder.Services.AddDbContext<IngDbContext>(options => options.UseSqlServer(conn
 
 // Add services to the container.
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped(typeof(IService<,>), typeof(Service<,>));
+builder.Services.AddScoped(typeof(IService<,>), typeof(Service<,>));// Repository Wrapper
+builder.Services.AddScoped<IRepositoryWrapper, RepositoryWrapper>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddScoped<TokenService>();
@@ -47,6 +50,8 @@ builder.Services.AddScoped<TagService>();
 builder.Services.AddScoped<RecruitmentService>();
 // builder.Services.AddScoped<ApiResponseMiddleware>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
+
+
 
 // Json Serializer
 builder.Services.AddControllers()

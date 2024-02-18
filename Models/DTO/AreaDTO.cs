@@ -17,6 +17,21 @@ public class AreaDTO
 
 }
 
+
+// TODO: May change this class.
+// By Danny
+public class AreaPostDTO
+{
+    public required int Sequence { get; set; }
+    public required bool IsDisplayed { get; set; }
+    public required string Title { get; set; }
+    public LayoutType? Arrangement { get; set; }
+    public AreaTypeDTO? AreaType { get; set; }
+    public TextLayoutDTO? TextLayout { get; set; }
+    public ImageTextLayoutDTO? ImageTextLayout { get; set; }
+    public ListLayoutDTO? ListLayout { get; set; }
+    public KeyValueListLayoutDTO? KeyValueListLayout { get; set; }
+}
 public class AreaTypeDTO
 {
     public int Id { get; set; }
@@ -40,20 +55,6 @@ public class AreaFormDataDTO
     public required AreaPostDTO AreaPost { get; set; }
 }
 
-// TODO: May change this class.
-// By Danny
-public class AreaPostDTO
-{
-    public required int Sequence { get; set; }
-    public required bool IsDisplayed { get; set; }
-    public required string Title { get; set; }
-    public LayoutType? Arrangement { get; set; }
-    public AreaTypeDTO? Type { get; set; }
-    public TextLayoutDTO? TextLayout { get; set; }
-    public ImageTextLayoutDTO? ImageTextLayout { get; set; }
-    public ListLayoutDTO? ListLayout { get; set; }
-    public KeyValueListLayoutDTO? KeyValueListLayout { get; set; }
-}
 
 
 public class TextLayoutDTO

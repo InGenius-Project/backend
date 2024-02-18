@@ -3,7 +3,7 @@ using IngBackend.Interfaces.Repository;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
-namespace IngBackend.Services.Repository;
+namespace IngBackend.Repository;
 
 public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
     where TEntity : class, IEntity<TKey>
