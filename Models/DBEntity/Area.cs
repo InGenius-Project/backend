@@ -45,6 +45,9 @@ public class AreaType : BaseEntity, IEntity<int>
     public required LayoutType LayoutType { get; set; }
 
     [JsonIgnore]
+    public List<Area>? Areas { get; set; }
+
+    [JsonIgnore]
     public List<TagType>? ListTagTypes { get; set; }
 }
 

@@ -31,6 +31,8 @@ public class UserRepository : Repository<User, Guid>, IUserRepository
                 .ThenInclude(a => a.KeyValueListLayout)
                     .ThenInclude(kv => kv.Items)
             .Include(u => u.Areas)
+                .ThenInclude(a => a.AreaType)
+            .Include(u => u.Areas)
                 .ThenInclude(a => a.AreaType);
 
 

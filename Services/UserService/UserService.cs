@@ -29,11 +29,13 @@ public class UserService : Service<User, UserInfoDTO, Guid>
         _passwordHasher = passwordHasher;
     }
 
-    public async Task<UserInfoDTO?> GetUserByIdAsync(Guid userId)
+    public async Task<UserInfoDTO?> GetUserByIdIncludeAllAsync(Guid userId)
     {
         var user = _repository.User.GetUserByIdIncludeAll(userId);
         return await _mapper.ProjectTo<UserInfoDTO>(user).FirstOrDefaultAsync();
     }
+
+
 
     /// <summary>
     /// Asynchronously finds the user information that matches the specified email address.
@@ -53,7 +55,11 @@ public class UserService : Service<User, UserInfoDTO, Guid>
         return await _mapper.ProjectTo<UserInfoDTO>(query).FirstOrDefaultAsync();
     }
 
-
+    public async Task<UserInfoDTO> CheckAndGetUserIncludeAllAsync(Guid userId)
+    {
+        var user = await GetUserByIdIncludeAllAsync(userId);
+        return user ?? throw new UserNotFoundException();
+    }
     /// <summary>
     /// Asynchronously checks if a user exists with the specified ID and retrieves the user information if found.
     /// </summary>

@@ -12,9 +12,14 @@ public class MappingProfile : Profile
     {
         CreateMap<UserInfoDTO, UserDTO>()
             .ForMember(dest => dest.User, opt => opt.MapFrom(src => src));
-        CreateMap<User, UserInfoDTO>();
-        CreateMap<User, UserInfoPostDTO>();
-        CreateMap<UserInfoPostDTO, User>();
+        CreateMap<User, UserInfoDTO>()
+            .ReverseMap();
+        CreateMap<UserInfoPostDTO, UserInfoDTO>()
+            .ForAllMembers(opts =>
+            {
+                opts.AllowNull();
+                opts.Condition((src, dest, srcMember) => srcMember != null);
+            });
         CreateMap<TokenDTO, UserDTO>()
             .ForMember(dest => dest.Token, opt => opt.MapFrom(src => src));
 
@@ -26,7 +31,7 @@ public class MappingProfile : Profile
         CreateMap<Recruitment, RecruitmentDTO>()
             .ReverseMap();
         CreateMap<RecruitmentPostDTO, Recruitment>()
-            .ForMember(rp => rp.Publisher, r => r.Ignore());
+                .ForMember(rp => rp.Publisher, r => r.Ignore());
 
         // Area
         CreateMap<Area, AreaDTO>().ReverseMap();
@@ -34,7 +39,7 @@ public class MappingProfile : Profile
         CreateMap<AreaTypeDTO, AreaType>()
             .ForMember(dest => dest.ListTagTypes, opt => opt.Ignore());
         CreateMap<AreaTypePostDTO, AreaType>()
-            .ForMember(dest => dest.ListTagTypes, opt => opt.Ignore());
+                .ForMember(dest => dest.ListTagTypes, opt => opt.Ignore());
 
         // CreateMap<AreaPostDTO, Area>()
         // .ForMember(dest => dest.AreaType, opt => opt.MapFrom(src => src.AreaType));
@@ -43,29 +48,29 @@ public class MappingProfile : Profile
 
         // TextLayout
         CreateMap<TextLayoutDTO, TextLayout>()
-            .ReverseMap();
+                .ReverseMap();
 
         // ImageLayout
         CreateMap<ImageTextLayoutDTO, ImageTextLayout>()
-            .ReverseMap();
+                .ReverseMap();
         CreateMap<ImageDTO, Image>()
-            .ReverseMap();
+                .ReverseMap();
 
         // ListLayout
         CreateMap<ListLayoutDTO, ListLayout>()
-            .ReverseMap();
+                .ReverseMap();
 
         // KeyValueListLayout
         CreateMap<KeyValueListLayoutDTO, KeyValueListLayout>()
-            .ReverseMap();
+                .ReverseMap();
         CreateMap<KeyValueItem, KeyValueItemDTO>()
-            .ReverseMap();
+                .ReverseMap();
 
         // Tag
         CreateMap<Tag, TagDTO>()
-            .ReverseMap();
+                .ReverseMap();
         CreateMap<TagType, TagTypeDTO>()
-            .ReverseMap();
+                .ReverseMap();
 
     }
     public MappingProfile(IPasswordHasher passwordHasher) : this()

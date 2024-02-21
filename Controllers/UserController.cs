@@ -38,7 +38,7 @@ public class UserController : BaseController
     public async Task<UserInfoDTO> GetUser()
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.GetUserByIdAsync(userId);
+        var user = await _userService.GetUserByIdIncludeAllAsync(userId);
 
         if (user == null)
         {
@@ -53,10 +53,13 @@ public class UserController : BaseController
     public async Task<UserInfoDTO> PostUser(UserInfoPostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.CheckAndGetUserAsync(userId);
+        var user = await _userService.CheckAndGetUserIncludeAllAsync(userId);
 
+        user.Username = req.Username ?? user.Username;
+        user.Tags = req.Tags ?? user.Tags;
+        user.Avatar = req.Avatar ?? user.Avatar;
+        // user.Area
         await _userService.UpdateAsync(user);
-        await _userService.SaveChangesAsync();
         var userDTO = _mapper.Map<UserInfoDTO>(user);
         return userDTO;
     }
