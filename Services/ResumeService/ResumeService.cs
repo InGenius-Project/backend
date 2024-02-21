@@ -1,20 +1,25 @@
-﻿using IngBackend.Exceptions;
+﻿using AutoMapper;
+using IngBackend.Exceptions;
 using IngBackend.Interfaces.Repository;
 using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Models.DBEntity;
+using IngBackend.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 
 namespace IngBackend.Services.UserService;
 
-public class ResumeService : Service<Resume, Guid>
+public class ResumeService : Service<Resume, ResumeDTO, Guid>
 {
     private readonly IUnitOfWork _unitOfWork;
-
+    private readonly IMapper _mapper;
+    private readonly IRepositoryWrapper _repository;
     private readonly IRepository<Resume, Guid> _resumeRepository;
 
-    public ResumeService(IUnitOfWork unitOfWork) : base(unitOfWork)
+    public ResumeService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository) : base(unitOfWork, mapper)
     {
         _unitOfWork = unitOfWork;
+        _repository = repository;
+        _mapper = mapper;
         _resumeRepository = unitOfWork.Repository<Resume, Guid>();
     }
 
@@ -26,44 +31,15 @@ public class ResumeService : Service<Resume, Guid>
     }
 
     /// <summary>
-    /// Asynchronously retrieves a resume with its associated information based on the specified ID, including related entities.
-    /// </summary>
-    /// <param name="id">The ID of the resume to retrieve (Guid).</param>
-    /// <returns>A Resume object containing all information about the resume and its related entities, or null if no resume exists with the specified ID.</returns>
-    public async Task<Resume?> GetResumeIncludeByIdAsync(Guid id)
-    {
-        var resume = await _resumeRepository.GetAll()
-            .Where(x => x.Id.Equals(id))
-            .Include(r => r.Areas)
-                .ThenInclude(a => a.TextLayout)
-            .Include(r => r.Areas)
-                .ThenInclude(a => a.ImageTextLayout)
-                    .ThenInclude(it => it.Image)
-            .Include(r => r.Areas)
-                .ThenInclude(a => a.ListLayout)
-                    .ThenInclude(l => l.Items)
-            .Include(r => r.Areas)
-                .ThenInclude(a => a.KeyValueListLayout)
-                    .ThenInclude(kv => kv.Items)
-                        .ThenInclude(kvi => kvi.Key)
-            .Include(r => r.User)
-            .Include(r => r.Recruitments)
-                .ThenInclude(a => a.Publisher)
-            .FirstOrDefaultAsync();
-        return resume;
-    }
-
-    /// <summary>
     /// Asynchronously checks for the existence of a resume with the specified ID, retrieves it with its associated information, and throws an exception if not found.
     /// </summary>
     /// <param name="id">The ID of the resume to check and retrieve (Guid).</param>
     /// <returns>A `Resume` object containing all information about the resume and its related entities.</returns>
     /// <exception cref="NotFoundException">Throws a `NotFoundException` if no resume exists with the specified ID.</exception>
-    public async Task<Resume> CheckAndGetResumeAsync(Guid id)
+    public async Task<ResumeDTO?> CheckAndGetResumeAsync(Guid id)
     {
-        var resume = await GetResumeIncludeByIdAsync(id) ?? throw new NotFoundException("履歷不存在");
-
-        return resume;
+        var resume = _repository.Resume.GetResumeByIdIncludeAll(id) ?? throw new NotFoundException("履歷不存在");
+        return await _mapper.ProjectTo<ResumeDTO>(resume).FirstOrDefaultAsync();
     }
 
     /// <summary>
@@ -74,14 +50,15 @@ public class ResumeService : Service<Resume, Guid>
     /// <returns>A `Resume` object containing all information about the resume and its related entities, with potentially hidden areas based on access control.</returns>
     /// <exception cref="NotFoundException">Throws a `NotFoundException` if no resume exists with the specified ID.</exception>
     /// <exception cref="ForbiddenException">Throws a `ForbiddenException` if the user requesting access does not have permission to view the resume.</exception>
-    public async Task<Resume> CheckAndGetResumeAsync(Guid id, User user)
+    public async Task<ResumeDTO> CheckAndGetResumeAsync(Guid id, UserInfoDTO user)
     {
-        var resume = await GetResumeIncludeByIdAsync(id) ?? throw new NotFoundException("履歷不存在");
+        var query = _repository.Resume.GetResumeByIdIncludeAll(id) ?? throw new NotFoundException("履歷不存在");
+        var resume = await query.FirstOrDefaultAsync();
 
         // Is Owner
-        if (resume.User.Id == user.Id)
+        if (resume?.UserId == user.Id)
         {
-            return resume;
+            return _mapper.Map<ResumeDTO>(resume);
         }
 
         // Not Owner => Hide Area
@@ -90,7 +67,7 @@ public class ResumeService : Service<Resume, Guid>
         // No Visibility
         if (resume.Visibility)
         {
-            return resume;
+            return _mapper.Map<ResumeDTO>(resume);
         }
 
         // Not Related Company
@@ -99,7 +76,7 @@ public class ResumeService : Service<Resume, Guid>
             throw new ForbiddenException();
         }
 
-        return resume;
+        return _mapper.Map<ResumeDTO>(resume);
     }
 
     /// <summary>
@@ -110,6 +87,7 @@ public class ResumeService : Service<Resume, Guid>
     /// <returns>True if the user is from a related company, false otherwise.</returns>
     private static bool IsRelatedCompany(Resume resume, Guid userId)
     {
+
         var relatedCompanyIdList = resume.Recruitments?.Select(x => x.PublisherId);
 
         if (relatedCompanyIdList == null)

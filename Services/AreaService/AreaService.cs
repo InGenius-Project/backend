@@ -1,57 +1,57 @@
-﻿using IngBackend.Enum;
+﻿using AutoMapper;
+using IngBackend.Enum;
 using IngBackend.Exceptions;
 using IngBackend.Interfaces.Repository;
 using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace IngBackend.Services.AreaService;
 
-public class AreaService : Service<Area, Guid>
+public class AreaService : Service<Area, AreaDTO, Guid>
 {
     private readonly IUnitOfWork _unitOfWork;
 
-    private readonly IRepository<Area, Guid> _areaRepository;
+    private readonly IMapper _mapper;
+    private readonly IRepositoryWrapper _repository;
+
     private readonly IRepository<AreaType, int> _areaTypeRepository;
 
 
-    public AreaService(IUnitOfWork unitOfWork) : base(unitOfWork)
+    public AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository) : base(unitOfWork, mapper)
     {
         _unitOfWork = unitOfWork;
-        _areaRepository = unitOfWork.Repository<Area, Guid>();
+        _mapper = mapper;
+        _repository = repository;
         _areaTypeRepository = unitOfWork.Repository<AreaType, int>();
 
     }
-    public Area? GetAreaIncludeAllById(Guid areaId)
+    public async Task<AreaDTO?> GetAreaIncludeAllById(Guid areaId)
     {
-        var area = _areaRepository.GetAll()
-            .Where(x => x.Id.Equals(areaId))
-            .Include(a => a.TextLayout)
-            .Include(a => a.ImageTextLayout)
-                .ThenInclude(it => it.Image)
-            .Include(a => a.ListLayout)
-                .ThenInclude(l => l.Items)
-             .Include(a => a.KeyValueListLayout)
-                .ThenInclude(kv => kv.Items)
-                    .ThenInclude(kvi => kvi.Key)
-            .Include(a => a.AreaType)
-            .FirstOrDefault();
-        return area;
+        var area = _repository.Area.GetAreaByIdIncludeAll(areaId);
+        return await _mapper.ProjectTo<AreaDTO>(area).FirstOrDefaultAsync();
     }
 
-    public void CheckAreaOwnership(Guid areaId, User user)
+    public async Task CheckAreaOwnership(Guid areaId, UserInfoDTO req)
     {
-        // 檢查 Resume 關聯
-        var result = user.Resumes.SelectMany(x => x.Areas.Where(a => a.Id == areaId)).Any();
-        if (result)
+        var area = await _repository.Area.GetByIdAsync(areaId);
+        if (area == null || area.User?.Id != req.Id)
         {
             throw new ForbiddenException();
         }
     }
 
-    public void ClearArea(Area area)
+    public async void ClearArea(AreaDTO req)
     {
+        var area = await _repository.Area.GetByIdAsync(req.Id);
+
+        if (area == null)
+        {
+            throw new AreaNotFoundException();
+        }
+
         var properties = area.GetType().GetProperties();
 
         foreach (var property in properties)
@@ -64,48 +64,12 @@ public class AreaService : Service<Area, Guid>
     }
 
 
-    public List<AreaType> GetAllAreaTypes(UserRole[]? userRoles)
+    public async Task<List<AreaTypeDTO>> GetAllAreaTypes(UserRole[] userRoles)
     {
         var areaTypes = _areaTypeRepository
             .GetAll()
-            .Where(a => a.UserRole.Any(ur => userRoles.Contains(ur)))
-            .ToList();
-        return areaTypes;
-    }
-
-
-    public async Task<AreaType> GetAreaTypeById(int id)
-    {
-        var areaType = await _areaTypeRepository
-            .GetAll()
-            .Where(x => x.Id == id)
-            .Include(x => x.ListTagTypes)
-            .FirstOrDefaultAsync();
-        return areaType;
-    }
-
-    public async Task<AreaType> AddAreaTypeAsync(AreaType areaType)
-    {
-        await _areaTypeRepository.AddAsync(areaType);
-        await _unitOfWork.SaveChangesAsync();
-        return areaType;
-    }
-
-
-    public async Task<AreaType> UpdateAreaTypeAsync(AreaType areaType)
-    {
-        _areaTypeRepository.Update(areaType);
-        await _unitOfWork.SaveChangesAsync();
-        return areaType;
-    }
-
-    public async Task DeleteAreaTypeAsync(AreaType areaType)
-    {
-        if (areaType != null)
-        {
-            _areaTypeRepository.Delete(areaType);
-            await _unitOfWork.SaveChangesAsync();
-        }
+            .Where(a => a.UserRole.Any(ur => userRoles.Contains(ur)));
+        return await _mapper.ProjectTo<AreaTypeDTO>(areaTypes).ToListAsync(); ;
     }
 
 }

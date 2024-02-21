@@ -3,6 +3,7 @@ using AutoMapper.QueryableExtensions;
 using IngBackend.Enum;
 using IngBackend.Exceptions;
 using IngBackend.Interfaces.Repository;
+using IngBackend.Interfaces.Service;
 using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
@@ -13,26 +14,25 @@ using System.Runtime.CompilerServices;
 
 namespace IngBackend.Services.UserService;
 
-public class UserService : Service<User, Guid>
+public class UserService : Service<User, UserInfoDTO, Guid>
 {
     private readonly IUnitOfWork _unitOfWork;
-
-    private readonly IRepository<User, Guid> _userRepository;
     private readonly IMapper _mapper;
     private readonly IRepositoryWrapper _repository;
+    private readonly IPasswordHasher _passwordHasher;
 
-    public UserService(IUnitOfWork unitOfWork, IRepositoryWrapper repository, IMapper mapper) : base(unitOfWork)
+    public UserService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository, IPasswordHasher passwordHasher) : base(unitOfWork, mapper)
     {
         _unitOfWork = unitOfWork;
-        _userRepository = unitOfWork.Repository<User, Guid>();
         _mapper = mapper;
         _repository = repository;
+        _passwordHasher = passwordHasher;
     }
 
-    public async Task<UserInfoDTO?> GetUserById(Guid userId)
+    public async Task<UserInfoDTO?> GetUserByIdAsync(Guid userId)
     {
-        var user = _repository.User.GetUserById(userId);
-        return await _mapper.ProjectTo<UserInfoDTO>(user).FirstOrDefaultAsync(); ;
+        var user = _repository.User.GetUserByIdIncludeAll(userId);
+        return await _mapper.ProjectTo<UserInfoDTO>(user).FirstOrDefaultAsync();
     }
 
     /// <summary>
@@ -43,13 +43,16 @@ public class UserService : Service<User, Guid>
     /// <returns>A `User` object containing the user information that matches the email address `email`, or null if no matching user exists</returns>
     public async Task<UserInfoDTO?> GetUserByEmailAsync(string email, params Expression<Func<User, object>>[] includes)
     {
-        var query = _repository.User.GetAll();
+        var query = _repository.User.GetUserByEmail(email);
+
         foreach (var include in includes)
         {
-            query = query.Include(include);
+            query.Include(include);
         }
-        return await _mapper.ProjectTo<UserInfoDTO>(query).FirstOrDefaultAsync(e => e.Email == email);
+
+        return await _mapper.ProjectTo<UserInfoDTO>(query).FirstOrDefaultAsync();
     }
+
 
     /// <summary>
     /// Asynchronously checks if a user exists with the specified ID and retrieves the user information if found.
@@ -57,7 +60,7 @@ public class UserService : Service<User, Guid>
     /// <param name="userId">The ID of the user to check and retrieve (Guid).</param>
     /// <returns>A `User` object containing the user information if found.</returns>
     /// <exception cref="UserNotFoundException">Throws a `UserNotFoundException` if no user exists with the specified ID.</exception>
-    public async Task<User> CheckAndGetUserAsync(Guid userId, params Expression<Func<User, object>>[] includes)
+    public async Task<UserInfoDTO> CheckAndGetUserAsync(Guid userId, params Expression<Func<User, object>>[] includes)
     {
         var user = await GetByIdAsync(userId, includes) ?? throw new UserNotFoundException();
         return user;
@@ -71,7 +74,7 @@ public class UserService : Service<User, Guid>
     /// <returns>A `User` object containing the user information if found and has the allowed role.</returns>
     /// <exception cref="UserNotFoundException">Throws a `UserNotFoundException` if no user exists with the specified ID.</exception>
     /// <exception cref="ForbiddenException">Throws a `ForbiddenException` if the user exists but does not have the required role.</exception>
-    public async Task<User> CheckAndGetUserAsync(Guid userId, UserRole allowedRole, params Expression<Func<User, object>>[] includes)
+    public async Task<UserInfoDTO> CheckAndGetUserAsync(Guid userId, UserRole allowedRole, params Expression<Func<User, object>>[] includes)
     {
         var user = await GetByIdAsync(userId, includes) ?? throw new UserNotFoundException();
 
@@ -91,7 +94,7 @@ public class UserService : Service<User, Guid>
     /// <returns>A `User` object containing the user information if found and belongs to any of the allowed roles.</returns>
     /// <exception cref="UserNotFoundException">Throws a `UserNotFoundException` if no user exists with the specified ID.</exception>
     /// <exception cref="ForbiddenException">Throws a `ForbiddenException` if the user exists but does not belong to any of the allowed roles.</exception>
-    public async Task<User> CheckAndGetUserAsync(Guid userId, IEnumerable<UserRole> allowedRoles, params Expression<Func<User, object>>[] includes)
+    public async Task<UserInfoDTO> CheckAndGetUserAsync(Guid userId, IEnumerable<UserRole> allowedRoles, params Expression<Func<User, object>>[] includes)
     {
         var user = await GetByIdAsync(userId, includes) ?? throw new UserNotFoundException();
 
@@ -103,34 +106,39 @@ public class UserService : Service<User, Guid>
         return user;
     }
 
-    public async Task<User> CheckAndGetUserIncludeAllAsync(Guid userId)
+    public async Task<ResumeDTO?> GetResumesByUserId(Guid userId)
     {
-        var user = await _repository.User.GetUserById(userId).FirstOrDefaultAsync() ?? throw new UserNotFoundException();
-        return user;
+        var query = _repository.User.GetResumesByUserId(userId);
+        return await _mapper.ProjectTo<ResumeDTO>(query).FirstOrDefaultAsync();
     }
 
-    public async Task<IEnumerable<Resume>> GetUserResumes(Guid userId)
+    public async Task<UserInfoDTO> VerifyHashedPasswordAsync(UserSignInDTO req)
     {
-        var user = await _userRepository.GetAll().Where(u => u.Id == userId)
-            .Include(u => u.Resumes)
-                .ThenInclude(r => r.Areas)
-                    .ThenInclude(a => a.TextLayout)
-            .Include(u => u.Resumes)
-                .ThenInclude(r => r.Areas)
-                    .ThenInclude(a => a.ImageTextLayout)
-            .FirstOrDefaultAsync();
-
+        var query = _repository.User.GetUserByEmail(req.Email.ToLower());
+        var user = await query.FirstOrDefaultAsync();
         if (user == null)
         {
-            return new List<Resume>() { };
+            throw new BadRequestException("帳號或密碼錯誤");
         }
-
-        var resume = user.Resumes;
-        return resume;
+        var passwordValid = _passwordHasher.VerifyHashedPassword(user.HashedPassword, req.Password);
+        if (!passwordValid)
+        {
+            throw new BadRequestException("帳號或密碼錯誤");
+        }
+        return _mapper.Map<UserInfoDTO>(user);
     }
 
+    public async Task AddUserResumeAsync(UserInfoDTO userDTO, ResumeDTO resumeDTO)
+    {
+        var user = await _repository.User.GetByIdAsync(userDTO.Id);
+        if (user == null)
+        {
+            throw new UserNotFoundException();
+        }
 
-
+        user.Resumes.Add(_mapper.Map<Resume>(resumeDTO));
+        await _unitOfWork.SaveChangesAsync();
+    }
 
 }
 

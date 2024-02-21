@@ -85,4 +85,23 @@ public class TagNotFoundException : NotFoundException
     public TagNotFoundException(string tagId) : base($"標籤: {tagId}") { }
 }
 
+public class AreaNotFoundException : NotFoundException
+{
+    public AreaNotFoundException() : base("區域") { }
+    public AreaNotFoundException(string areaId) : base($"區域: {areaId}") { }
+}
+
+
+public class EntityNotFoundException : Exception
+{
+    public EntityNotFoundException() : base()
+    {
+    }
+    public EntityNotFoundException(Exception ex) : base(ex.Message)
+    { }
+    public EntityNotFoundException(string message) : base(message) { }
+    public EntityNotFoundException(string message, Exception exception) : base(message, exception)
+    { }
+}
+
 

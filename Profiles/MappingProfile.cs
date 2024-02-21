@@ -14,7 +14,6 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.User, opt => opt.MapFrom(src => src));
         CreateMap<User, UserInfoDTO>();
         CreateMap<User, UserInfoPostDTO>();
-        CreateProjection<User, UserInfoDTO>();
         CreateMap<UserInfoPostDTO, User>();
         CreateMap<TokenDTO, UserDTO>()
             .ForMember(dest => dest.Token, opt => opt.MapFrom(src => src));
@@ -37,8 +36,8 @@ public class MappingProfile : Profile
         CreateMap<AreaTypePostDTO, AreaType>()
             .ForMember(dest => dest.ListTagTypes, opt => opt.Ignore());
 
-        CreateMap<AreaPostDTO, Area>()
-            .ForMember(dest => dest.AreaType, opt => opt.MapFrom(src => src.AreaType));
+        // CreateMap<AreaPostDTO, Area>()
+        // .ForMember(dest => dest.AreaType, opt => opt.MapFrom(src => src.AreaType));
         // CreateProjection<Area, AreaDTO>();
 
 

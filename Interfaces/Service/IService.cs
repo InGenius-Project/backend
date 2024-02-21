@@ -3,88 +3,22 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
 namespace IngBackend.Interfaces.Service;
-
-
-/// <summary>
-/// 泛型的 Service 介面，定義基本的 CRUD 操作
-/// </summary>
-/// <typeparam name="TEntity">實體類別</typeparam>
-public interface IService<TEntity, TKey> where TEntity : class, IEntity<TKey>
+public interface IService<TEntity, TDto, TKey> where TEntity : IEntity<TKey> where TDto : class
 {
-    /// <summary>
-    /// 新增 TEntity
-    /// </summary>
-    /// <param name="entity">欲新增的 TEntity</param>
-    void Add(TEntity entity);
+    IEnumerable<TDto> GetAll();
+    IEnumerable<TDto> GetAll(params Expression<Func<TEntity, object>>[] includes);
+    IEnumerable<TDto> GetAll(Expression<Func<TEntity, bool>> predicate);
 
-    /// <summary>
-    /// 新增 TEntity 異步方法
-    /// </summary>
-    /// <param name="entity">欲新增的 TEntity</param>
-    Task AddAsync(TEntity entity);
+    IEnumerable<TDto> GetAll(Expression<Func<TEntity, bool>> predicate, params Expression<Func<TEntity, object>>[] includes);
 
-    /// <summary>
-    /// 加入實體的集合
-    /// </summary>
-    /// <param name="entities"></param>
-    /// <returns></returns>
-    Task AddRangeAsync(IEnumerable<TEntity> entities);
-
-    /// <summary>
-    /// 更新 TEntity
-    /// </summary>
-    /// <param name="entity">欲更新的 TEntity</param>
-    void Update(TEntity entity);
-
-    /// <summary>
-    /// 刪除 TEntity
-    /// </summary>
-    /// <param name="entity">欲刪除的 TEntity</param>
-    void Delete(TEntity entity);
-
-    /// <summary>
-    /// 儲存異動
-    /// </summary>
-    void SaveChanges();
-
-    /// <summary>
-    /// 非同步儲存異動
-    /// </summary>
-    /// <returns></returns>
+    Task<TDto?> GetByIdAsync(TKey id);
+    Task<TDto?> GetByIdAsync(TKey id, params Expression<Func<TEntity, object>>[] includes);
+    Task AddAsync(TDto dto);
+    Task DeleteByIdAsync(TKey key);
+    Task UpdateAsync(TDto dto);
     Task SaveChangesAsync();
 
-    /// <summary>
-    /// 獲取所有 <typeparamref name="TEntity"/> 實體，可選擇性載入關聯實體。
-    /// </summary>
-    /// <param name="includes">包含需要載入的關聯實體的 <see cref="Expression{TDelegate}"/> 陣列。</param>
-    /// <returns>包含所有 <typeparamref name="TEntity"/> 實體的 <see cref="IQueryable{T}"/> 物件。</returns>
-    IQueryable<TEntity> GetAll(params Expression<Func<TEntity, object>>[] includes);
-
-    /// <summary>
-    /// 取得符合條件的所有 <typeparamref name="TEntity"/> 資料，並且包含指定的關聯屬性
-    /// </summary>
-    /// <param name="predicate">篩選條件</param>
-    /// <param name="includes">要包含的關聯屬性</param>
-    /// <returns>符合條件的所有 TEntity 資料</returns>
-    IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> predicate, params Expression<Func<TEntity, object>>[] includes);
-
-    /// <summary>
-    /// 根據主鍵 ID 取得實體資料異步方法。
-    /// </summary>
-    /// <typeparam name="TKey">主鍵類型。</typeparam>
-    /// <param name="id">主鍵值。</param>
-    /// <param name="includes">包含導覽屬性的表達式。</param>
-    /// <returns>符合指定主鍵 ID 的實體資料。</returns>
-    TEntity? GetById(TKey id, params Expression<Func<TEntity, object>>[] includes);
-
-    /// <summary>
-    /// 根據傳入的 ID 取得實體異步方法
-    /// </summary>
-    /// <typeparam name="TKey">實體 ID 的類型</typeparam>
-    /// <param name="id">實體 ID</param>
-    /// <returns>包含指定實體的 Task 物件</returns>
-    Task<TEntity>? GetByIdAsync(TKey id, params Expression<Func<TEntity, object>>[] includes);
-
+    // Task AddRangeAsync(IEnumerable<TEntity> entities);
     /// <summary>
     /// 非同步載入指定實體的集合屬性。
     /// </summary>

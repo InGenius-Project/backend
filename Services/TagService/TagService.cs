@@ -1,80 +1,39 @@
 using System.Runtime.CompilerServices;
+using AutoMapper;
 using IngBackend.Interfaces.Repository;
 using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Models.DBEntity;
+using IngBackend.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 
 namespace IngBackend.Services.TagService;
 
-public class TagService : Service<Tag, Guid>
+public class TagService : Service<Tag, TagDTO, Guid>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IRepository<Tag, Guid> _tagRepository;
+    private readonly IMapper _mapper;
     private readonly IRepository<TagType, int> _tagTypeRepository;
 
-    public TagService(IUnitOfWork unitOfWork) : base(unitOfWork)
+    public TagService(IUnitOfWork unitOfWork, IMapper mapper) : base(unitOfWork, mapper)
     {
         _unitOfWork = unitOfWork;
+        _mapper = mapper;
         _tagRepository = unitOfWork.Repository<Tag, Guid>();
         _tagTypeRepository = unitOfWork.Repository<TagType, int>();
     }
 
-    public async Task<List<Tag>> GetAllTagsByType(string? type)
+    public async Task<List<TagDTO>?> GetAllTagsByType(string? type)
     {
-        var tags = await _tagRepository.GetAll()
-        .Where(t => t.Type.Value == type)
-        .Include(t => t.Type)
-        .ToListAsync();
+        var tags = _tagRepository.GetAll()
+            .Include(t => t.Type)
+            .Where(t => t.Type.Value == type);
 
         if (tags == null)
         {
-            return new List<Tag>();
+            return new List<TagDTO>();
         }
-        return tags;
-    }
-    public async Task<List<TagType>> GetAllTagTypes()
-    {
-        var tagTypes = await _tagTypeRepository.GetAll().ToListAsync();
-        return tagTypes;
-    }
-
-    public async Task<TagType> GetTagTypeById(int id)
-    {
-        var tagType = await _tagTypeRepository.GetByIdAsync(id);
-        return tagType;
-    }
-
-    // get tagtypes by ids from request body
-    public async Task<List<TagType>> GetTagTypesByIds(List<int> ids)
-    {
-        var tagTypes = await _tagTypeRepository.GetAll().Where(t => ids.Contains(t.Id)).ToListAsync();
-        return tagTypes;
-    }
-
-
-
-    public async Task<TagType> AddTagTypeAsync(TagType tagType)
-    {
-        await _tagTypeRepository.AddAsync(tagType);
-        await _unitOfWork.SaveChangesAsync();
-        return tagType;
-    }
-
-
-    public async Task<TagType> UpdateTagTypeAsync(TagType tagType)
-    {
-        _tagTypeRepository.Update(tagType);
-        await _unitOfWork.SaveChangesAsync();
-        return tagType;
-    }
-
-    public async Task DeleteTagTypeAsync(TagType tagType)
-    {
-        if (tagType != null)
-        {
-            _tagTypeRepository.Delete(tagType);
-            await _unitOfWork.SaveChangesAsync();
-        }
+        return await _mapper.ProjectTo<List<TagDTO>>(tags).FirstOrDefaultAsync();
     }
 }
 

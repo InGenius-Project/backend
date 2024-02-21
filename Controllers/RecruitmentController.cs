@@ -48,43 +48,38 @@ namespace IngBackend.Controllers
 
         [HttpGet("{recruitmentId}")]
         [ProducesResponseType(typeof(RecruitmentDTO), 200)]
-        public async Task<RecruitmentDTO> GetRecruitmentById(Guid recruitmentId)
+        public async Task<RecruitmentDTO?> GetRecruitmentById(Guid recruitmentId)
         {
             var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
 
-            var user = await _userService.CheckAndGetUserAsync(userId);
-            var recruitment = _recruitmentService.GetRecruitmentIncludeAllById(recruitmentId);
-
-            var recruitmentDTO = _mapper.Map<RecruitmentDTO>(recruitment);
-            return recruitmentDTO;
+            await _userService.CheckAndGetUserAsync(userId);
+            var recruitment = await _recruitmentService.GetByIdAsync(recruitmentId);
+            return recruitment;
         }
 
         [HttpPost]
         [ProducesResponseType(typeof(ResponseDTO<RecruitmentDTO>), StatusCodes.Status200OK)]
-        public async Task<RecruitmentDTO> PostRecruitment([FromBody] RecruitmentPostDTO req)
+        public async Task<ApiResponse> PostRecruitment([FromBody] RecruitmentPostDTO req)
         {
             var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-            var user = await _userService.CheckAndGetUserAsync(userId, u => u.Recruitments);
+            var user = await _userService.CheckAndGetUserAsync(userId);
 
             var recruitment = await _recruitmentService.GetByIdAsync(req.Id ?? Guid.Empty);
 
             // Add new recruitment
             if (recruitment == null)
             {
-                var newRecruitment = _mapper.Map<Recruitment>(req);
+                var newRecruitment = _mapper.Map<RecruitmentDTO>(req);
                 newRecruitment.Publisher = user;
-                user.Recruitments.Add(newRecruitment);
-                _userService.Update(user);
-                await _userService.SaveChangesAsync();
-                return _mapper.Map<RecruitmentDTO>(newRecruitment);
+                await _recruitmentService.AddAsync(newRecruitment);
+                return new ApiResponse("Post Success");
             }
 
             // Patch
             _mapper.Map(req, recruitment);
-            _userService.Update(user);
+            await _recruitmentService.UpdateAsync(recruitment);
             await _userService.SaveChangesAsync();
-            var recruitmentDTO = _mapper.Map<RecruitmentDTO>(recruitment);
-            return recruitmentDTO;
+            return new ApiResponse("Post Success");
         }
 
         [HttpDelete("{recruitmentId}")]
@@ -92,18 +87,8 @@ namespace IngBackend.Controllers
         public async Task<ApiResponse> DeleteRecruitment(Guid recruitmentId)
         {
             var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-            var user = await _userService.CheckAndGetUserAsync(userId, u => u.Recruitments);
-
-            if (user.Recruitments == null)
-            {
-                throw new NotFoundException("找不到職缺");
-            }
-
-            var existRecruitment = user.Recruitments.FirstOrDefault(x => x.Id == recruitmentId) ?? throw new NotFoundException("找不到職缺");
-
-            user.Recruitments.Remove(existRecruitment);
-            _userService.Update(user);
-            await _userService.SaveChangesAsync();
+            var user = await _userService.CheckAndGetUserAsync(userId);
+            await _recruitmentService.DeleteByIdAsync(recruitmentId);
             return new ApiResponse("刪除成功");
         }
 

@@ -18,6 +18,9 @@ public class IngDbContext : DbContext
     }
 
     public DbSet<User> User { get; set; }
+    public DbSet<Resume> Resume { get; set; }
+    public DbSet<Recruitment> Recruitment { get; set; }
+    public DbSet<Area> Area { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -39,7 +42,7 @@ public class IngDbContext : DbContext
             .HasIndex(t => t.Value).IsUnique();
         modelBuilder.Entity<AreaType>()
             .Property(t => t.Id).ValueGeneratedOnAdd();
-        
-            
+
+
     }
 }

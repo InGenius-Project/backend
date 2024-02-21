@@ -2,6 +2,7 @@
 using AutoWrapper.Wrappers;
 using IngBackend.Enum;
 using IngBackend.Exceptions;
+using IngBackend.Interfaces.Service;
 using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
 using IngBackend.Services.AreaService;
@@ -23,13 +24,25 @@ public class AreaController : BaseController
     private readonly AreaService _areaService;
     private readonly TagService _tagService;
     private readonly IMapper _mapper;
+    private readonly IService<AreaType, AreaTypeDTO, int> _areaTypeService;
+    private readonly IService<TagType, TagTypeDTO, int> _tagTypeService;
 
-    public AreaController(IMapper mapper, UserService userService, ResumeService resumeService, AreaService areaService, TagService tagService)
+    public AreaController(
+        IMapper mapper,
+        UserService userService,
+        ResumeService resumeService,
+        AreaService areaService,
+        TagService tagService,
+        IService<AreaType, AreaTypeDTO, int> areaTypeService,
+        IService<TagType, TagTypeDTO, int> tagTypeService
+        )
     {
         _resumeService = resumeService;
         _userService = userService;
         _areaService = areaService;
         _tagService = tagService;
+        _areaTypeService = areaTypeService;
+        _tagTypeService = tagTypeService;
         _mapper = mapper;
     }
 
@@ -40,11 +53,10 @@ public class AreaController : BaseController
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
 
-        var area = _areaService.GetAreaIncludeAllById(areaId)
+        var area = await _areaService.GetAreaIncludeAllById(areaId)
             ?? throw new NotFoundException("找不到區塊");
 
-        var areaDTO = _mapper.Map<AreaDTO>(area);
-        return areaDTO;
+        return area;
     }
 
     [HttpPost("{areaId}")]
@@ -55,51 +67,44 @@ public class AreaController : BaseController
         var user = await _userService.CheckAndGetUserAsync(userId);
 
         var parsedAreaId = areaId ?? Guid.Empty;
-        var area = _areaService.GetAreaIncludeAllById(parsedAreaId);
-
+        var area = await _areaService.GetAreaIncludeAllById(parsedAreaId);
 
         // Add Area
         if (area == null)
         {
-            var newArea = _mapper.Map<Area>(req);
-            await _areaService.AddAsync(newArea);
-            await _areaService.SaveChangesAsync();
-
-            var newAreaDTO = _mapper.Map<AreaDTO>(newArea);
+            var newAreaDTO = _mapper.Map<AreaDTO>(req);
+            await _areaService.AddAsync(newAreaDTO);
             return newAreaDTO;
         }
 
         // Patch Area
-        _areaService.CheckAreaOwnership(area.Id, user);
+        await _areaService.CheckAreaOwnership(area.Id, user);
         _mapper.Map(req, area);
-        _areaService.Update(area);
+        await _areaService.UpdateAsync(area);
 
-        await _areaService.SaveChangesAsync();
-
-        var areaDTO = _mapper.Map<AreaDTO>(area);
-        return areaDTO;
+        return _mapper.Map<AreaDTO>(req);
     }
 
-    [HttpPut("{areaId}")]
-    [ProducesResponseType(typeof(ResponseDTO<AreaDTO>), StatusCodes.Status200OK)]
-    public async Task<AreaDTO> PutArea(Guid areaId, [FromForm] AreaFormDataDTO req)
-    {
-        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.CheckAndGetUserIncludeAllAsync(userId);
+    // [HttpPut("{areaId}")]
+    // [ProducesResponseType(typeof(ResponseDTO<AreaDTO>), StatusCodes.Status200OK)]
+    // public async Task<AreaDTO> PutArea(Guid areaId, [FromForm] AreaFormDataDTO req)
+    // {
+    //     var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+    //     var user = await _userService.CheckAndGetUserIncludeAllAsync(userId);
 
-        // 確定 area 所有權
-        _areaService.CheckAreaOwnership(areaId, user);
-        var area = _areaService.GetAreaIncludeAllById(areaId) ?? throw new NotFoundException("Area not found.");
+    //     // 確定 area 所有權
+    //     _areaService.CheckAreaOwnership(areaId, user);
+    //     var area = _areaService.GetAreaIncludeAllById(areaId) ?? throw new NotFoundException("Area not found.");
 
-        // 清空 Entity
-        _areaService.ClearArea(area);
-        _mapper.Map(req, area);
-        _areaService.Update(area);
-        await _areaService.SaveChangesAsync();
+    //     // 清空 Entity
+    //     _areaService.ClearArea(area);
+    //     _mapper.Map(req, area);
+    //     await _areaService.UpdateAsync(area);
+    //     await _areaService.SaveChangesAsync();
 
-        var areaDTO = _mapper.Map<AreaDTO>(area);
-        return areaDTO;
-    }
+    //     var areaDTO = _mapper.Map<AreaDTO>(area);
+    //     return areaDTO;
+    // }
 
     [HttpDelete("{areaId}")]
     [ProducesResponseType(typeof(ResponseDTO<>), StatusCodes.Status200OK)]
@@ -109,8 +114,7 @@ public class AreaController : BaseController
         await _userService.CheckAndGetUserAsync(userId);
 
         var area = await _areaService.GetByIdAsync(areaId) ?? throw new NotFoundException("找不到區塊");
-        _areaService.Delete(area);
-        await _areaService.SaveChangesAsync();
+        await _areaService.DeleteByIdAsync(area.Id);
 
         return new ApiResponse("區塊已刪除");
     }
@@ -119,7 +123,7 @@ public class AreaController : BaseController
     [ProducesResponseType(typeof(ResponseDTO<AreaTypeDTO>), StatusCodes.Status200OK)]
     public async Task<AreaTypeDTO> GetAreaType(int id)
     {
-        var areaType = await _areaService.GetAreaTypeById(id)
+        var areaType = await _areaTypeService.GetByIdAsync(id)
             ?? throw new NotFoundException("Area type not found");
 
         var areaTypeDTO = _mapper.Map<AreaTypeDTO>(areaType);
@@ -131,10 +135,10 @@ public class AreaController : BaseController
     [ProducesResponseType(typeof(ResponseDTO<List<AreaTypeDTO>>), StatusCodes.Status200OK)]
     public List<AreaTypeDTO> GetAreaTypes([FromQuery] UserRole[]? roles)
     {
-        var areaTypes = _areaService.GetAllAreaTypes(roles);
-        var areaTypesDTO = _mapper.Map<List<AreaTypeDTO>>(areaTypes);
-
-        return areaTypesDTO;
+        var areaTypes = _areaTypeService
+            .GetAll(at => roles.Any(r => at.UserRole.Contains(r)))
+            .ToList();
+        return areaTypes;
     }
 
     [HttpPost("type")]
@@ -144,20 +148,18 @@ public class AreaController : BaseController
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId, [UserRole.Admin, UserRole.InternalUser]);
 
-        var areaType = await _areaService.GetAreaTypeById(req.Id);
+        var areaType = await _areaTypeService.GetByIdAsync(req.Id);
         if (areaType == null)
         {
-            var newAreaType = _mapper.Map<AreaType>(req);
-            await _areaService.AddAreaTypeAsync(newAreaType);
-            await _areaService.SaveChangesAsync();
+            var newAreaTypeDto = _mapper.Map<AreaTypeDTO>(req);
+            await _areaTypeService.AddAsync(newAreaTypeDto);
             return new ApiResponse("新增成功");
         }
 
         _mapper.Map(req, areaType);
-        areaType.ListTagTypes = await _tagService.GetTagTypesByIds(req.ListTagTypeIds);
+        areaType.ListTagTypes = _tagTypeService.GetAll().Where(t => req.ListTagTypeIds.Contains(t.Id)).ToList();
 
-        await _areaService.UpdateAreaTypeAsync(areaType);
-        await _areaService.SaveChangesAsync();
+        await _areaTypeService.UpdateAsync(areaType);
         return new ApiResponse("更新成功");
     }
 
@@ -170,14 +172,13 @@ public class AreaController : BaseController
 
         foreach (var id in ids)
         {
-            var areaType = await _areaService.GetAreaTypeById(id);
+            var areaType = await _areaTypeService.GetByIdAsync(id);
             if (areaType != null)
             {
-                await _areaService.DeleteAreaTypeAsync(areaType);
+                await _areaTypeService.DeleteByIdAsync(id);
             }
         }
 
-        await _areaService.SaveChangesAsync();
         return new ApiResponse("刪除成功");
     }
 }

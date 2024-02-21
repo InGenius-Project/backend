@@ -38,9 +38,8 @@ builder.Services.AddDbContext<IngDbContext>(options => options.UseSqlServer(conn
 
 // Add services to the container.
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped(typeof(IService<,>), typeof(Service<,>));// Repository Wrapper
+builder.Services.AddScoped(typeof(IService<,,>), typeof(Service<,,>));// Repository Wrapper
 builder.Services.AddScoped<IRepositoryWrapper, RepositoryWrapper>();
-builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<ResumeService>();
@@ -50,8 +49,7 @@ builder.Services.AddScoped<TagService>();
 builder.Services.AddScoped<RecruitmentService>();
 // builder.Services.AddScoped<ApiResponseMiddleware>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
-
-
+builder.Services.AddControllers();
 
 // Json Serializer
 builder.Services.AddControllers()
@@ -100,10 +98,6 @@ builder.Services.AddAutoMapper(
         )),
         AppDomain.CurrentDomain.GetAssemblies()
 );
-
-
-
-
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

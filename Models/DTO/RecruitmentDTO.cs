@@ -10,7 +10,7 @@ namespace IngBackend.Models.DTO
         public bool Enable { get; set; }
         public List<AreaDTO> Areas { get; set; }
         public IEnumerable<ResumeDTO> Resumes { get; set; }
-        // public UserInfoDTO Publisher { get; set; }
+        public UserInfoDTO Publisher { get; set; }
         // public Guid PublisherId { get; set; }
     }
 

@@ -3,45 +3,36 @@ using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Services.AreaService;
 using IngBackend.Models.DBEntity;
 using Microsoft.EntityFrameworkCore;
+using IngBackend.Models.DTO;
+using AutoMapper;
 
 namespace IngBackend.Services.RecruitmentService;
 
-public class RecruitmentService : Service<Recruitment, Guid>
+public class RecruitmentService : Service<Recruitment, RecruitmentDTO, Guid>
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IRepository<Recruitment, Guid> _recruitmentRepository;
+    private readonly IMapper _mapper;
+    private readonly IRepositoryWrapper _repository;
 
-    public RecruitmentService(IUnitOfWork unitOfWork) : base(unitOfWork)
+    public RecruitmentService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository) : base(unitOfWork, mapper)
 
     {
         _unitOfWork = unitOfWork;
-        _recruitmentRepository = unitOfWork.Repository<Recruitment, Guid>();
+        _mapper = mapper;
+        _repository = repository;
     }
-    public List<Recruitment> GetUserRecruitements(Guid userId)
+    public List<RecruitmentDTO> GetUserRecruitements(Guid userId)
     {
-        var recruitment = _recruitmentRepository.GetAll()
+        var recruitments = _repository.Recruitment.GetAll()
             .Where(x => x.PublisherId.Equals(userId))
             .ToList();
-        return recruitment ?? [];
+        return _mapper.Map<List<RecruitmentDTO>>(recruitments);
     }
 
-    public Recruitment GetRecruitmentIncludeAllById(Guid recruitmentId)
+    public async Task<RecruitmentDTO?> GetRecruitmentByIdIncludeAllAsync(Guid recruitmentId)
     {
-        var recruitment = _recruitmentRepository.GetAll()
-            .Where(x => x.Id.Equals(recruitmentId))
-            .Include(r => r.Areas)
-                .ThenInclude(a => a.TextLayout)
-            .Include(r => r.Areas)
-                .ThenInclude(a => a.ImageTextLayout)
-            .Include(r => r.Areas)
-                .ThenInclude(a => a.ListLayout)
-                    .ThenInclude(l => l.Items)
-            .Include(r => r.Areas)
-                .ThenInclude(a => a.KeyValueListLayout)
-                    .ThenInclude(kv => kv.Items)
-                        .ThenInclude(kvi => kvi.Key)
-            .FirstOrDefault();
-        return recruitment;
+        var query = _repository.Recruitment.GetRecruitmentByIdIncludeAll(recruitmentId);
+        return await _mapper.ProjectTo<RecruitmentDTO>(query).FirstOrDefaultAsync();
     }
 
 

@@ -33,7 +33,7 @@ public class ResumeController : BaseController
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
 
-        var resume = await _userService.GetUserResumes(userId);
+        var resume = await _userService.GetResumesByUserId(userId);
         var resumeDTO = _mapper.Map<List<ResumeDTO>>(resume);
         return resumeDTO;
     }
@@ -53,47 +53,36 @@ public class ResumeController : BaseController
 
     [HttpPost]
     [ProducesResponseType(typeof(ResponseDTO<ResumeDTO>), StatusCodes.Status200OK)]
-    public async Task<ResumeDTO> PostResume([FromBody] ResumePostDTO req)
+    public async Task<ApiResponse> PostResume([FromBody] ResumePostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         var user = await _userService.CheckAndGetUserAsync(userId, u => u.Resumes);
 
         var resume = await _resumeService.GetByIdAsync(req.Id ?? Guid.Empty);
-
         // Add new resume
         if (resume == null)
         {
-            var newResume = _mapper.Map<Resume>(req);
-            user.Resumes.Add(newResume);
-            _userService.Update(user);
-            await _userService.SaveChangesAsync();
-            return _mapper.Map<ResumeDTO>(newResume);
+            await _userService.AddUserResumeAsync(user, _mapper.Map<ResumeDTO>(req));
         }
 
         // Patch
         _mapper.Map(req, resume);
-        _userService.Update(user);
-        await _userService.SaveChangesAsync();
-        var resumeDTO = _mapper.Map<ResumeDTO>(resume);
-        return resumeDTO;
+        await _resumeService.UpdateAsync(resume);
+        return new ApiResponse("更新成功");
     }
 
     [HttpDelete("{resumeId}")]
     public async Task<ApiResponse> DeleteResume(Guid resumeId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.CheckAndGetUserAsync(userId, u => u.Resumes);
+        var resume = await _resumeService.GetByIdAsync(resumeId);
 
-        if (user.Resumes == null)
+        if (resume == null)
         {
             throw new NotFoundException("履歷");
         }
 
-        var existResume = user.Resumes.FirstOrDefault(x => x.Id == resumeId) ?? throw new NotFoundException("找不到履歷");
-
-        user.Resumes.Remove(existResume);
-        _userService.Update(user);
-        await _userService.SaveChangesAsync();
+        await _resumeService.DeleteByIdAsync(resumeId);
         return new ApiResponse("刪除成功");
     }
 

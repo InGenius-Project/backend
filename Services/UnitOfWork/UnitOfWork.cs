@@ -36,7 +36,7 @@ public class UnitOfWork : IUnitOfWork
     }
 
     /// <inheritdoc />
-    public IRepository<TEntity, TKey> Repository<TEntity, TKey>() where TEntity : class, IEntity<TKey>
+    public IRepository<TEntity, TKey> Repository<TEntity, TKey>() where TEntity : IEntity<TKey>
     {
         if (_repositories == null)
         {

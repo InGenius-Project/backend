@@ -13,10 +13,12 @@ public class UserRepository : Repository<User, Guid>, IUserRepository
     {
         _context = context;
     }
-    public IQueryable<User> GetUserById(Guid id)
+    public IQueryable<User> GetUserByIdIncludeAll(Guid id)
     {
         return _context.User
+            .Where(u => u.Id == id)
             .Include(u => u.Avatar)
+            .Include(u => u.Recruitments)
             .Include(u => u.Areas)
                 .ThenInclude(a => a.TextLayout)
             .Include(u => u.Areas)
@@ -28,10 +30,25 @@ public class UserRepository : Repository<User, Guid>, IUserRepository
             .Include(u => u.Areas)
                 .ThenInclude(a => a.KeyValueListLayout)
                     .ThenInclude(kv => kv.Items)
-                    .ThenInclude(kvi => kvi.Key)
             .Include(u => u.Areas)
-                .ThenInclude(a => a.AreaType)
-            .Include(u => u.Recruitments)
-            .Where(u => u.Id == id);
+                .ThenInclude(a => a.AreaType);
+
+
     }
+
+    public IQueryable<Resume> GetResumesByUserId(Guid id)
+    {
+        var resumes = _context.User
+            .Include(u => u.Resumes)
+            .Where(u => u.Id == id)
+            .SelectMany(u => u.Resumes);
+        return resumes;
+    }
+
+    public IQueryable<User> GetUserByEmail(string email)
+    {
+        return _context.User.Where(u => u.Email == email);
+    }
+
+
 }
