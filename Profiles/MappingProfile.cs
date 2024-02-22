@@ -8,77 +8,79 @@ namespace IngBackend.Profiles;
 public class MappingProfile : Profile
 
 {
-    public MappingProfile()
-    {
-        CreateMap<UserInfoDTO, UserDTO>()
-            .ForMember(dest => dest.User, opt => opt.MapFrom(src => src));
-        CreateMap<User, UserInfoDTO>()
-            .ReverseMap();
-        CreateMap<UserInfoPostDTO, UserInfoDTO>()
-            .ForAllMembers(opts =>
-            {
-                opts.AllowNull();
-                opts.Condition((src, dest, srcMember) => srcMember != null);
-            });
-        CreateMap<TokenDTO, UserDTO>()
-            .ForMember(dest => dest.Token, opt => opt.MapFrom(src => src));
+        public MappingProfile()
+        {
+                CreateMap<UserInfoDTO, UserDTO>()
+                        .ForMember(dest => dest.User, opt => opt.MapFrom(src => src));
+                CreateMap<User, UserInfoDTO>();
+                CreateMap<UserInfoDTO, User>()
+                        .ForAllMembers(opts =>
+                        {
+                                opts.AllowNull();
+                                opts.Condition((src, dest, srcMember) => srcMember != null);
+                        });
+                CreateMap<UserInfoPostDTO, User>()
+                    .ForAllMembers(opts =>
+                    {
+                            opts.AllowNull();
+                            opts.Condition((src, dest, srcMember) => srcMember != null);
+                    });
+                CreateMap<TokenDTO, UserDTO>()
+                    .ForMember(dest => dest.Token, opt => opt.MapFrom(src => src));
 
-        // Resume
-        CreateMap<Resume, ResumeDTO>();
-        CreateMap<ResumePostDTO, Resume>();
+                // Resume
+                CreateMap<Resume, ResumeDTO>();
+                CreateMap<ResumePostDTO, Resume>();
 
-        // Recruitment
-        CreateMap<Recruitment, RecruitmentDTO>()
-            .ReverseMap();
-        CreateMap<RecruitmentPostDTO, Recruitment>()
-                .ForMember(rp => rp.Publisher, r => r.Ignore());
+                // Recruitment
+                CreateMap<Recruitment, RecruitmentDTO>()
+                    .ReverseMap();
+                CreateMap<RecruitmentPostDTO, Recruitment>()
+                        .ForMember(rp => rp.Publisher, r => r.Ignore());
 
-        // Area
-        CreateMap<Area, AreaDTO>().ReverseMap();
-        CreateMap<AreaType, AreaTypeDTO>();
-        CreateMap<AreaTypeDTO, AreaType>()
-            .ForMember(dest => dest.ListTagTypes, opt => opt.Ignore());
-        CreateMap<AreaTypePostDTO, AreaType>()
-                .ForMember(dest => dest.ListTagTypes, opt => opt.Ignore());
+                // Area
+                CreateMap<Area, AreaDTO>().ReverseMap();
+                CreateMap<AreaType, AreaTypeDTO>();
+                CreateMap<AreaTypeDTO, AreaType>()
+                    .ForMember(dest => dest.ListTagTypes, opt => opt.Ignore());
+                CreateMap<AreaTypePostDTO, AreaType>()
+                        .ForMember(dest => dest.ListTagTypes, opt => opt.Ignore());
+                CreateMap<AreaPostDTO, AreaDTO>();
+                CreateMap<AreaPostDTO, Area>();
 
-        // CreateMap<AreaPostDTO, Area>()
-        // .ForMember(dest => dest.AreaType, opt => opt.MapFrom(src => src.AreaType));
-        // CreateProjection<Area, AreaDTO>();
+                // TextLayout
+                CreateMap<TextLayoutDTO, TextLayout>()
+                        .ReverseMap();
 
+                // ImageLayout
+                CreateMap<ImageTextLayoutDTO, ImageTextLayout>()
+                        .ReverseMap();
+                CreateMap<ImageDTO, Image>()
+                        .ReverseMap();
 
-        // TextLayout
-        CreateMap<TextLayoutDTO, TextLayout>()
-                .ReverseMap();
+                // ListLayout
+                CreateMap<ListLayoutDTO, ListLayout>()
+                        .ReverseMap();
 
-        // ImageLayout
-        CreateMap<ImageTextLayoutDTO, ImageTextLayout>()
-                .ReverseMap();
-        CreateMap<ImageDTO, Image>()
-                .ReverseMap();
+                // KeyValueListLayout
+                CreateMap<KeyValueListLayoutDTO, KeyValueListLayout>()
+                        .ReverseMap();
+                CreateMap<KeyValueItem, KeyValueItemDTO>()
+                        .ReverseMap();
 
-        // ListLayout
-        CreateMap<ListLayoutDTO, ListLayout>()
-                .ReverseMap();
+                // Tag
+                CreateMap<Tag, TagDTO>()
+                        .ReverseMap();
+                CreateMap<TagType, TagTypeDTO>()
+                        .ReverseMap();
 
-        // KeyValueListLayout
-        CreateMap<KeyValueListLayoutDTO, KeyValueListLayout>()
-                .ReverseMap();
-        CreateMap<KeyValueItem, KeyValueItemDTO>()
-                .ReverseMap();
-
-        // Tag
-        CreateMap<Tag, TagDTO>()
-                .ReverseMap();
-        CreateMap<TagType, TagTypeDTO>()
-                .ReverseMap();
-
-    }
-    public MappingProfile(IPasswordHasher passwordHasher) : this()
-    {
-        CreateMap<UserSignUpDTO, User>()
-           .ForMember(
-                dest => dest.HashedPassword,
-                opt => opt.MapFrom(src => passwordHasher.HashPassword(src.Password)));
-        CreateMap<User, UserInfoDTO>();
-    }
+        }
+        public MappingProfile(IPasswordHasher passwordHasher) : this()
+        {
+                CreateMap<UserSignUpDTO, User>()
+                   .ForMember(
+                        dest => dest.HashedPassword,
+                        opt => opt.MapFrom(src => passwordHasher.HashPassword(src.Password)));
+                CreateMap<User, UserInfoDTO>();
+        }
 }

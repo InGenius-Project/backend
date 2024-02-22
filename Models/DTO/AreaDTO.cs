@@ -22,6 +22,7 @@ public class AreaDTO
 // By Danny
 public class AreaPostDTO
 {
+    public required Guid Id { get; set; }
     public required int Sequence { get; set; }
     public required bool IsDisplayed { get; set; }
     public required string Title { get; set; }

@@ -50,18 +50,11 @@ public class UserController : BaseController
 
     [HttpPost]
     [ProducesResponseType(typeof(ResponseDTO<UserInfoDTO>), StatusCodes.Status200OK)]
-    public async Task<UserInfoDTO> PostUser(UserInfoPostDTO req)
+    public async Task<ApiResponse> PostUser(UserInfoPostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.CheckAndGetUserIncludeAllAsync(userId);
-
-        user.Username = req.Username ?? user.Username;
-        user.Tags = req.Tags ?? user.Tags;
-        user.Avatar = req.Avatar ?? user.Avatar;
-        // user.Area
-        await _userService.UpdateAsync(user);
-        var userDTO = _mapper.Map<UserInfoDTO>(user);
-        return userDTO;
+        await _userService.PostUser(req, userId);
+        return new ApiResponse("Post success");
     }
 
 
@@ -78,12 +71,10 @@ public class UserController : BaseController
 
         var user = _mapper.Map<UserInfoDTO>(req);
         await _userService.AddAsync(user);
-        await _userService.SaveChangesAsync();
 
         // TODO: send auth email
 
         await _userService.UpdateAsync(user);
-        await _userService.SaveChangesAsync();
 
         // TODO: add send email process to background job
 

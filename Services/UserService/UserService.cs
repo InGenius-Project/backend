@@ -35,6 +35,13 @@ public class UserService : Service<User, UserInfoDTO, Guid>
         return await _mapper.ProjectTo<UserInfoDTO>(user).FirstOrDefaultAsync();
     }
 
+    public async Task PostUser(UserInfoPostDTO req, Guid userId)
+    {
+        var user = await _repository.User.GetUserByIdIncludeAll(userId).FirstOrDefaultAsync();
+        _mapper.Map(req, user);
+        await _repository.User.UpdateAsync(user);
+    }
+
 
 
     /// <summary>

@@ -11,8 +11,6 @@ public interface IRepository<TEntity, Tkey> where TEntity : IEntity<Tkey>
     IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> predicate);
     IQueryable<TEntity> GetAll(params Expression<Func<TEntity, object>>[] includes);
     IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> predicate, params Expression<Func<TEntity, object>>[] includes);
-
-
     Task UpdateAsync(TEntity entity);
     Task DeleteByIdAsync(Tkey key);
     Task SaveAsync();
