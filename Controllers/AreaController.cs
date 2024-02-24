@@ -125,7 +125,6 @@ public class AreaController : BaseController
     {
         var areaType = await _areaTypeService.GetByIdAsync(id)
             ?? throw new NotFoundException("Area type not found");
-
         var areaTypeDTO = _mapper.Map<AreaTypeDTO>(areaType);
 
         return areaTypeDTO;
@@ -187,5 +186,58 @@ public class AreaController : BaseController
         }
 
         return new ApiResponse("刪除成功");
+    }
+    [HttpPost("image")]
+    public async Task<IActionResult> UploadAreaImage([FromQuery] Guid areaId, IFormFile image)
+    {
+        Guid userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        UserInfoDTO user = await _userService.CheckAndGetUserIncludeAllAsync(userId);
+
+        await _areaService.CheckAreaOwnership(areaId, user);
+
+        var area =
+            await _areaService.GetAreaIncludeAllById(areaId) ?? throw new NotFoundException("area 不存在");
+
+        if (area.ImageTextLayout == null)
+        {
+            throw new BadRequestException("此 Area 沒有 Image Text Layout");
+        }
+
+        byte[] imageData;
+        using (MemoryStream memoryStream = new())
+        {
+            await image.CopyToAsync(memoryStream);
+            imageData = memoryStream.ToArray();
+        }
+
+        area.ImageTextLayout.Image = new ImageDTO()
+        {
+            Filename = image.FileName,
+            ContentType = image.ContentType,
+            Data = imageData
+        };
+
+        await _areaService.UpdateAsync(area);
+
+        return Accepted();
+    }
+
+    [HttpGet("image")]
+    public async Task<IActionResult> GetImage([FromQuery] Guid areaId)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        var user = await _userService.CheckAndGetUserIncludeAllAsync(userId);
+
+        // Check CheckAreaOwnership
+        await _areaService.CheckAreaOwnership(areaId, user);
+
+        AreaDTO? area =
+           await _areaService.GetAreaIncludeAllById(areaId) ?? throw new NotFoundException("area 不存在");
+
+        _ = area.ImageTextLayout ?? throw new BadRequestException("此 Area 沒有 Image Text Layout");
+        ImageDTO? image = area.ImageTextLayout.Image ?? throw new NotFoundException("沒有圖片資料");
+
+        MemoryStream imageStream = new(image.Data);
+        return File(imageStream, image.ContentType);
     }
 }

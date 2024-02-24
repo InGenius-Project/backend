@@ -5,6 +5,7 @@
 
 # Environment
 .env
+.vscode
 
 # User-specific files
 *.rsuser
@@ -372,5 +373,11 @@ Migrations/
 # wwwroot/
 wwwroot/avatars/*
 !wwwroot/avatars/UserDefault.jpg
-# /appsettings.json
-.vscode
+
+# appsettings.json
+appsettings.Secrets.json
+
+# database (dev)
+*.db
+*.db-*
+

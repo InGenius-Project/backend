@@ -2,6 +2,7 @@
 using IngBackend.Models.DBEntity;
 
 namespace IngBackend.Models.DTO;
+
 public class AreaDTO
 {
     public Guid Id { get; set; }
@@ -14,7 +15,6 @@ public class AreaDTO
     public ImageTextLayoutDTO? ImageTextLayout { get; set; }
     public ListLayoutDTO? ListLayout { get; set; }
     public KeyValueListLayoutDTO? KeyValueListLayout { get; set; }
-
 }
 
 
@@ -57,7 +57,6 @@ public class AreaFormDataDTO
 }
 
 
-
 public class TextLayoutDTO
 {
     public Guid Id { get; set; }
@@ -70,22 +69,19 @@ public class ImageDTO
     public Guid Id { get; set; }
     public required string Filename { get; set; }
     public required string ContentType { get; set; }
-    public required string Content { get; set; }
+    public required byte[] Data { get; set; }
 }
 
 public class ImageTextLayoutDTO
 {
     public Guid Id { get; set; }
-    public required string Content { get; set; }
-    public ImageDTO? Image { get; set; }
+    public ImageDTO Image { get; set; }
 }
-
 
 public class ListLayoutDTO
 {
     public Guid Id { get; set; }
     public List<TagDTO>? Items { get; set; }
-
 }
 
 public class KeyValueListLayoutDTO
@@ -94,10 +90,10 @@ public class KeyValueListLayoutDTO
     public List<KeyValueItemDTO>? Items { get; set; }
 }
 
-
 public class KeyValueItemDTO
 {
     public Guid Id { get; set; }
     public Tag? Key { get; set; }
     public string Value { get; set; } = "";
 }
+

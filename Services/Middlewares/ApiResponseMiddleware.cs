@@ -1,25 +1,23 @@
-﻿using IngBackend.Exceptions;
+using IngBackend.Exceptions;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
+using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Net;
-using System.Text;
 
 namespace IngBackend.Services.Middlewares;
 
 // You may need to install the Microsoft.AspNetCore.Http.Abstractions package into your project
 public class ApiResponseMiddleware : IMiddleware
 {
-
-
     private readonly ILogger _logger;
+
     public ApiResponseMiddleware(ILogger<ApiResponseMiddleware> logger)
     {
         _logger = logger;
     }
-
 
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
@@ -36,14 +34,20 @@ public class ApiResponseMiddleware : IMiddleware
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ex.Message);
+                // _logger.LogError(ex, ex.Message);
 
                 await HandleException(context, memStream, ex);
             }
 
             // 找出 content type
             string contentType = context.Response.ContentType ?? "";
-            bool isFileResponse = !contentType.StartsWith("application/problem+json") && !contentType.StartsWith("application/json") && contentType.StartsWith("application/") || contentType.StartsWith("image/") || contentType.StartsWith("audio/") || contentType.StartsWith("video/");
+            bool isFileResponse =
+                !contentType.StartsWith("application/problem+json")
+                    && !contentType.StartsWith("application/json")
+                    && contentType.StartsWith("application/")
+                || contentType.StartsWith("image/")
+                || contentType.StartsWith("audio/")
+                || contentType.StartsWith("video/");
 
             // 如果不是 檔案 才進行 parse
             if (!isFileResponse)
@@ -56,7 +60,6 @@ public class ApiResponseMiddleware : IMiddleware
 
             // 將新的內容寫入原始的回應主體
             await memStream.CopyToAsync(originalBody);
-
         }
         finally
         {
@@ -66,15 +69,12 @@ public class ApiResponseMiddleware : IMiddleware
 
     public async Task FormatResponseAsync(HttpContext context, MemoryStream memoryStream)
     {
-        // 從 HttpContext.Items 中取得訊息
-        var message = context.Items["Message"]?.ToString();
-
         // 將記憶體串流設定為回應的主體
         memoryStream.Seek(0, SeekOrigin.Begin);
         var responseBody = await new StreamReader(memoryStream).ReadToEndAsync();
         memoryStream.Seek(0, SeekOrigin.Begin);
 
-        var parsedBody = ParseApiResponse(responseBody, context.Response.StatusCode, message);
+        var parsedBody = ParseApiResponse(responseBody, context.Response.StatusCode);
 
         context.Response.ContentType = "application/json";
 
@@ -85,13 +85,17 @@ public class ApiResponseMiddleware : IMiddleware
         await memoryStream.WriteAsync(Encoding.UTF8.GetBytes(parsedBody));
     }
 
-    private static string ParseApiResponse(string originalBody, int statusCode, string? message)
+    private static string ParseApiResponse(string originalBody, int statusCode)
     {
-
         JToken? jsonToken;
+        string? message = "";
+        string? exception = "";
         try
         {
             jsonToken = JToken.Parse(originalBody);
+            message = jsonToken["Message"].ToString();
+            exception = jsonToken["ExceptionType"].ToString();
+            Console.WriteLine("意外: {0}", exception);
         }
         catch (JsonReaderException)
         {
@@ -103,8 +107,6 @@ public class ApiResponseMiddleware : IMiddleware
         // 不是 json 物件
         if (jsonToken == null)
         {
-            var rawBody = originalBody.IsNullOrEmpty() ? null : originalBody;
-
             if (isSuccess)
             {
                 var responseRawObject = new
@@ -112,7 +114,7 @@ public class ApiResponseMiddleware : IMiddleware
                     Success = isSuccess,
                     StatusCode = statusCode,
                     Message = message ?? GetDefaultMessage(statusCode),
-                    Data = rawBody,
+                    Data = originalBody,
                 };
 
                 return JsonConvert.SerializeObject(responseRawObject);
@@ -124,7 +126,7 @@ public class ApiResponseMiddleware : IMiddleware
                     Success = isSuccess,
                     StatusCode = statusCode,
                     Message = message ?? GetDefaultMessage(statusCode),
-                    Exception = rawBody,
+                    Exception = originalBody,
                 };
 
                 return JsonConvert.SerializeObject(responseRawObject);
@@ -157,24 +159,20 @@ public class ApiResponseMiddleware : IMiddleware
                 Data = jsonToken
             };
 
-
             return JsonConvert.SerializeObject(responseObject);
         }
         else
         {
-
             var responseObject = new
             {
                 Success = isSuccess,
                 StatusCode = statusCode,
                 Message = message ?? GetDefaultMessage(statusCode),
-                Exception = jsonToken["Exception"]
+                Exception = jsonToken["ExceptionType"]
             };
             return JsonConvert.SerializeObject(responseObject);
         }
     }
-
-
 
     private static string GetDefaultMessage(int statusCode)
     {
@@ -191,74 +189,67 @@ public class ApiResponseMiddleware : IMiddleware
             _ => "發生未知的錯誤",
         };
     }
-    private static ValueTask HandleException(HttpContext context, MemoryStream memoryStream, Exception exception)
+
+    private static ValueTask HandleException(
+        HttpContext context,
+        MemoryStream memoryStream,
+        Exception exception
+    )
     {
-        var code = HttpStatusCode.InternalServerError; // 預設狀態碼
-        var message = "伺服器發生內部錯誤";
-        var excpetion = exception.Message;
+        string? message = null;
+        HttpStatusCode? code = null;
 
         if (exception is UnauthorizedException)
         {
             message = "驗證錯誤";
             code = HttpStatusCode.Unauthorized; // 401
         }
-
         else if (exception is NotFoundException)
         {
             message = "已被刪除、移動或從未存在";
             code = HttpStatusCode.NotFound; // 404
         }
-
         else if (exception is UserNotFoundException)
         {
             message = "使用者不存在";
             code = HttpStatusCode.NotFound; // 404
         }
-        
         else if (exception is ForbiddenException)
         {
             message = "拒絕存取";
             code = HttpStatusCode.Forbidden;
         }
-
         else if (exception is BadRequestException || exception is BadHttpRequestException)
         {
             message = "請求無效";
             code = HttpStatusCode.BadRequest; // 400
         }
-
         else if (exception is SecurityTokenValidationException)
         {
             message = "JWT token 驗證失敗";
         }
-        else if (exception is DbUpdateException dbUpdateEx)
+
+        if (code == null)
         {
-            if (dbUpdateEx.InnerException != null)
-            {
-                if (dbUpdateEx.InnerException is SqlException sqlException)
-                {
-                    switch (sqlException.Number)
-                    {
-                    case 2627:  // Unique constraint error
-                    case 547:   // Constraint check violation
-                    case 2601:  // Duplicated key row error
-                                // Constraint violation exception
-                        
-                         message = "欄位存取異常，請確認欄位資料是否正確";
-                         code = HttpStatusCode.BadRequest;
-                         break;
-                    }
-                }
-            }
+            code = HttpStatusCode.InternalServerError; // 預設狀態碼
         }
 
-        var jsonObject = new { Message = message, InnerException = excpetion };
+        var exceptionMessage = exception.Message.ToString();
+        if (exceptionMessage != null)
+        {
+            message = exceptionMessage;
+        }
+
+        if (message == null)
+        {
+            message = "伺服器發生內部錯誤";
+        }
+
+        var jsonObject = new { Message = message, ExceptionType = exception.GetType().Name };
         var result = JsonConvert.SerializeObject(jsonObject);
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)code;
 
         return memoryStream.WriteAsync(Encoding.UTF8.GetBytes(result));
     }
-
-
 }

@@ -1,5 +1,5 @@
-﻿using AutoMapper;
-using AutoMapper.QueryableExtensions;
+using AutoMapper;
+using System.Linq.Expressions;
 using IngBackend.Enum;
 using IngBackend.Exceptions;
 using IngBackend.Interfaces.Repository;
@@ -8,9 +8,6 @@ using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
-
 
 namespace IngBackend.Services.UserService;
 
@@ -160,5 +157,72 @@ public class UserService : Service<User, UserInfoDTO, Guid>
         await _unitOfWork.SaveChangesAsync();
     }
 
-}
 
+    public async Task<bool> VerifyEmailVerificationCode(UserInfoDTO req, string token)
+    {
+        var user = await _repository.User.GetUserByIdIncludeAll(req.Id).FirstOrDefaultAsync();
+
+        if (user.EmailVerifications == null)
+            return false;
+        var result = user.EmailVerifications.Any(e =>
+            e.Code == token && e.ExpiresTime > DateTime.UtcNow
+        );
+
+        if (result)
+        {
+            user.EmailVerifications.RemoveAll(e =>
+                e.Code == token || e.ExpiresTime > DateTime.UtcNow
+            );
+        }
+        return result;
+    }
+
+    public async Task<string> GenerateEmailConfirmationTokenAsync(UserInfoDTO req)
+    {
+        var user = _repository.User.GetUserByIdIncludeAll(req.Id).FirstOrDefault();
+        if (user == null)
+        {
+            throw new UserNotFoundException();
+        }
+        Random random = new();
+        var length = 6;
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        string token;
+
+        do
+        {
+            token = new String(
+                Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray()
+            );
+        } while (!IsEmailVerificationCodeAvailable(user, token));
+
+        user.EmailVerifications ??= new List<VerificationCode>() { };
+        user.EmailVerifications.Add(
+            new VerificationCode { Code = token, ExpiresTime = DateTime.UtcNow.AddMinutes(10) }
+        );
+        await _repository.User.UpdateAsync(user);
+
+        return token;
+    }
+
+    public bool VerifyEducationEmail(string email)
+    {
+        // TODO: need third-party service to handle
+        if (!email.Contains("edu"))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static bool IsEmailVerificationCodeAvailable(User user, string token)
+    {
+        if (user.EmailVerifications == null)
+        {
+            return true;
+        }
+
+        return !user.EmailVerifications.Any(e => e.Code == token);
+    }
+}
