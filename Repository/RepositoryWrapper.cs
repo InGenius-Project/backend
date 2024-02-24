@@ -1,5 +1,6 @@
 using IngBackend.Context;
 using IngBackend.Interfaces.Repository;
+using IngBackend.Models.DBEntity;
 
 namespace IngBackend.Repository;
 
@@ -10,6 +11,10 @@ public class RepositoryWrapper : IRepositoryWrapper
     private IAreaRepository _areaRepository;
     private IResumeRepository _resumeRepository;
     private IRecruitmentRepository _recruitmentRepository;
+
+    private IRepository<AreaType, int> _areaTypeRepository;
+
+
 
     public IUserRepository User
     {
@@ -59,6 +64,19 @@ public class RepositoryWrapper : IRepositoryWrapper
             }
             return _areaRepository;
         }
+    }
+
+    public IRepository<AreaType, int> AreaType
+    {
+        get
+        {
+            if (_areaTypeRepository == null)
+            {
+                _areaTypeRepository = new Repository<AreaType, int>(_context);
+            }
+            return _areaTypeRepository;
+        }
+
     }
 
 

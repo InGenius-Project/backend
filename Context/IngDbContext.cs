@@ -44,5 +44,6 @@ public class IngDbContext : DbContext
             .Property(t => t.Id).ValueGeneratedOnAdd();
 
 
+
     }
 }

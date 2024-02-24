@@ -9,7 +9,7 @@ public class AreaDTO
     public required bool IsDisplayed { get; set; }
     public required string Title { get; set; }
     public LayoutType? LayoutType { get; set; }
-    public AreaTypeDTO? AreaType { get; set; }
+    public int? AreaTypeId { get; set; }
     public TextLayoutDTO? TextLayout { get; set; }
     public ImageTextLayoutDTO? ImageTextLayout { get; set; }
     public ListLayoutDTO? ListLayout { get; set; }
@@ -27,7 +27,7 @@ public class AreaPostDTO
     public required bool IsDisplayed { get; set; }
     public required string Title { get; set; }
     public LayoutType? Arrangement { get; set; }
-    public AreaTypeDTO? AreaType { get; set; }
+    public int? AreaTypeId { get; set; }
     public TextLayoutDTO? TextLayout { get; set; }
     public ImageTextLayoutDTO? ImageTextLayout { get; set; }
     public ListLayoutDTO? ListLayout { get; set; }
@@ -35,7 +35,7 @@ public class AreaPostDTO
 }
 public class AreaTypeDTO
 {
-    public int Id { get; set; }
+    public int? Id { get; set; }
     public required string Name { get; set; }
     public required string Value { get; set; } // unique
     public required string Description { get; set; }
@@ -44,7 +44,7 @@ public class AreaTypeDTO
     public List<TagTypeDTO>? ListTagTypes { get; set; }
 }
 
-public class AreaTypePostDTO : AreaType
+public class AreaTypePostDTO : AreaTypeDTO
 {
     public List<int> ListTagTypeIds { get; set; } = new List<int>();
 }

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using IngBackend.Interfaces.Service;
+using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
 
@@ -8,6 +9,8 @@ namespace IngBackend.Profiles;
 public class MappingProfile : Profile
 
 {
+        // private readonly IUnitOfWork _unitOfWork;
+
         public MappingProfile()
         {
                 CreateMap<UserInfoDTO, UserDTO>()
@@ -20,11 +23,14 @@ public class MappingProfile : Profile
                                 opts.Condition((src, dest, srcMember) => srcMember != null);
                         });
                 CreateMap<UserInfoPostDTO, User>()
-                    .ForAllMembers(opts =>
-                    {
-                            opts.AllowNull();
-                            opts.Condition((src, dest, srcMember) => srcMember != null);
-                    });
+                        // .ForMember(dest => dest.Areas, opt => opt.Ignore())
+                        .ForAllMembers(opts =>
+                        {
+                                opts.AllowNull();
+                                opts.Condition((src, dest, srcMember) => srcMember != null);
+                        });
+                CreateMap<UserSignUpDTO, UserInfoDTO>();
+
                 CreateMap<TokenDTO, UserDTO>()
                     .ForMember(dest => dest.Token, opt => opt.MapFrom(src => src));
 
@@ -39,14 +45,32 @@ public class MappingProfile : Profile
                         .ForMember(rp => rp.Publisher, r => r.Ignore());
 
                 // Area
-                CreateMap<Area, AreaDTO>().ReverseMap();
+                CreateMap<Area, AreaDTO>()
+                        .ForMember(dest => dest.AreaTypeId, opt => opt.MapFrom(src => src.AreaType.Id))
+                        .ForMember(dest => dest.Title, opt =>
+                        {
+                                opt.Condition((src, dest, srcMember) => src.AreaType != null);
+                                opt.MapFrom(src => src.AreaType!.Name);
+                        })
+                        .ForMember(dest => dest.LayoutType, opt =>
+                        {
+                                opt.Condition((src, dest, srcMember) => src.AreaType != null);
+                                opt.MapFrom(src => src.AreaType!.LayoutType);
+                        });
+                CreateMap<AreaPostDTO, Area>()
+                        .ForMember(dest => dest.AreaTypeId, opt => opt.MapFrom(src => src.AreaTypeId))
+                  .ForAllMembers(opts =>
+                        {
+                                opts.AllowNull();
+                                opts.Condition((src, dest, srcMember) => srcMember != null);
+                        });
+
+                CreateMap<AreaDTO, Area>();
                 CreateMap<AreaType, AreaTypeDTO>();
                 CreateMap<AreaTypeDTO, AreaType>()
                     .ForMember(dest => dest.ListTagTypes, opt => opt.Ignore());
                 CreateMap<AreaTypePostDTO, AreaType>()
                         .ForMember(dest => dest.ListTagTypes, opt => opt.Ignore());
-                CreateMap<AreaPostDTO, AreaDTO>();
-                CreateMap<AreaPostDTO, Area>();
 
                 // TextLayout
                 CreateMap<TextLayoutDTO, TextLayout>()
@@ -74,13 +98,40 @@ public class MappingProfile : Profile
                 CreateMap<TagType, TagTypeDTO>()
                         .ReverseMap();
 
+
         }
         public MappingProfile(IPasswordHasher passwordHasher) : this()
         {
+                // _unitOfWork = unitOfWork;
                 CreateMap<UserSignUpDTO, User>()
                    .ForMember(
                         dest => dest.HashedPassword,
                         opt => opt.MapFrom(src => passwordHasher.HashPassword(src.Password)));
                 CreateMap<User, UserInfoDTO>();
         }
+
+        // private async Task<Area> MapAreaPost(IEnumerable<AreaPostDTO> areas)
+        // {
+        //     var result = new List<Area>();
+
+        //     foreach (var a in areas)
+        //     {
+        //         var area = await _unitOfWork.Repository<Area, Guid>().GetByIdAsync(a.Id);
+        //         if (area != null)
+        //         {
+        //             result.Add(
+        //                 new Area
+        //                 Title: a.Title,
+        //         Sequence: a.Sequence
+        //         IsDisplay: a.IsDisplayed;
+        //         });
+        //     }
+        //         else
+        //     {
+        //         result.Add(area)
+        //         }
+        // }
+        //     return result;
+
+        // }
 }

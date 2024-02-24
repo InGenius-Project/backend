@@ -19,7 +19,6 @@ public class UserController : BaseController
 {
     private readonly TokenService _tokenService;
     private readonly UserService _userService;
-
     private readonly IMapper _mapper;
 
     public UserController(TokenService tokenService, UserService userService, IMapper mapper)
@@ -69,12 +68,10 @@ public class UserController : BaseController
             throw new BadRequestException("帳號已經存在");
         }
 
+
+        await _userService.AddAsync(req);
+
         var user = _mapper.Map<UserInfoDTO>(req);
-        await _userService.AddAsync(user);
-
-        // TODO: send auth email
-
-        await _userService.UpdateAsync(user);
 
         // TODO: add send email process to background job
 

@@ -1,3 +1,5 @@
+using IngBackend.Models.DBEntity;
+
 namespace IngBackend.Interfaces.Repository;
 
 public interface IRepositoryWrapper
@@ -6,5 +8,6 @@ public interface IRepositoryWrapper
     IAreaRepository Area { get; }
     IResumeRepository Resume { get; }
     IRecruitmentRepository Recruitment { get; }
+    IRepository<AreaType, int> AreaType { get; }
     void Save();
 }

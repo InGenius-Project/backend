@@ -13,6 +13,9 @@ public class Area : BaseEntity, IEntity<Guid>
 
     public required int Sequence { get; set; }
     public required bool IsDisplayed { get; set; }
+    public required string Title { get; set; }
+    public LayoutType? LayoutType { get; set; } // custom area
+
 
     [JsonIgnore]
     public Resume? Resume { get; set; }
@@ -20,9 +23,9 @@ public class Area : BaseEntity, IEntity<Guid>
     public User? User { get; set; }
     [JsonIgnore]
     public Recruitment? Recruitment { get; set; }
-
-    public required string Title { get; set; }
-    public LayoutType? LayoutType { get; set; } // custom area
+    [JsonIgnore]
+    [ForeignKey("AreaType")]
+    public int AreaTypeId { get; set; }
     public AreaType? AreaType { get; set; } // default area
     [JsonIgnore]
     public TextLayout? TextLayout { get; set; }

@@ -38,11 +38,18 @@ public class UserService : Service<User, UserInfoDTO, Guid>
     public async Task PostUser(UserInfoPostDTO req, Guid userId)
     {
         var user = await _repository.User.GetUserByIdIncludeAll(userId).FirstOrDefaultAsync();
+        user.Areas.ForEach(x => _repository.Area.SetEntityState(x, EntityState.Detached));
         _mapper.Map(req, user);
         await _repository.User.UpdateAsync(user);
+
     }
 
-
+    public async Task AddAsync(UserSignUpDTO req)
+    {
+        var user = _mapper.Map<User>(req);
+        await _repository.User.AddAsync(user);
+        await _unitOfWork.SaveChangesAsync();
+    }
 
     /// <summary>
     /// Asynchronously finds the user information that matches the specified email address.

@@ -148,7 +148,14 @@ public class AreaController : BaseController
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId, [UserRole.Admin, UserRole.InternalUser]);
 
-        var areaType = await _areaTypeService.GetByIdAsync(req.Id);
+        if (req.Id == null || req.Id == 0)
+        {
+            var newAreaTypeDto = _mapper.Map<AreaTypeDTO>(req);
+            await _areaTypeService.AddAsync(newAreaTypeDto);
+            return new ApiResponse("新增成功");
+        }
+
+        var areaType = await _areaTypeService.GetByIdAsync((int)req.Id);
         if (areaType == null)
         {
             var newAreaTypeDto = _mapper.Map<AreaTypeDTO>(req);

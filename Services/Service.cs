@@ -102,7 +102,7 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
     }
 
 
-    public async Task AddAsync(TDto dto)
+    public virtual async Task AddAsync(TDto dto)
     {
         await _unitOfWork.Repository<TEntity, TKey>().AddAsync(_mapper.Map<TEntity>(dto));
         await _unitOfWork.SaveChangesAsync();
