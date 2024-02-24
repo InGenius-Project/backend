@@ -23,7 +23,7 @@ public interface IUnitOfWork : IDisposable
     /// </summary>
     /// <typeparam name="T">此Context裡面的Entity Type</typeparam>
     /// <returns>Entity的Repository</returns>
-    IRepository<TEntity, TKey> Repository<TEntity, TKey>() where TEntity : class, IEntity<TKey>;
+    IRepository<TEntity, TKey> Repository<TEntity, TKey>() where TEntity : IEntity<TKey>;
 
     /// <summary>
     /// 非同步載入指定實體的導覽屬性。

@@ -1,0 +1,63 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+      {
+          "label": "build",
+          "command": "dotnet",
+          "type": "process",
+          "args": [
+              "build",
+              "${workspaceFolder}/ing-backend.csproj",
+              "/property:GenerateFullPaths=true",
+              "/consoleloggerparameters:NoSummary"
+          ],
+          "problemMatcher": "$msCompile"
+      },
+      {
+          "label": "publish",
+          "command": "dotnet",
+          "type": "process",
+          "args": [
+              "publish",
+              "${workspaceFolder}/ing-backend.csproj",
+              "/property:GenerateFullPaths=true",
+              "/consoleloggerparameters:NoSummary"
+          ],
+          "problemMatcher": "$msCompile"
+      },
+      {
+          "label": "watch",
+          "command": "dotnet",
+          "type": "process",
+          "args": [
+              "watch",
+              "run",
+              "--project",
+              "${workspaceFolder}/ing-backend.csproj"
+          ],
+          "problemMatcher": "$msCompile",
+          "runOptions": {
+            "runOn": "folderOpen"
+          }
+      },
+      {
+        "label": "Add EF Migration",
+        "type": "shell",
+        "command": "dotnet ef migrations add ${input:migrationName}",
+        "problemMatcher": []
+      },
+    {
+      "label": "Update Database",
+      "type": "shell",
+      "command": "dotnet ef database update",
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "migrationName",
+      "type": "promptString",
+      "description": "Name of the migration."
+    }
+  ]
+}

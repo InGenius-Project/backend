@@ -1,54 +1,75 @@
-﻿using IngBackend.Exceptions;
+﻿using AutoMapper;
+using IngBackend.Enum;
+using IngBackend.Exceptions;
 using IngBackend.Interfaces.Repository;
 using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Models.DBEntity;
+using IngBackend.Models.DTO;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace IngBackend.Services.AreaService;
 
-public class AreaService : Service<Area, Guid>
+public class AreaService : Service<Area, AreaDTO, Guid>
 {
     private readonly IUnitOfWork _unitOfWork;
 
-    private readonly IRepository<Area, Guid> _areaRepository;
+    private readonly IMapper _mapper;
+    private readonly IRepositoryWrapper _repository;
 
-    public AreaService(IUnitOfWork unitOfWork) : base(unitOfWork)
+    private readonly IRepository<AreaType, int> _areaTypeRepository;
+
+
+    public AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository) : base(unitOfWork, mapper)
     {
         _unitOfWork = unitOfWork;
-        _areaRepository = unitOfWork.Repository<Area, Guid>();
-    }
+        _mapper = mapper;
+        _repository = repository;
+        _areaTypeRepository = unitOfWork.Repository<AreaType, int>();
 
-    public Area? GetAreaIncludeAllById(Guid areaId)
+    }
+    public async Task<AreaDTO?> GetAreaIncludeAllById(Guid areaId)
     {
-        var area = _areaRepository.GetAll()
-            .Where(x => x.Id.Equals(areaId))
-            .Include(a => a.TextLayout)
-            .Include(a => a.ImageTextLayout)
-            .Include(a => a.ListLayout)
-                .ThenInclude(l => l.Items)
-             .Include(a => a.KeyValueListLayout)
-                .ThenInclude(kv => kv.Items)
-                    .ThenInclude(kvi => kvi.Key)
-            .FirstOrDefault();
-        return area;
+        var area = _repository.Area.GetAreaByIdIncludeAll(areaId);
+        return await _mapper.ProjectTo<AreaDTO>(area).FirstOrDefaultAsync();
     }
 
-    public void CheckAreaOwnership(Guid areaId, User user) {
-        // 檢查 Resume 關聯
-        var result = user.Resumes.SelectMany(x => x.Areas.Where(a => a.Id == areaId)).Any();
-        if (result) {
+    public async Task CheckAreaOwnership(Guid areaId, UserInfoDTO req)
+    {
+        var area = await _repository.Area.GetByIdAsync(areaId);
+        if (area == null || area.User?.Id != req.Id)
+        {
             throw new ForbiddenException();
-        } 
+        }
     }
 
-    public void ClearArea(Area area){
-        var properties =  area.GetType().GetProperties();
+    public async void ClearArea(AreaDTO req)
+    {
+        var area = await _repository.Area.GetByIdAsync(req.Id);
 
-        foreach(var property in properties){
-            if (property.Name != "Id"){
+        if (area == null)
+        {
+            throw new AreaNotFoundException();
+        }
+
+        var properties = area.GetType().GetProperties();
+
+        foreach (var property in properties)
+        {
+            if (property.Name != "Id")
+            {
                 property.SetValue(area, null);
             }
         }
     }
-    
+
+
+    public async Task<List<AreaTypeDTO>> GetAllAreaTypes(UserRole[] userRoles)
+    {
+        var areaTypes = _areaTypeRepository
+            .GetAll()
+            .Where(a => a.UserRole.Any(ur => userRoles.Contains(ur)));
+        return await _mapper.ProjectTo<AreaTypeDTO>(areaTypes).ToListAsync(); ;
+    }
+
 }

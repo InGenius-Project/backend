@@ -1,4 +1,6 @@
 ﻿using IngBackend.Exceptions;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -227,7 +229,27 @@ public class ApiResponseMiddleware : IMiddleware
 
         else if (exception is SecurityTokenValidationException)
         {
-            excpetion = "JWT token 驗證失敗";
+            message = "JWT token 驗證失敗";
+        }
+        else if (exception is DbUpdateException dbUpdateEx)
+        {
+            if (dbUpdateEx.InnerException != null)
+            {
+                if (dbUpdateEx.InnerException is SqlException sqlException)
+                {
+                    switch (sqlException.Number)
+                    {
+                    case 2627:  // Unique constraint error
+                    case 547:   // Constraint check violation
+                    case 2601:  // Duplicated key row error
+                                // Constraint violation exception
+                        
+                         message = "欄位存取異常，請確認欄位資料是否正確";
+                         code = HttpStatusCode.BadRequest;
+                         break;
+                    }
+                }
+            }
         }
 
         var jsonObject = new { Message = message, InnerException = excpetion };

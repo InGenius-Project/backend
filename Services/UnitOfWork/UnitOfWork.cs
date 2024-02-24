@@ -1,7 +1,7 @@
 ﻿using IngBackend.Context;
 using IngBackend.Interfaces.Repository;
 using IngBackend.Interfaces.UnitOfWork;
-using IngBackend.Services.Repository;
+using IngBackend.Repository;
 using System.Collections;
 using System.Linq.Expressions;
 
@@ -36,7 +36,7 @@ public class UnitOfWork : IUnitOfWork
     }
 
     /// <inheritdoc />
-    public IRepository<TEntity, TKey> Repository<TEntity, TKey>() where TEntity : class, IEntity<TKey>
+    public IRepository<TEntity, TKey> Repository<TEntity, TKey>() where TEntity : IEntity<TKey>
     {
         if (_repositories == null)
         {
@@ -106,11 +106,16 @@ public class UnitOfWork : IUnitOfWork
     {
         if (!_disposed)
         {
-            foreach (var repository in _repositories.Values.OfType<IDisposable>())
+            // foreach (var repository in _repositories.Values.OfType<IDisposable>())
+            // {
+            //     repository.Dispose();
+            // }
+            // _context.Dispose();
+
+            if (disposing)
             {
-                repository.Dispose();
+                _context.Dispose();
             }
-            _context.Dispose();
         }
 
         _disposed = true;

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using IngBackend.Interfaces.Service;
+using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
 
@@ -8,49 +9,129 @@ namespace IngBackend.Profiles;
 public class MappingProfile : Profile
 
 {
-    public MappingProfile()
-    {
-        CreateMap<UserInfoDTO, UserDTO>()
-            .ForMember(dest => dest.User, opt => opt.MapFrom(src => src));
-        CreateMap<UserInfoPostDTO, User>();
-        CreateMap<TokenDTO, UserDTO>()
-            .ForMember(dest => dest.Token, opt => opt.MapFrom(src => src));
+        // private readonly IUnitOfWork _unitOfWork;
 
-        // Resume
-        CreateMap<Resume, ResumeDTO>();
-        CreateMap<ResumePostDTO, Resume>();
+        public MappingProfile()
+        {
+                CreateMap<UserInfoDTO, UserDTO>()
+                        .ForMember(dest => dest.User, opt => opt.MapFrom(src => src));
+                CreateMap<User, UserInfoDTO>();
+                CreateMap<UserInfoDTO, User>()
+                        .ForAllMembers(opts =>
+                        {
+                                opts.AllowNull();
+                                opts.Condition((src, dest, srcMember) => srcMember != null);
+                        });
+                CreateMap<UserInfoPostDTO, User>()
+                        // .ForMember(dest => dest.Areas, opt => opt.Ignore())
+                        .ForAllMembers(opts =>
+                        {
+                                opts.AllowNull();
+                                opts.Condition((src, dest, srcMember) => srcMember != null);
+                        });
+                CreateMap<UserSignUpDTO, UserInfoDTO>();
 
-        // Area
-        CreateMap<Area, AreaDTO>();
-        CreateMap<AreaDTO, Area>();
-        CreateMap<AreaPostDTO, Area>();
-        // TextLayout
-        CreateMap<TextLayoutDTO, TextLayout>();
-        CreateMap<TextLayout, TextLayoutDTO>();
-        // ImageLayout
-        CreateMap<ImageTextLayoutDTO, ImageTextLayout>();
-        CreateMap<ImageTextLayout, ImageTextLayoutDTO>();
-        // ListLayout
-        CreateMap<ListLayoutDTO, ListLayout>();
-        CreateMap<ListLayout, ListLayoutDTO>();
-        // KeyValueListLayout
-        CreateMap<KeyValueListLayoutDTO, KeyValueListLayout>();
-        CreateMap<KeyValueListLayout, KeyValueListLayoutDTO>();
-        CreateMap<KeyValueItem, KeyValueItemDTO>();
-        CreateMap<KeyValueItemDTO, KeyValueItem>();
+                CreateMap<TokenDTO, UserDTO>()
+                    .ForMember(dest => dest.Token, opt => opt.MapFrom(src => src));
 
-        // Tag
-        CreateMap<Tag, TagDTO>();
-        CreateMap<TagDTO, Tag>();
+                // Resume
+                CreateMap<Resume, ResumeDTO>();
+                CreateMap<ResumePostDTO, Resume>();
 
-        CreateMap<AreaPostDTO, Area>();
-    }
-    public MappingProfile(IPasswordHasher passwordHasher) : this()
-    {
-        CreateMap<UserSignUpDTO, User>()
-           .ForMember(
-                dest => dest.HashedPassword,
-                opt => opt.MapFrom(src => passwordHasher.HashPassword(src.Password)));
-        CreateMap<User, UserInfoDTO>();
-    }
+                // Recruitment
+                CreateMap<Recruitment, RecruitmentDTO>()
+                    .ReverseMap();
+                CreateMap<RecruitmentPostDTO, Recruitment>()
+                        .ForMember(rp => rp.Publisher, r => r.Ignore());
+
+                // Area
+                CreateMap<Area, AreaDTO>()
+                        .ForMember(dest => dest.AreaTypeId, opt => opt.MapFrom(src => src.AreaType.Id))
+                        .ForMember(dest => dest.Title, opt =>
+                        {
+                                opt.Condition((src, dest, srcMember) => src.AreaType != null);
+                                opt.MapFrom(src => src.AreaType!.Name);
+                        })
+                        .ForMember(dest => dest.LayoutType, opt =>
+                        {
+                                opt.Condition((src, dest, srcMember) => src.AreaType != null);
+                                opt.MapFrom(src => src.AreaType!.LayoutType);
+                        });
+                CreateMap<AreaPostDTO, Area>()
+                        .ForMember(dest => dest.AreaTypeId, opt => opt.MapFrom(src => src.AreaTypeId))
+                  .ForAllMembers(opts =>
+                        {
+                                opts.AllowNull();
+                                opts.Condition((src, dest, srcMember) => srcMember != null);
+                        });
+
+                CreateMap<AreaDTO, Area>();
+                CreateMap<AreaType, AreaTypeDTO>();
+                CreateMap<AreaTypeDTO, AreaType>()
+                    .ForMember(dest => dest.ListTagTypes, opt => opt.Ignore());
+                CreateMap<AreaTypePostDTO, AreaType>()
+                        .ForMember(dest => dest.ListTagTypes, opt => opt.Ignore());
+
+                // TextLayout
+                CreateMap<TextLayoutDTO, TextLayout>()
+                        .ReverseMap();
+
+                // ImageLayout
+                CreateMap<ImageTextLayoutDTO, ImageTextLayout>()
+                        .ReverseMap();
+                CreateMap<ImageDTO, Image>()
+                        .ReverseMap();
+
+                // ListLayout
+                CreateMap<ListLayoutDTO, ListLayout>()
+                        .ReverseMap();
+
+                // KeyValueListLayout
+                CreateMap<KeyValueListLayoutDTO, KeyValueListLayout>()
+                        .ReverseMap();
+                CreateMap<KeyValueItem, KeyValueItemDTO>()
+                        .ReverseMap();
+
+                // Tag
+                CreateMap<Tag, TagDTO>()
+                        .ReverseMap();
+                CreateMap<TagType, TagTypeDTO>()
+                        .ReverseMap();
+
+
+        }
+        public MappingProfile(IPasswordHasher passwordHasher) : this()
+        {
+                // _unitOfWork = unitOfWork;
+                CreateMap<UserSignUpDTO, User>()
+                   .ForMember(
+                        dest => dest.HashedPassword,
+                        opt => opt.MapFrom(src => passwordHasher.HashPassword(src.Password)));
+                CreateMap<User, UserInfoDTO>();
+        }
+
+        // private async Task<Area> MapAreaPost(IEnumerable<AreaPostDTO> areas)
+        // {
+        //     var result = new List<Area>();
+
+        //     foreach (var a in areas)
+        //     {
+        //         var area = await _unitOfWork.Repository<Area, Guid>().GetByIdAsync(a.Id);
+        //         if (area != null)
+        //         {
+        //             result.Add(
+        //                 new Area
+        //                 Title: a.Title,
+        //         Sequence: a.Sequence
+        //         IsDisplay: a.IsDisplayed;
+        //         });
+        //     }
+        //         else
+        //     {
+        //         result.Add(area)
+        //         }
+        // }
+        //     return result;
+
+        // }
 }

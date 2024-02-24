@@ -7,3 +7,11 @@ public enum UserRole
     Admin,
     InternalUser
 }
+
+public enum LayoutType
+{
+    Text ,
+    ImageText,
+    List,
+    KeyValueList
+}

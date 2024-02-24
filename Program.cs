@@ -4,7 +4,6 @@ using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Profiles;
 using IngBackend.Services;
 using IngBackend.Services.AreaService;
-using IngBackend.Services.Middlewares;
 using IngBackend.Services.TokenServices;
 using IngBackend.Services.UnitOfWork;
 using IngBackend.Services.UserService;
@@ -13,7 +12,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using AutoWrapper;
 using IngBackend.Helpers;
+using IngBackend.Services.RecruitmentService;
+using IngBackend.Services.TagService;
+using Azure;
+using IngBackend.Models.DTO;
+using IngBackend.Interfaces.Repository;
+using IngBackend.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,15 +38,18 @@ builder.Services.AddDbContext<IngDbContext>(options => options.UseSqlServer(conn
 
 // Add services to the container.
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped(typeof(IService<,>), typeof(Service<,>));
-builder.Services.AddControllers();
+builder.Services.AddScoped(typeof(IService<,,>), typeof(Service<,,>));// Repository Wrapper
+builder.Services.AddScoped<IRepositoryWrapper, RepositoryWrapper>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<ResumeService>();
 builder.Services.AddScoped<AreaService>();
 builder.Services.AddScoped<UserService>();
-builder.Services.AddScoped<ApiResponseMiddleware>();
+builder.Services.AddScoped<TagService>();
+builder.Services.AddScoped<RecruitmentService>();
+// builder.Services.AddScoped<ApiResponseMiddleware>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
+builder.Services.AddControllers();
 
 // Json Serializer
 builder.Services.AddControllers()
@@ -90,10 +99,6 @@ builder.Services.AddAutoMapper(
         AppDomain.CurrentDomain.GetAssemblies()
 );
 
-
-
-
-
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -138,6 +143,12 @@ if (app.Environment.IsDevelopment())
 
 // Middleware
 // app.UseMiddleware<ApiResponseMiddleware>();
+app.UseApiResponseAndExceptionWrapper(new AutoWrapperOptions
+{
+    // UseApiProblemDetailsException = true,
+    ShowIsErrorFlagForSuccessfulResponse = true,
+    ShowStatusCode = true,
+});
 
 app.UseCors(devCorsPolicy);
 app.UseHttpsRedirection();

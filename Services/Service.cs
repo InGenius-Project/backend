@@ -1,6 +1,9 @@
-﻿using IngBackend.Interfaces.Repository;
+﻿using AutoMapper;
+using IngBackend.Exceptions;
+using IngBackend.Interfaces.Repository;
 using IngBackend.Interfaces.Service;
 using IngBackend.Interfaces.UnitOfWork;
+using IngBackend.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -10,114 +13,185 @@ namespace IngBackend.Services;
 /// 泛型的 Service 實作類別，提供基本的 CRUD 操作
 /// </summary>
 /// <typeparam name="TEntity">實體類別</typeparam>
-public class Service<TEntity, TKey> : IService<TEntity, TKey> where TEntity : class, IEntity<TKey>
+public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
+    where TEntity : class, IEntity<TKey>
+    where TDto : class
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
 
-    public Service(IUnitOfWork unitOfWork)
+    public Service(IUnitOfWork unitOfWork, IMapper mapper) : base()
     {
         _unitOfWork = unitOfWork;
+        _mapper = mapper;
     }
 
-    /// <inheritdoc />
-    public virtual void Add(TEntity entity)
+    public IEnumerable<TDto> GetAll()
     {
-        _unitOfWork.Repository<TEntity, TKey>().Add(entity);
+        try
+        {
+            var query = _unitOfWork.Repository<TEntity, TKey>().GetAll();
+
+            if (query.Any())
+            {
+                return _mapper.Map<IEnumerable<TDto>>(query);
+            }
+            else
+            {
+                throw new EntityNotFoundException($"No {typeof(TDto).Name}s were found");
+            }
+
+        }
+        catch (EntityNotFoundException ex)
+        {
+            var message = $"Error retrieving all {typeof(TDto).Name}s";
+
+            throw new EntityNotFoundException(message, ex);
+        }
     }
 
-    /// <inheritdoc />
-    public virtual async Task AddAsync(TEntity entity)
+    public IEnumerable<TDto> GetAll(params Expression<Func<TEntity, object>>[] includes)
     {
-        await _unitOfWork.Repository<TEntity, TKey>().AddAsync(entity);
+        var query = _unitOfWork.Repository<TEntity, TKey>().GetAll(includes);
+
+        return _mapper.Map<IEnumerable<TDto>>(query);
     }
 
-    /// <inheritdoc />
-    public virtual async Task AddRangeAsync(IEnumerable<TEntity> entities)
+    public IEnumerable<TDto> GetAll(Expression<Func<TEntity, bool>> predicate)
     {
-        await _unitOfWork.Repository<TEntity, TKey>().AddRangeAsync(entities);
+        var query = _unitOfWork.Repository<TEntity, TKey>().GetAll(predicate);
+
+        return _mapper.Map<IEnumerable<TDto>>(query);
     }
 
     /// <inheritdoc />
-    public virtual void Update(TEntity entity)
+    public IEnumerable<TDto> GetAll(Expression<Func<TEntity, bool>> predicate, params Expression<Func<TEntity, object>>[] includes)
     {
-        _unitOfWork.Repository<TEntity, TKey>().Update(entity);
+        var query = _unitOfWork.Repository<TEntity, TKey>().GetAll(predicate, includes);
+
+        return _mapper.Map<IEnumerable<TDto>>(query);
     }
 
-    /// <inheritdoc />
-    public virtual void Delete(TEntity entity)
+    public async Task<TDto?> GetByIdAsync(TKey id)
     {
-        _unitOfWork.Repository<TEntity, TKey>().Delete(entity);
+        try
+        {
+            var result = await _unitOfWork.Repository<TEntity, TKey>().GetByIdAsync(id);
+
+            if (result is null)
+            {
+                throw new EntityNotFoundException($"Entity with ID {id} not found.");
+            }
+
+            return _mapper.Map<TDto>(result);
+        }
+
+        catch (EntityNotFoundException ex)
+        {
+            var message = $"Error retrieving {typeof(TDto).Name} with Id: {id}";
+
+            throw new EntityNotFoundException(message, ex);
+        }
     }
 
-    /// <inheritdoc />
-    public virtual void RemoveRange(IEnumerable<TEntity> entities)
+    public async Task<TDto?> GetByIdAsync(TKey id, params Expression<Func<TEntity, object>>[] includes)
     {
-        _unitOfWork.Repository<TEntity, TKey>().RemoveRange(entities);
+        var query = _unitOfWork.Repository<TEntity, TKey>().GetAll(includes);
+
+        return _mapper.Map<TDto>(await query.FirstOrDefaultAsync(e => e.Id.Equals(id)));
     }
 
-    /// <inheritdoc />
-    public void SaveChanges()
+
+    public virtual async Task AddAsync(TDto dto)
     {
-        _unitOfWork.SaveChanges();
+        await _unitOfWork.Repository<TEntity, TKey>().AddAsync(_mapper.Map<TEntity>(dto));
+        await _unitOfWork.SaveChangesAsync();
     }
 
-    /// <inheritdoc />
+    public async Task DeleteByIdAsync(TKey id)
+    {
+        await _unitOfWork.Repository<TEntity, TKey>().DeleteByIdAsync(id);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task UpdateAsync(TDto dto)
+    {
+        var entity = _mapper.Map<TEntity>(dto);
+        await _unitOfWork.Repository<TEntity, TKey>().UpdateAsync(entity);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
     public async Task SaveChangesAsync()
     {
         await _unitOfWork.SaveChangesAsync();
     }
 
-    /// <inheritdoc />
-    public IQueryable<TEntity> GetAll(params Expression<Func<TEntity, object>>[] includes)
-    {
-        var query = _unitOfWork.Repository<TEntity, TKey>().Query();
 
-        foreach (var include in includes)
-        {
-            query = query.Include(include);
-        }
-        return query;
-    }
+    // /// <inheritdoc />
+    // public virtual async Task AddRangeAsync(IEnumerable<TEntity> entities)
+    // {
+    //     await _unitOfWork.Repository<TEntity, TKey>().AddRangeAsync(entities);
+    // }
 
-    /// <inheritdoc />
-    public IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> predicate, params Expression<Func<TEntity, object>>[] includes)
-    {
-        var query = _unitOfWork.Repository<TEntity, TKey>().Query();
 
-        foreach (var include in includes)
-        {
-            query = query.Include(include);
-        }
-        return query.Where(predicate);
-    }
+    // /// <inheritdoc />
+    // public virtual void RemoveRange(IEnumerable<TEntity> entities)
+    // {
+    //     _unitOfWork.Repository<TEntity, TKey>().RemoveRange(entities);
+    // }
 
-    /// <inheritdoc />
-    public TEntity? GetById(TKey id, params Expression<Func<TEntity, object>>[] includes)
-    {
-        var query = _unitOfWork.Repository<TEntity, TKey>().Query();
 
-        foreach (var include in includes)
-        {
-            query = query.Include(include);
-        }
+    // /// <inheritdoc />
+    // public IQueryable<TEntity> GetAll(params Expression<Func<TEntity, object>>[] includes)
+    // {
+    //     var query = _unitOfWork.Repository<TEntity, TKey>().Query();
 
-        return query.FirstOrDefault(e => e.Id.Equals(id));
-    }
+    //     foreach (var include in includes)
+    //     {
+    //         query = query.Include(include);
+    //     }
+    //     return query;
+    // }
 
-    /// <inheritdoc />
-    public async Task<TEntity?> GetByIdAsync(TKey id, params Expression<Func<TEntity, object>>[] includes)
-    {
-        var query = _unitOfWork.Repository<TEntity, TKey>().Query();
+    // /// <inheritdoc />
+    // public IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> predicate, params Expression<Func<TEntity, object>>[] includes)
+    // {
+    //     var query = _unitOfWork.Repository<TEntity, TKey>().Query();
 
-        foreach (var include in includes)
-        {
-            query = query.Include(include);
-        }
+    //     foreach (var include in includes)
+    //     {
+    //         query = query.Include(include);
+    //     }
+    //     return query.Where(predicate);
+    // }
 
-        var entity = await query.FirstOrDefaultAsync(e => e.Id.Equals(id));
+    // /// <inheritdoc />
+    // public TEntity? GetById(TKey id, params Expression<Func<TEntity, object>>[] includes)
+    // {
+    //     var query = _unitOfWork.Repository<TEntity, TKey>().Query();
 
-        return entity;
-    }
+    //     foreach (var include in includes)
+    //     {
+    //         query = query.Include(include);
+    //     }
+
+    //     return query.FirstOrDefault(e => e.Id.Equals(id));
+    // }
+
+    // /// <inheritdoc />
+    // public async Task<TEntity?> GetByIdAsync(TKey id, params Expression<Func<TEntity, object>>[] includes)
+    // {
+    //     var query = _unitOfWork.Repository<TEntity, TKey>().Query();
+
+    //     foreach (var include in includes)
+    //     {
+    //         query = query.Include(include);
+    //     }
+
+    //     var entity = await query.FirstOrDefaultAsync(e => e.Id.Equals(id));
+
+    //     return entity;
+    // }
 
 
     /// <inheritdoc />

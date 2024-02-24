@@ -1,4 +1,7 @@
-﻿namespace IngBackend.Models.DTO;
+﻿using IngBackend.Enum;
+using IngBackend.Models.DBEntity;
+
+namespace IngBackend.Models.DTO;
 
 public class UserDTO
 {
@@ -13,16 +16,20 @@ public class UserInfoDTO
     public string Email { get; set; }
 
     public string Username { get; set; }
+    public ImageDTO Avatar { get; set; }
+    public UserRole Role { get; set; }
     public List<AreaDTO> Areas { get; set; }
     public List<TagDTO>? Tags { get; set; }
 
     public List<ResumeDTO>? Resumes { get; set; }
+    public List<RecruitmentDTO>? Recruitments { get; set; }
 }
 
 public class UserInfoPostDTO
 {
+    public ImageDTO? Avatar { get; set; }
     public string? Username { get; set; }
-    public List<AreaDTO>? Areas { get; set; }
+    public List<AreaPostDTO>? Areas { get; set; }
     public List<TagDTO>? Tags { get; set; }
 }
 
@@ -31,6 +38,7 @@ public class UserSignUpDTO
     public string Email { get; set; }
     public string Username { get; set; }
     public string Password { get; set; }
+    public UserRole Role { get; set; }
 }
 public class UserSignInDTO
 {

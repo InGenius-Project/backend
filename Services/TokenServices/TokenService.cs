@@ -18,7 +18,7 @@ public class TokenService
         _config = config;
     }
 
-    public TokenDTO GenerateToken(User user)
+    public TokenDTO GenerateToken(UserInfoDTO user)
     {
         var claims = new[]
         {

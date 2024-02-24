@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using AutoWrapper.Models;
+using AutoWrapper.Wrappers;
 using IngBackend.Exceptions;
 using IngBackend.Interfaces.Service;
 using IngBackend.Models.DBEntity;
@@ -17,15 +19,13 @@ public class UserController : BaseController
 {
     private readonly TokenService _tokenService;
     private readonly UserService _userService;
-    private readonly IPasswordHasher _passwordHasher;
     private readonly IMapper _mapper;
 
-    public UserController(TokenService tokenService, UserService userService, IMapper mapper, IPasswordHasher passwordHasher)
+    public UserController(TokenService tokenService, UserService userService, IMapper mapper)
     {
         _tokenService = tokenService;
         _userService = userService;
         _mapper = mapper;
-        _passwordHasher = passwordHasher;
     }
 
     /// <summary>
@@ -33,74 +33,49 @@ public class UserController : BaseController
     /// </summary>
     /// <returns>使用者資訊</returns>
     [HttpGet]
-    [ProducesResponseType(typeof(UserInfoDTO), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<UserInfoDTO>> GetUser()
+    [ProducesResponseType(typeof(ResponseDTO<UserInfoDTO>), StatusCodes.Status200OK)]
+    public async Task<UserInfoDTO> GetUser()
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.GetUserByIdIncludeAll(userId);
+        var user = await _userService.GetUserByIdIncludeAllAsync(userId);
 
         if (user == null)
         {
             throw new UserNotFoundException();
         }
 
-        var userInfoDTO = _mapper.Map<UserInfoDTO>(user);
-        return Ok(userInfoDTO);
+        return user;
     }
 
     [HttpPost]
-    [ProducesResponseType(typeof(UserInfoDTO), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<UserInfoDTO>> PostUser(UserInfoPostDTO req)
+    [ProducesResponseType(typeof(ResponseDTO<UserInfoDTO>), StatusCodes.Status200OK)]
+    public async Task<ApiResponse> PostUser(UserInfoPostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.GetByIdAsync(userId);
-
-        if (user == null)
-        {
-            throw new UserNotFoundException();
-        }
-
-        _mapper.Map(req, user);
-        _userService.Update(user);
-
-        await _userService.SaveChangesAsync();
-        var userDTO = _mapper.Map<UserInfoDTO>(user);
-        return userDTO;
-
+        await _userService.PostUser(req, userId);
+        return new ApiResponse("Post success");
     }
 
 
 
     [AllowAnonymous]
     [HttpPost("signup")]
-    [ProducesResponseType(typeof(UserDTO), 201)]
-    [ProducesResponseType(typeof(string), 400)]
-    public async Task<ActionResult<TokenDTO>> SignUp([FromBody] UserSignUpDTO req)
+    [ProducesResponseType(typeof(ResponseDTO<TokenDTO>), StatusCodes.Status200OK)]
+    public async Task<TokenDTO> SignUp([FromBody] UserSignUpDTO req)
     {
         if (await _userService.GetUserByEmailAsync(req.Email.ToLower()) != null)
         {
             throw new BadRequestException("帳號已經存在");
         }
 
-        var user = _mapper.Map<User>(req);
-        await _userService.AddAsync(user);
-        await _userService.SaveChangesAsync();
 
-        // TODO: send auth email
+        await _userService.AddAsync(req);
 
-        _userService.Update(user);
-        await _userService.SaveChangesAsync();
+        var user = _mapper.Map<UserInfoDTO>(req);
 
         // TODO: add send email process to background job
 
-        //var userInfoDTO = _mapper.Map<UserInfoDTO>(user);
         var TokenDTO = _tokenService.GenerateToken(user);
-        //var userDTO = _mapper.Map<UserDTO>(userInfoDTO);
-        //_mapper.Map(TokenDTO, userDTO);
 
         return TokenDTO;
 
@@ -109,37 +84,16 @@ public class UserController : BaseController
 
     [AllowAnonymous]
     [HttpPost("login")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<HttpResponseMessage>> Login(UserSignInDTO req)
+    [ProducesResponseType(typeof(ResponseDTO<TokenDTO>), StatusCodes.Status200OK)]
+    public async Task<TokenDTO> Login(UserSignInDTO req)
     {
-        // 從資料庫中尋找使用者
-        var user = await _userService.GetUserByEmailAsync(req.Email.ToLower());
-        if (user == null)
-        {
-            throw new BadRequestException("帳號或密碼錯誤");
-        }
-
         // 驗證密碼
-        var passwordValid = _passwordHasher.VerifyHashedPassword(user.HashedPassword, req.Password);
-        if (!passwordValid)
-        {
-            throw new UnauthorizedException("帳號或密碼錯誤");
-        }
+        // TODO : VerifyHashedPassword input userdto 
+        var user = await _userService.VerifyHashedPasswordAsync(req);
 
         // 轉換為 UserDTO 回傳
-        //var userInfoDTO = _mapper.Map<UserInfoDTO>(user);
         var tokenDTO = _tokenService.GenerateToken(user);
-        //var userDTO = _mapper.Map<UserDTO>(userInfoDTO);
-        //_mapper.Map(TokenDTO, userDTO);
-
-
-        return Ok(tokenDTO);
+        return tokenDTO;
     }
-
-
-
-
-
 
 }
