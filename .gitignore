@@ -381,3 +381,5 @@ appsettings.Secrets.json
 *.db
 *.db-*
 
+.editorconfig
+.vscode/tasks.json

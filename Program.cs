@@ -13,13 +13,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Text;
 using AutoWrapper;
-using IngBackend.Helpers;
 using IngBackend.Services.RecruitmentService;
 using IngBackend.Services.TagService;
-using Azure;
-using IngBackend.Models.DTO;
 using IngBackend.Interfaces.Repository;
 using IngBackend.Repository;
 
@@ -72,10 +68,7 @@ builder.Services.AddScoped<EmailService>();
 // Json Serializer
 builder
     .Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.PropertyNamingPolicy = null;
-    });
+    .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
 
 // Add Logger
 builder.Logging.ClearProviders();
@@ -185,6 +178,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
 
 // Middleware
 // app.UseMiddleware<ApiResponseMiddleware>();

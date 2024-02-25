@@ -69,13 +69,14 @@ public class Recruitment : BaseEntity, IEntity<Guid>
 
 public class VerificationCode : BaseEntity, IEntity<int>
 {
-  [Key]
-  public int Id { get; set; }
-  public Guid UserId { get; set; }
-  [Required]
-  public User User { get; set; }
+    [Key]
 
-  [Column(TypeName = "char(6)")]
-  public string Code { get;set; }
-  public DateTime ExpiresTime { get; set; }
+    public int Id { get; set; }
+    public Guid UserId { get; set; }
+    [Required]
+    public User User { get; set; }
+
+    [Column(TypeName = "char(6)")]
+    public string Code { get; set; }
+    public DateTime ExpiresTime { get; set; }
 }
