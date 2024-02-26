@@ -28,25 +28,29 @@ public class TagService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapp
 
     public async Task PostTag(TagDTO req)
     {
-        var tagType = await _repository.TagType.GetByIdAsync(req.Type.Id) ?? throw new NotFoundException(req.Id.ToString());
 
-        _repository.TagType.SetEntityState(tagType, EntityState.Detached);
         var existingTag = await _repository.Tag.GetByIdAsync(req.Id);
+        var existingTagType = await _repository.TagType.GetByIdAsync(req.Type.Id);
+
+        if (existingTagType == null)
+        {
+            throw new TagTypeNotFoundExceptiuon();
+        }
+
         if (existingTag == null)
         {
             var newTag = _mapper.Map<Tag>(req);
-            newTag.Type = tagType;
+            newTag.Type = existingTagType;
             await _repository.Tag.AddAsync(newTag);
         }
         else
         {
             _mapper.Map(req, existingTag);
-            existingTag.Type = tagType;
+            existingTag.Type = existingTagType;
             await _repository.Tag.UpdateAsync(existingTag);
         }
     }
 
-    public IEnumerable<TagType> GetLocals() => _repository.TagType.GetLocal();
 
 }
 

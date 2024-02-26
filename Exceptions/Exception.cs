@@ -56,6 +56,7 @@ public class AreaNotFoundException : NotFoundException
     public AreaNotFoundException(string areaId) : base($"區域: {areaId}") { }
 }
 
+public class TagTypeNotFoundExceptiuon() : NotFoundException("標籤類型") { }
 
 public class EntityNotFoundException : NotFoundException
 {
