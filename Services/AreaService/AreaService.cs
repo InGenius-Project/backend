@@ -17,13 +17,13 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
 
     public async Task<AreaDTO?> GetAreaIncludeAllById(Guid areaId)
     {
-        var area = _repository.Area.GetAreaByIdIncludeAll(areaId);
+        var area = _repository.Area.GetAreaByIdIncludeAll(areaId).AsNoTracking();
         return await _mapper.ProjectTo<AreaDTO>(area).FirstOrDefaultAsync();
     }
 
     public async Task CheckAreaOwnership(Guid areaId, UserInfoDTO req)
     {
-        var area = await _repository.Area.GetByIdAsync(areaId);
+        var area = await _repository.Area.GetAreaByIdIncludeUser(areaId).AsNoTracking().FirstOrDefaultAsync();
         if (area == null || area.User?.Id != req.Id)
         {
             throw new ForbiddenException();

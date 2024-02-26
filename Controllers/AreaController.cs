@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿namespace IngBackend.Controllers;
+using AutoMapper;
 using AutoWrapper.Wrappers;
 using IngBackend.Enum;
 using IngBackend.Exceptions;
@@ -9,42 +10,28 @@ using IngBackend.Services.AreaService;
 using IngBackend.Services.TagService;
 using IngBackend.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.AspNetCore.Mvc;
-
-namespace IngBackend.Controllers;
 
 [Route("api/[controller]")]
 [Authorize]
 [ApiController]
-public class AreaController : BaseController
+public class AreaController(
+    IMapper mapper,
+    UserService userService,
+    ResumeService resumeService,
+    AreaService areaService,
+    TagService tagService,
+    IService<AreaType, AreaTypeDTO, int> areaTypeService,
+    IService<TagType, TagTypeDTO, int> tagTypeService
+        ) : BaseController
 {
-    private readonly ResumeService _resumeService;
-    private readonly UserService _userService;
-    private readonly AreaService _areaService;
-    private readonly TagService _tagService;
-    private readonly IMapper _mapper;
-    private readonly IService<AreaType, AreaTypeDTO, int> _areaTypeService;
-    private readonly IService<TagType, TagTypeDTO, int> _tagTypeService;
-
-    public AreaController(
-        IMapper mapper,
-        UserService userService,
-        ResumeService resumeService,
-        AreaService areaService,
-        TagService tagService,
-        IService<AreaType, AreaTypeDTO, int> areaTypeService,
-        IService<TagType, TagTypeDTO, int> tagTypeService
-        )
-    {
-        _resumeService = resumeService;
-        _userService = userService;
-        _areaService = areaService;
-        _tagService = tagService;
-        _areaTypeService = areaTypeService;
-        _tagTypeService = tagTypeService;
-        _mapper = mapper;
-    }
+    private readonly ResumeService _resumeService = resumeService;
+    private readonly UserService _userService = userService;
+    private readonly AreaService _areaService = areaService;
+    private readonly TagService _tagService = tagService;
+    private readonly IMapper _mapper = mapper;
+    private readonly IService<AreaType, AreaTypeDTO, int> _areaTypeService = areaTypeService;
+    private readonly IService<TagType, TagTypeDTO, int> _tagTypeService = tagTypeService;
 
     [HttpGet("{areaId}")]
     [ProducesResponseType(typeof(ResponseDTO<AreaDTO>), StatusCodes.Status200OK)]
@@ -59,14 +46,14 @@ public class AreaController : BaseController
         return area;
     }
 
-    [HttpPost("{areaId}")]
+    [HttpPost]
     [ProducesResponseType(typeof(ResponseDTO<AreaDTO>), StatusCodes.Status200OK)]
-    public async Task<AreaDTO> PostArea(Guid? areaId, [FromBody] AreaPostDTO req)
+    public async Task<AreaDTO> PostArea([FromBody] AreaPostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         var user = await _userService.CheckAndGetUserAsync(userId);
 
-        var parsedAreaId = areaId ?? Guid.Empty;
+        var parsedAreaId = req.Id;
         var area = await _areaService.GetAreaIncludeAllById(parsedAreaId);
 
         // Add Area
@@ -80,6 +67,7 @@ public class AreaController : BaseController
         // Patch Area
         await _areaService.CheckAreaOwnership(area.Id, user);
         _mapper.Map(req, area);
+
         await _areaService.UpdateAsync(area);
 
         return _mapper.Map<AreaDTO>(req);

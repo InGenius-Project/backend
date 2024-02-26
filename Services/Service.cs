@@ -123,10 +123,7 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
         await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task SaveChangesAsync()
-    {
-        await _unitOfWork.SaveChangesAsync();
-    }
+    public async Task SaveChangesAsync() => await _unitOfWork.SaveChangesAsync();
 
 
     // /// <inheritdoc />

@@ -1,21 +1,15 @@
+namespace IngBackend.Repository;
+
 using IngBackend.Context;
 using IngBackend.Interfaces.Repository;
 using IngBackend.Models.DBEntity;
 using Microsoft.EntityFrameworkCore;
 
-namespace IngBackend.Repository;
-
-public class AreaRepository : Repository<Area, Guid>, IAreaRepository
+public class AreaRepository(IngDbContext context) : Repository<Area, Guid>(context), IAreaRepository
 {
-    private readonly IngDbContext _context;
+    private readonly IngDbContext _context = context;
 
-    public AreaRepository(IngDbContext context) : base(context)
-    {
-        _context = context;
-    }
-    public IQueryable<Area> GetAreaByIdIncludeAll(Guid id)
-    {
-        return _context.Area
+    public IQueryable<Area> GetAreaByIdIncludeAll(Guid id) => _context.Area
             .Include(a => a.TextLayout)
             .Include(a => a.ImageTextLayout)
                 .ThenInclude(it => it.Image)
@@ -25,7 +19,9 @@ public class AreaRepository : Repository<Area, Guid>, IAreaRepository
                 .ThenInclude(kv => kv.Items)
             .Include(a => a.AreaType)
             .Where(a => a.Id == id);
-    }
+
+    public IQueryable<Area> GetAreaByIdIncludeUser(Guid id) => _context.Area.Include(a => a.User).Where(a => a.Id == id);
+
 
 
 
