@@ -1,3 +1,4 @@
+namespace IngBackend.Services.UserService;
 using AutoMapper;
 using System.Linq.Expressions;
 using IngBackend.Enum;
@@ -9,22 +10,12 @@ using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 
-namespace IngBackend.Services.UserService;
-
-public class UserService : Service<User, UserInfoDTO, Guid>
+public class UserService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository, IPasswordHasher passwordHasher) : Service<User, UserInfoDTO, Guid>(unitOfWork, mapper)
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-    private readonly IRepositoryWrapper _repository;
-    private readonly IPasswordHasher _passwordHasher;
-
-    public UserService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository, IPasswordHasher passwordHasher) : base(unitOfWork, mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-        _repository = repository;
-        _passwordHasher = passwordHasher;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
+    private readonly IRepositoryWrapper _repository = repository;
+    private readonly IPasswordHasher _passwordHasher = passwordHasher;
 
     public async Task<UserInfoDTO?> GetUserByIdIncludeAllAsync(Guid userId)
     {
@@ -34,8 +25,7 @@ public class UserService : Service<User, UserInfoDTO, Guid>
 
     public async Task PostUser(UserInfoPostDTO req, Guid userId)
     {
-        var user = await _repository.User.GetUserByIdIncludeAll(userId).FirstOrDefaultAsync();
-        user.Areas.ForEach(x => _repository.Area.SetEntityState(x, EntityState.Detached));
+        var user = await _repository.User.GetUserByIdIncludeAll(userId).AsNoTracking().FirstOrDefaultAsync();
         _mapper.Map(req, user);
         await _repository.User.UpdateAsync(user);
 

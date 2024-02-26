@@ -1,11 +1,9 @@
-﻿using IngBackend.Enum;
+﻿namespace IngBackend.Models.DBEntity;
+
 using IngBackend.Interfaces.Repository;
-using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
-namespace IngBackend.Models.DBEntity;
 public class Tag : BaseEntity, IEntity<Guid>
 {
     [Key]
@@ -35,10 +33,6 @@ public class TagType : BaseEntity, IEntity<int>
     [StringLength(20)]
     public required string Value { get; set; } // unique
     public required string Color { get; set; }
-
-    [JsonIgnore]
-    public List<AreaType>? AreaTypes { get; set; }
-
 }
 
 

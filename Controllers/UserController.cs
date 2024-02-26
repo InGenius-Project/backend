@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿namespace IngBackend.Controllers;
+using AutoMapper;
 using AutoWrapper.Wrappers;
 using Hangfire;
 using IngBackend.Enum;
@@ -10,8 +11,6 @@ using IngBackend.Services.TokenServices;
 using IngBackend.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
-namespace IngBackend.Controllers;
 
 [ApiController]
 [Authorize]

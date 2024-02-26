@@ -1,6 +1,6 @@
+namespace IngBackend.Services.AreaService;
 using AutoMapper;
 using IngBackend.Enum;
-using System.Diagnostics;
 using IngBackend.Exceptions;
 using IngBackend.Interfaces.Repository;
 using IngBackend.Interfaces.UnitOfWork;
@@ -9,26 +9,12 @@ using IngBackend.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 
-namespace IngBackend.Services.AreaService;
-
-public class AreaService : Service<Area, AreaDTO, Guid>
+public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository) : Service<Area, AreaDTO, Guid>(unitOfWork, mapper)
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper = mapper;
+    private readonly IRepositoryWrapper _repository = repository;
+    private readonly IRepository<AreaType, int> _areaTypeRepository = unitOfWork.Repository<AreaType, int>();
 
-    private readonly IMapper _mapper;
-    private readonly IRepositoryWrapper _repository;
-
-    private readonly IRepository<AreaType, int> _areaTypeRepository;
-
-
-    public AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository) : base(unitOfWork, mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-        _repository = repository;
-        _areaTypeRepository = unitOfWork.Repository<AreaType, int>();
-
-    }
     public async Task<AreaDTO?> GetAreaIncludeAllById(Guid areaId)
     {
         var area = _repository.Area.GetAreaByIdIncludeAll(areaId);
@@ -46,12 +32,7 @@ public class AreaService : Service<Area, AreaDTO, Guid>
 
     public async void ClearArea(AreaDTO req)
     {
-        var area = await _repository.Area.GetByIdAsync(req.Id);
-
-        if (area == null)
-        {
-            throw new AreaNotFoundException();
-        }
+        var area = await _repository.Area.GetByIdAsync(req.Id) ?? throw new AreaNotFoundException();
 
         var properties = area.GetType().GetProperties();
 
@@ -70,7 +51,8 @@ public class AreaService : Service<Area, AreaDTO, Guid>
         var areaTypes = _areaTypeRepository
             .GetAll()
             .Where(a => a.UserRole.Any(ur => userRoles.Contains(ur)));
-        return await _mapper.ProjectTo<AreaTypeDTO>(areaTypes).ToListAsync(); ;
+        return await _mapper.ProjectTo<AreaTypeDTO>(areaTypes).ToListAsync();
+        ;
     }
 
 }

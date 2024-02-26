@@ -1,28 +1,23 @@
-﻿
+﻿namespace IngBackend.Repository;
+
 using IngBackend.Interfaces.Repository;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
-namespace IngBackend.Repository;
-
-public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
+public class Repository<TEntity, TKey>(DbContext context) : IRepository<TEntity, TKey>
     where TEntity : class, IEntity<TKey>
 {
-    private DbContext _context { get; set; }
-    private readonly DbSet<TEntity> _dbSet;
+    private DbContext Context { get; set; } = context;
+    private readonly DbSet<TEntity> _dbSet = context.Set<TEntity>();
 
-    public Repository(DbContext context)
-    {
-        _context = context;
-        _dbSet = context.Set<TEntity>();
-    }
     public async Task AddAsync(TEntity entity)
     {
-        await _context.Set<TEntity>().AddAsync(entity);
+        await Context.Set<TEntity>().AddAsync(entity);
+        await SaveAsync();
     }
-    public async Task DeleteByIdAsync(TKey id)
+    public async Task DeleteByIdAsync(TKey key)
     {
-        var entityToDelete = await _dbSet.FindAsync(id);
+        var entityToDelete = await _dbSet.FindAsync(key);
 
         if (entityToDelete != null)
         {
@@ -30,9 +25,15 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
             await SaveAsync();
         }
     }
-    public async Task<TEntity?> GetByIdAsync(TKey id)
+    public async Task<TEntity?> GetByIdAsync(TKey id) => await Context.Set<TEntity>().FindAsync(id);
+
+    public async Task<TEntity?> GetByIdAsync(TKey id, bool tracking = true)
     {
-        return await _context.Set<TEntity>().FindAsync(id);
+        if (!tracking)
+        {
+            return await Context.Set<TEntity>().AsNoTracking().FirstOrDefaultAsync(e => e.Id.Equals(id));
+        }
+        return await Context.Set<TEntity>().FindAsync(id);
     }
 
     public IQueryable<TEntity> GetAll()
@@ -91,10 +92,7 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
         await SaveAsync();
     }
 
-    public async Task SaveAsync()
-    {
-        await _context.SaveChangesAsync();
-    }
+    public async Task SaveAsync() => await Context.SaveChangesAsync();
 
     // /// <summary>
     // /// 建構EF一個Entity的Repository，需傳入此Entity的Context。
@@ -188,20 +186,14 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
     /// <inheritdoc />
     public async Task<IEnumerable<TEntity>> CollectionAsync<TProperty>(Expression<Func<TEntity, IEnumerable<TProperty>>> navigationProperty)
     {
-        var query = _context.Set<TEntity>().AsQueryable();
+        var query = Context.Set<TEntity>().AsQueryable();
         var result = await query.Include(navigationProperty).ToListAsync();
         return result;
     }
 
     /// <inheritdoc />
-    public void SetEntityState(TEntity entity, EntityState state)
-    {
-        _context.Entry(entity).State = state;
-    }
+    public void SetEntityState(TEntity entity, EntityState state) => Context.Entry(entity).State = state;
 
     /// <inheritdoc />
-    public IEnumerable<TEntity> GetLocal()
-    {
-        return _context.Set<TEntity>().Local.AsEnumerable();
-    }
+    public IEnumerable<TEntity> GetLocal() => Context.Set<TEntity>().Local.AsEnumerable();
 }

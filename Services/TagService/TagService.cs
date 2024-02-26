@@ -1,39 +1,52 @@
-using System.Runtime.CompilerServices;
+namespace IngBackend.Services.TagService;
+
 using AutoMapper;
+using IngBackend.Exceptions;
 using IngBackend.Interfaces.Repository;
 using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 
-namespace IngBackend.Services.TagService;
-
-public class TagService : Service<Tag, TagDTO, Guid>
+public class TagService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository) : Service<Tag, TagDTO, Guid>(unitOfWork, mapper)
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IRepository<Tag, Guid> _tagRepository;
-    private readonly IMapper _mapper;
-    private readonly IRepository<TagType, int> _tagTypeRepository;
-
-    public TagService(IUnitOfWork unitOfWork, IMapper mapper) : base(unitOfWork, mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-        _tagRepository = unitOfWork.Repository<Tag, Guid>();
-        _tagTypeRepository = unitOfWork.Repository<TagType, int>();
-    }
+    private readonly IMapper _mapper = mapper;
+    private readonly IRepositoryWrapper _repository = repository;
 
     public async Task<List<TagDTO>?> GetAllTagsByType(string? type)
     {
-        var tags = _tagRepository.GetAll()
+        var tags = _repository.Tag.GetAll()
             .Include(t => t.Type)
             .Where(t => t.Type.Value == type);
 
         if (tags == null)
         {
-            return new List<TagDTO>();
+            return [];
         }
         return await _mapper.ProjectTo<List<TagDTO>>(tags).FirstOrDefaultAsync();
     }
+
+    public async Task PostTag(TagDTO req)
+    {
+        var tagType = await _repository.TagType.GetByIdAsync(req.Type.Id) ?? throw new NotFoundException(req.Id.ToString());
+
+        _repository.TagType.SetEntityState(tagType, EntityState.Detached);
+        var existingTag = await _repository.Tag.GetByIdAsync(req.Id);
+        if (existingTag == null)
+        {
+            var newTag = _mapper.Map<Tag>(req);
+            newTag.Type = tagType;
+            await _repository.Tag.AddAsync(newTag);
+        }
+        else
+        {
+            _mapper.Map(req, existingTag);
+            existingTag.Type = tagType;
+            await _repository.Tag.UpdateAsync(existingTag);
+        }
+    }
+
+    public IEnumerable<TagType> GetLocals() => _repository.TagType.GetLocal();
+
 }
 

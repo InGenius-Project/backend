@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoWrapper.Wrappers;
 using IngBackend.Exceptions;
 using IngBackend.Interfaces.Repository;
 using IngBackend.Interfaces.Service;
@@ -38,7 +39,7 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
             }
             else
             {
-                throw new EntityNotFoundException($"No {typeof(TDto).Name}s were found");
+                throw new EntityNotFoundException(typeof(TDto).Name);
             }
 
         }
@@ -52,14 +53,14 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
 
     public IEnumerable<TDto> GetAll(params Expression<Func<TEntity, object>>[] includes)
     {
-        var query = _unitOfWork.Repository<TEntity, TKey>().GetAll(includes);
+        var query = _unitOfWork.Repository<TEntity, TKey>().GetAll(includes).AsNoTracking();
 
         return _mapper.Map<IEnumerable<TDto>>(query);
     }
 
     public IEnumerable<TDto> GetAll(Expression<Func<TEntity, bool>> predicate)
     {
-        var query = _unitOfWork.Repository<TEntity, TKey>().GetAll(predicate);
+        var query = _unitOfWork.Repository<TEntity, TKey>().GetAll(predicate).AsNoTracking();
 
         return _mapper.Map<IEnumerable<TDto>>(query);
     }
@@ -67,7 +68,7 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
     /// <inheritdoc />
     public IEnumerable<TDto> GetAll(Expression<Func<TEntity, bool>> predicate, params Expression<Func<TEntity, object>>[] includes)
     {
-        var query = _unitOfWork.Repository<TEntity, TKey>().GetAll(predicate, includes);
+        var query = _unitOfWork.Repository<TEntity, TKey>().GetAll(predicate, includes).AsNoTracking();
 
         return _mapper.Map<IEnumerable<TDto>>(query);
     }
@@ -76,29 +77,29 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
     {
         try
         {
-            var result = await _unitOfWork.Repository<TEntity, TKey>().GetByIdAsync(id);
-
-            if (result is null)
-            {
-                throw new EntityNotFoundException($"Entity with ID {id} not found.");
-            }
+            var result = await _unitOfWork.Repository<TEntity, TKey>().GetByIdAsync(id, false);
 
             return _mapper.Map<TDto>(result);
         }
 
-        catch (EntityNotFoundException ex)
+        catch (Exception ex)
         {
-            var message = $"Error retrieving {typeof(TDto).Name} with Id: {id}";
-
-            throw new EntityNotFoundException(message, ex);
+            throw new ApiException(ex);
         }
     }
 
     public async Task<TDto?> GetByIdAsync(TKey id, params Expression<Func<TEntity, object>>[] includes)
     {
-        var query = _unitOfWork.Repository<TEntity, TKey>().GetAll(includes);
+        var entity = await _unitOfWork.Repository<TEntity, TKey>().GetAll(includes).FirstOrDefaultAsync(e => e.Id.Equals(id));
 
-        return _mapper.Map<TDto>(await query.FirstOrDefaultAsync(e => e.Id.Equals(id)));
+        var dto = _mapper.Map<TDto>(entity);
+
+        if (entity == null)
+        {
+            return null;
+        }
+        _unitOfWork.Repository<TEntity, TKey>().SetEntityState(entity, EntityState.Detached);
+        return dto;
     }
 
 
@@ -117,6 +118,7 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
     public async Task UpdateAsync(TDto dto)
     {
         var entity = _mapper.Map<TEntity>(dto);
+
         await _unitOfWork.Repository<TEntity, TKey>().UpdateAsync(entity);
         await _unitOfWork.SaveChangesAsync();
     }
@@ -196,27 +198,15 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
 
     /// <inheritdoc />
     public async Task LoadCollectionAsync<TProperty>(TEntity entity, Expression<Func<TEntity, IEnumerable<TProperty>>> navigationProperty)
-    where TProperty : class
-    {
-        await _unitOfWork.LoadCollectionAsync(entity, navigationProperty);
-    }
+    where TProperty : class => await _unitOfWork.LoadCollectionAsync(entity, navigationProperty);
 
     /// <inheritdoc />
     public async Task LoadCollectionAsync<TProperty>(IEnumerable<TProperty> entities, Expression<Func<TProperty, IEnumerable<TEntity>>> navigationProperty)
-    where TProperty : class
-    {
-        await _unitOfWork.LoadCollectionAsync(entities, navigationProperty);
-    }
+    where TProperty : class => await _unitOfWork.LoadCollectionAsync(entities, navigationProperty);
 
     /// <inheritdoc />
-    public void SetEntityState(TEntity entity, EntityState state)
-    {
-        _unitOfWork.Repository<TEntity, TKey>().SetEntityState(entity, state);
-    }
+    public void SetEntityState(TEntity entity, EntityState state) => _unitOfWork.Repository<TEntity, TKey>().SetEntityState(entity, state);
 
     /// <inheritdoc />
-    public IEnumerable<TEntity> GetLocal()
-    {
-        return _unitOfWork.Repository<TEntity, TKey>().GetLocal();
-    }
+    public IEnumerable<TEntity> GetLocal() => _unitOfWork.Repository<TEntity, TKey>().GetLocal();
 }

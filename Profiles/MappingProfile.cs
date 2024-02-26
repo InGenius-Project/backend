@@ -95,6 +95,8 @@ public class MappingProfile : Profile
                 .ReverseMap();
         CreateMap<TagType, TagTypeDTO>()
                 .ReverseMap();
+        CreateMap<TagTypeDTO, TagTypeDTO>();
+
 
 
     }

@@ -1,6 +1,4 @@
-﻿using IngBackend.Enum;
-
-namespace IngBackend.Models.DTO;
+﻿namespace IngBackend.Models.DTO;
 
 public class TagDTO
 {

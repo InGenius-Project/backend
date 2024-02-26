@@ -1,18 +1,18 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿namespace IngBackend.Interfaces.Repository;
+using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
-namespace IngBackend.Interfaces.Repository;
-
-public interface IRepository<TEntity, Tkey> where TEntity : IEntity<Tkey>
+public interface IRepository<TEntity, TKey> where TEntity : IEntity<TKey>
 {
     Task AddAsync(TEntity entity);
-    Task<TEntity?> GetByIdAsync(Tkey id);
+    Task<TEntity?> GetByIdAsync(TKey id);
+    Task<TEntity?> GetByIdAsync(TKey id, bool tracking = true);
     IQueryable<TEntity> GetAll();
     IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> predicate);
     IQueryable<TEntity> GetAll(params Expression<Func<TEntity, object>>[] includes);
     IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> predicate, params Expression<Func<TEntity, object>>[] includes);
     Task UpdateAsync(TEntity entity);
-    Task DeleteByIdAsync(Tkey key);
+    Task DeleteByIdAsync(TKey key);
     Task SaveAsync();
 
 
