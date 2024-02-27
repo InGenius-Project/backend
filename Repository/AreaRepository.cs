@@ -22,8 +22,8 @@ public class AreaRepository(IngDbContext context) : Repository<Area, Guid>(conte
 
     public IQueryable<Area> GetAreaByIdIncludeUser(Guid id) => _context.Area.Include(a => a.User).Where(a => a.Id == id);
 
-
-
-
+    public IQueryable<AreaType> GetAreaTypeByIdIncludeAll(int id) => _context.AreaType
+        .Include(at => at.ListTagTypes)
+        .Where(a => a.Id == id);
 
 }

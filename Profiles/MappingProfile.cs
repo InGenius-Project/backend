@@ -55,20 +55,20 @@ public class MappingProfile : Profile
                     opt.Condition((src, dest, srcMember) => src.AreaType != null);
                     opt.MapFrom(src => src.AreaType!.LayoutType);
                 });
-        CreateMap<AreaPostDTO, AreaDTO>()
-                .ForMember(dest => dest.AreaTypeId, opt => opt.MapFrom(src => src.AreaTypeId))
-          .ForAllMembers(opts =>
-                {
-                    opts.AllowNull();
-                    opts.Condition((src, dest, srcMember) => srcMember != null);
-                });
-
-        CreateMap<AreaDTO, Area>();
+        CreateMap<AreaPostDTO, Area>();
+        // .ForMember(dest => dest.ListLayout.Items, opt => opt.Ignore())
+        // .ForAllMembers(opts =>
+        // {
+        //     opts.AllowNull();
+        //     opts.Condition((src, dest, srcMember) => srcMember != null);
+        // });
         CreateMap<AreaType, AreaTypeDTO>();
         CreateMap<AreaTypeDTO, AreaType>()
             .ForMember(dest => dest.ListTagTypes, opt => opt.Ignore());
+
         CreateMap<AreaTypePostDTO, AreaType>()
                 .ForMember(dest => dest.ListTagTypes, opt => opt.Ignore());
+
 
         // TextLayout
         CreateMap<TextLayoutDTO, TextLayout>()
@@ -96,6 +96,8 @@ public class MappingProfile : Profile
         CreateMap<TagType, TagTypeDTO>()
                 .ReverseMap();
         CreateMap<TagTypeDTO, TagTypeDTO>();
+        CreateMap<TagType, TagTypeDetailDTO>();
+
 
 
 

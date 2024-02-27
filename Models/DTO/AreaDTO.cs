@@ -46,7 +46,7 @@ public class AreaTypeDTO
 
 public class AreaTypePostDTO : AreaTypeDTO
 {
-    public List<int> ListTagTypeIds { get; set; } = new List<int>();
+    public required List<int> ListTagTypeIds { get; set; }
 }
 
 
@@ -81,7 +81,7 @@ public class ImageTextLayoutDTO
 public class ListLayoutDTO
 {
     public Guid Id { get; set; }
-    public List<TagDTO>? Items { get; set; }
+    public List<TagDTO> Items { get; set; } = [];
 }
 
 public class KeyValueListLayoutDTO

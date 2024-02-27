@@ -10,7 +10,7 @@ public class Tag : BaseEntity, IEntity<Guid>
     public Guid Id { get; set; }
     public required string Name { get; set; }
 
-    public required TagType Type { get; set; }
+    public required TagType? Type { get; set; }
 
     public int Count { get; set; }
 

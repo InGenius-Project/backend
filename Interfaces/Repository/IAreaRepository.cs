@@ -8,4 +8,7 @@ public interface IAreaRepository : IRepository<Area, Guid>
 
     IQueryable<Area> GetAreaByIdIncludeUser(Guid id);
 
+    IQueryable<AreaType> GetAreaTypeByIdIncludeAll(int id);
+
+
 }

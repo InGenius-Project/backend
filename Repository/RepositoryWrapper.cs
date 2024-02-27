@@ -14,7 +14,7 @@ public class RepositoryWrapper(IngDbContext context) : IRepositoryWrapper
 
     private IRepository<AreaType, int> _areaTypeRepository;
 
-    private IRepository<Tag, Guid> _tagRepository;
+    private ITagRepository _tagRepository;
 
     private IRepository<TagType, int> _tagTypeRepository;
 
@@ -63,11 +63,11 @@ public class RepositoryWrapper(IngDbContext context) : IRepositoryWrapper
         }
 
     }
-    public IRepository<Tag, Guid> Tag
+    public ITagRepository Tag
     {
         get
         {
-            _tagRepository ??= new Repository<Tag, Guid>(_context);
+            _tagRepository ??= new TagRepository(_context);
             return _tagRepository;
         }
     }

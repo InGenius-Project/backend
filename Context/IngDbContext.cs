@@ -21,6 +21,9 @@ public class IngDbContext : DbContext
     public DbSet<Resume> Resume { get; set; }
     public DbSet<Recruitment> Recruitment { get; set; }
     public DbSet<Area> Area { get; set; }
+    public DbSet<AreaType> AreaType { get; set; }
+    public DbSet<Tag> Tag { get; set; }
+    public DbSet<TagType> TagType { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -44,7 +47,18 @@ public class IngDbContext : DbContext
         modelBuilder.Entity<AreaType>()
             .Property(t => t.Id).ValueGeneratedOnAdd();
 
+        // Data seeding
 
+        modelBuilder.Entity<TagType>().HasData(new TagType
+        {
+            Id = 1,
+            Name = "Custom",
+            Value = "Custom",
+            Color = "#000"
+        });
+
+
+        // Dummy user
         PasswordHasher hasher = new PasswordHasher();
         User user = new User
         {

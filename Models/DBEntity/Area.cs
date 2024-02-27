@@ -109,7 +109,7 @@ public class ListLayout : BaseEntity, IEntity<Guid>
     [Key]
     public Guid Id { get; set; }
 
-    public List<Tag>? Items { get; set; }
+    public List<Tag> Items { get; set; } = [];
 
     [JsonIgnore]
     [Required]

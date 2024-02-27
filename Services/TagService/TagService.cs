@@ -51,6 +51,23 @@ public class TagService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapp
         }
     }
 
+    public async Task<TagTypeDetailDTO?> GetTagTypeIncludeTags(int id)
+    {
+        var tagType = await _repository.TagType.GetByIdAsync(id);
+
+        if (tagType == null)
+        {
+            throw new TagTypeNotFoundExceptiuon();
+        }
+        var tagTypeDetail = _mapper.Map<TagTypeDetailDTO>(tagType);
+        tagTypeDetail.Tags = await _repository.Tag.GetAll()
+            .Include(t => t.Type)
+            .Where(t => t.Type.Id == id)
+            .Select(t => _mapper.Map<TagDTO>(t)).ToListAsync();
+
+        return tagTypeDetail;
+    }
+
 
 }
 

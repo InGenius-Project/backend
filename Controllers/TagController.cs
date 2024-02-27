@@ -60,10 +60,10 @@ public class TagController(
     }
 
     [HttpGet("type/{id}")]
-    [ProducesResponseType(typeof(ResponseDTO<TagTypeDTO>), StatusCodes.Status200OK)]
-    public async Task<TagTypeDTO> GetTagType(int id)
+    [ProducesResponseType(typeof(ResponseDTO<TagTypeDetailDTO>), StatusCodes.Status200OK)]
+    public async Task<TagTypeDetailDTO> GetTagType(int id)
     {
-        var tagType = await _tagTypeService.GetByIdAsync(id)
+        var tagType = await _tagService.GetTagTypeIncludeTags(id)
             ?? throw new NotFoundException($"標籤類型: {id}");
         return tagType;
     }

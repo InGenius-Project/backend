@@ -25,8 +25,11 @@ public class UserService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
 
     public async Task PostUser(UserInfoPostDTO req, Guid userId)
     {
-        var user = await _repository.User.GetUserByIdIncludeAll(userId).AsNoTracking().FirstOrDefaultAsync();
+        var user = await _repository.User.GetUserByIdIncludeAll(userId).AsNoTracking().FirstOrDefaultAsync() ?? throw new UserNotFoundException();
+
+
         _mapper.Map(req, user);
+
         await _repository.User.UpdateAsync(user);
 
     }
