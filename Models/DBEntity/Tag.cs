@@ -2,6 +2,7 @@
 
 using IngBackend.Interfaces.Repository;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 public class Tag : BaseEntity, IEntity<Guid>
@@ -10,17 +11,25 @@ public class Tag : BaseEntity, IEntity<Guid>
     public Guid Id { get; set; }
     public required string Name { get; set; }
 
-    public required TagType? Type { get; set; }
+    [Required]
+    public virtual TagType Type { get; set; }
+
+    [Required]
+    [ForeignKey("TagType")]
+    public int TypeId { get; set; }
 
     public int Count { get; set; }
 
     [JsonIgnore]
-    public List<ListLayout>? ListLayouts { get; set; }
+    public virtual List<ListLayout>? ListLayouts { get; set; }
     [JsonIgnore]
-    public List<KeyValueItem>? KeyValueItems { get; set; }
+    public virtual List<KeyValueItem>? KeyValueItems { get; set; }
     [JsonIgnore]
-    public List<User>? User { get; set; }
+    public virtual List<User>? User { get; set; }
 
+    // TODO: Test timestamp here  
+    // [Timestamp]
+    // public byte[] Timestamp { get; set; }
 }
 
 public class TagType : BaseEntity, IEntity<int>
@@ -33,6 +42,9 @@ public class TagType : BaseEntity, IEntity<int>
     [StringLength(20)]
     public required string Value { get; set; } // unique
     public required string Color { get; set; }
+    // TODO: Test timestamp here  
+    // [Timestamp]
+    // public byte[] Timestamp { get; set; }
 }
 
 

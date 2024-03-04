@@ -42,7 +42,11 @@ string? connectionString = builder.Configuration.GetConnectionString("Default");
 
 if (env.IsDevelopment())
 {
-    builder.Services.AddDbContext<IngDbContext>(options => options.UseSqlite(connectionString));
+    builder.Services.AddDbContext<IngDbContext>(options =>
+    {
+        options.UseSqlite(connectionString);
+        options.EnableSensitiveDataLogging();
+    });
 }
 else
 {
@@ -200,16 +204,16 @@ app.MapControllers();
 // Apply Migration
 using (var scope = app.Services.CreateScope())
 {
-    var services = scope.ServiceProvider;
+    // var services = scope.ServiceProvider;
 
-    Console.WriteLine("READY To Applying Migrations");
+    // Console.WriteLine("READY To Applying Migrations");
 
-    var context = services.GetRequiredService<IngDbContext>();
-    if (context.Database.GetPendingMigrations().Any())
-    {
-        Console.WriteLine("Applying Migrations...");
-        context.Database.Migrate();
-    }
+    // var context = services.GetRequiredService<IngDbContext>();
+    // if (context.Database.GetPendingMigrations().Any())
+    // {
+    //     Console.WriteLine("Applying Migrations...");
+    //     context.Database.Migrate();
+    // }
 }
 
 app.Run();

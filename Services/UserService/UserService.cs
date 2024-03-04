@@ -20,18 +20,22 @@ public class UserService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
     public async Task<UserInfoDTO?> GetUserByIdIncludeAllAsync(Guid userId)
     {
         var user = _repository.User.GetUserByIdIncludeAll(userId);
-        return await _mapper.ProjectTo<UserInfoDTO>(user).FirstOrDefaultAsync();
+        return await _mapper.ProjectTo<UserInfoDTO>(user).AsNoTracking().FirstOrDefaultAsync();
     }
 
     public async Task PostUser(UserInfoPostDTO req, Guid userId)
     {
-        var user = await _repository.User.GetUserByIdIncludeAll(userId).AsNoTracking().FirstOrDefaultAsync() ?? throw new UserNotFoundException();
+        var user = await _repository.User.GetUserByIdIncludeAll(userId).FirstOrDefaultAsync() ?? throw new UserNotFoundException();
 
+        foreach (var area in req.Areas)
+        {
+            await _repository.Area.PostArea(_mapper.Map<Area>(area), userId);
 
+        }
         _mapper.Map(req, user);
 
-        await _repository.User.UpdateAsync(user);
 
+        await _repository.User.UpdateAsync(user);
     }
 
     public async Task AddAsync(UserSignUpDTO req)

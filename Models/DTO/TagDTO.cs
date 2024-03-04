@@ -3,7 +3,7 @@
 
 public class TagDTO
 {
-    public Guid Id { get; set; }
+    public Guid? Id { get; set; }
     public string Name { get; set; } = "";
     public TagTypeDTO Type { get; set; } = new TagTypeDTO();
 }

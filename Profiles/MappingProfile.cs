@@ -1,10 +1,8 @@
-﻿using AutoMapper;
+﻿namespace IngBackend.Profiles;
+using AutoMapper;
 using IngBackend.Interfaces.Service;
-using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
-
-namespace IngBackend.Profiles;
 
 public class MappingProfile : Profile
 {
@@ -21,7 +19,7 @@ public class MappingProfile : Profile
                     opts.Condition((src, dest, srcMember) => srcMember != null);
                 });
         CreateMap<UserInfoPostDTO, User>()
-                // .ForMember(dest => dest.Areas, opt => opt.Ignore())
+                .ForMember(dest => dest.Areas, opt => opt.Ignore())
                 .ForAllMembers(opts =>
                 {
                     opts.AllowNull();
@@ -55,8 +53,19 @@ public class MappingProfile : Profile
                     opt.Condition((src, dest, srcMember) => src.AreaType != null);
                     opt.MapFrom(src => src.AreaType!.LayoutType);
                 });
+        CreateMap<ListLayout, ListLayout>()
+                .ForMember(dest => dest.Items, opt => opt.Ignore())
+                .ForMember(dest => dest.Area, opt => opt.Ignore())
+                .ForMember(dest => dest.AreaId, opt => opt.Ignore());
+        CreateMap<Area, Area>()
+                .ForMember(dest => dest.ListLayout, opt => opt.Ignore())
+                 .ForAllMembers(opts =>
+                {
+                    opts.AllowNull();
+                    opts.Condition((src, dest, srcMember) => srcMember != null);
+                });
         CreateMap<AreaPostDTO, Area>();
-        // .ForMember(dest => dest.ListLayout.Items, opt => opt.Ignore())
+
         // .ForAllMembers(opts =>
         // {
         //     opts.AllowNull();
@@ -93,6 +102,9 @@ public class MappingProfile : Profile
         // Tag
         CreateMap<Tag, TagDTO>()
                 .ReverseMap();
+        CreateMap<Tag, Tag>()
+                .ForMember(dest => dest.ListLayouts, opt => opt.Ignore())
+                .ForMember(dest => dest.Type, opt => opt.Ignore());
         CreateMap<TagType, TagTypeDTO>()
                 .ReverseMap();
         CreateMap<TagTypeDTO, TagTypeDTO>();

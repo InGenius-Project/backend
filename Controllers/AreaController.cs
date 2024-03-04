@@ -51,9 +51,7 @@ public class AreaController(
     public async Task<AreaDTO?> PostArea([FromBody] AreaPostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.CheckAndGetUserAsync(userId);
-
-        await _areaService.PostArea(req, user);
+        await _areaService.PostArea(req, userId);
         return await _areaService.GetAreaIncludeAllById(req.Id);
     }
 
@@ -140,9 +138,8 @@ public class AreaController(
     public async Task<IActionResult> UploadAreaImage([FromQuery] Guid areaId, IFormFile image)
     {
         Guid userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        UserInfoDTO user = await _userService.CheckAndGetUserIncludeAllAsync(userId);
 
-        await _areaService.CheckAreaOwnership(areaId, user);
+        await _areaService.CheckAreaOwnership(areaId, userId);
 
         var area =
             await _areaService.GetAreaIncludeAllById(areaId) ?? throw new NotFoundException("area 不存在");
@@ -175,10 +172,8 @@ public class AreaController(
     public async Task<IActionResult> GetImage([FromQuery] Guid areaId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.CheckAndGetUserIncludeAllAsync(userId);
-
         // Check CheckAreaOwnership
-        await _areaService.CheckAreaOwnership(areaId, user);
+        await _areaService.CheckAreaOwnership(areaId, userId);
 
         AreaDTO? area =
            await _areaService.GetAreaIncludeAllById(areaId) ?? throw new NotFoundException("area 不存在");

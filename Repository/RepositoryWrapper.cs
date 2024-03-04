@@ -1,18 +1,21 @@
+using AutoMapper;
 using IngBackend.Context;
 using IngBackend.Interfaces.Repository;
 using IngBackend.Models.DBEntity;
 
 namespace IngBackend.Repository;
 
-public class RepositoryWrapper(IngDbContext context) : IRepositoryWrapper
+public class RepositoryWrapper(IngDbContext context, IMapper mapper) : IRepositoryWrapper
 {
     private readonly IngDbContext _context = context;
+    private readonly IMapper _mapper = mapper;
     private IUserRepository _userRepository;
     private IAreaRepository _areaRepository;
     private IResumeRepository _resumeRepository;
     private IRecruitmentRepository _recruitmentRepository;
 
     private IRepository<AreaType, int> _areaTypeRepository;
+
 
     private ITagRepository _tagRepository;
 
@@ -49,7 +52,7 @@ public class RepositoryWrapper(IngDbContext context) : IRepositoryWrapper
     {
         get
         {
-            _areaRepository ??= new AreaRepository(_context);
+            _areaRepository ??= new AreaRepository(_context, _mapper);
             return _areaRepository;
         }
     }

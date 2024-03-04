@@ -80,7 +80,7 @@ public class ImageTextLayoutDTO
 
 public class ListLayoutDTO
 {
-    public Guid Id { get; set; }
+    public Guid? Id { get; set; }
     public List<TagDTO> Items { get; set; } = [];
 }
 

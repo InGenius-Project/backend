@@ -29,7 +29,7 @@ public class TagService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapp
     public async Task PostTag(TagDTO req)
     {
 
-        var existingTag = await _repository.Tag.GetByIdAsync(req.Id);
+        var existingTag = await _repository.Tag.GetByIdAsync(req.Id ?? Guid.Empty);
         var existingTagType = await _repository.TagType.GetByIdAsync(req.Type.Id);
 
         if (existingTagType == null)

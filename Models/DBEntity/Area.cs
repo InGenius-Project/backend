@@ -22,10 +22,12 @@ public class Area : BaseEntity, IEntity<Guid>
     [JsonIgnore]
     public User? User { get; set; }
     [JsonIgnore]
+    public Guid? UserId { get; set; }
+    [JsonIgnore]
     public Recruitment? Recruitment { get; set; }
     [JsonIgnore]
     [ForeignKey("AreaType")]
-    public int AreaTypeId { get; set; }
+    public int? AreaTypeId { get; set; }
     public AreaType? AreaType { get; set; } // default area
     [JsonIgnore]
     public TextLayout? TextLayout { get; set; }
@@ -109,15 +111,15 @@ public class ListLayout : BaseEntity, IEntity<Guid>
     [Key]
     public Guid Id { get; set; }
 
-    public List<Tag> Items { get; set; } = [];
+    public List<Tag> Items { get; set; } = new List<Tag>();
 
     [JsonIgnore]
-    [Required]
-    public required Area Area { get; set; }
+    // [Required]
+    public Area Area { get; set; }
 
     [ForeignKey("Area")]
-    [Required]
-    public Guid AreaId;
+    // [Required]       
+    public Guid AreaId { get; set; }
 }
 
 public class KeyValueListLayout : BaseEntity, IEntity<Guid>

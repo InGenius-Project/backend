@@ -20,10 +20,10 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
         return await _mapper.ProjectTo<AreaDTO>(area).FirstOrDefaultAsync();
     }
 
-    public async Task CheckAreaOwnership(Guid areaId, UserInfoDTO req)
+    public async Task CheckAreaOwnership(Guid areaId, Guid userId)
     {
         var area = await _repository.Area.GetAreaByIdIncludeUser(areaId).AsNoTracking().FirstOrDefaultAsync();
-        if (area == null || area.User?.Id != req.Id)
+        if (area == null || area.User?.Id != userId)
         {
             throw new ForbiddenException();
         }
@@ -69,38 +69,11 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
         return await _mapper.ProjectTo<AreaTypeDTO>(query).FirstOrDefaultAsync();
     }
 
-    public async Task PostArea(AreaPostDTO req, UserInfoDTO user)
+    public async Task PostArea(AreaPostDTO req, Guid userId)
     {
-        var parsedAreaId = req.Id;
-        var area = await _repository.Area.GetAreaByIdIncludeAll(parsedAreaId).FirstOrDefaultAsync();
-
-        // Add Area 
-        if (area == null)
-        {
-            var newArea = _mapper.Map<Area>(req);
-
-            if (req.ListLayout != null)
-            {
-                foreach (var listTag in req.ListLayout.Items)
-                {
-                    var tag = await _repository.Tag.GetByIdAsync(listTag.Id, false);
-                    _repository.Tag.SetEntityState(tag, EntityState.Modified);
-                    newArea.ListLayout.Items.Add(tag);
-                };
-
-            }
-            await _repository.Area.AddAsync(newArea);
-        }
-
-        await CheckAreaOwnership(area.Id, user);
-        _mapper.Map(req, area);
-        await _repository.Area.UpdateAsync(area);
+        await CheckAreaOwnership(req.Id, userId);
+        await _repository.Area.PostArea(_mapper.Map<Area>(req), userId);
     }
-
-
-
-
-
     public async Task PostAreaType(AreaTypePostDTO req)
     {
         var areaType = await _repository.Area.GetAreaTypeByIdIncludeAll(req.Id.GetValueOrDefault()).FirstOrDefaultAsync();
