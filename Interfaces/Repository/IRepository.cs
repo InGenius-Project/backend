@@ -18,5 +18,7 @@ public interface IRepository<TEntity, TKey> where TEntity : IEntity<TKey>
     Task SaveAsync();
     Task<IEnumerable<TEntity>> CollectionAsync<TProperty>(Expression<Func<TEntity, IEnumerable<TProperty>>> navigationProperty);
     void SetEntityState(TEntity entity, EntityState state);
+    void SetEntityState<TType>(TType entity, EntityState state);
+    void Attach<TType>(TType entity);
     IEnumerable<TEntity> GetLocal();
 }

@@ -72,7 +72,8 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
     public async Task PostArea(AreaPostDTO req, Guid userId)
     {
         await CheckAreaOwnership(req.Id, userId);
-        await _repository.Area.PostArea(_mapper.Map<Area>(req), userId);
+        List<Area> areaList = [_mapper.Map<Area>(req)];
+        await _repository.Area.PostAreas(areaList, userId);
     }
     public async Task PostAreaType(AreaTypePostDTO req)
     {

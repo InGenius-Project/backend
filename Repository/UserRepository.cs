@@ -32,8 +32,6 @@ public class UserRepository : Repository<User, Guid>, IUserRepository
                     .ThenInclude(kv => kv.Items)
             .Include(u => u.Areas)
                 .ThenInclude(a => a.AreaType);
-
-
     }
 
     public IQueryable<Resume> GetResumesByUserId(Guid id)

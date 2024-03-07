@@ -1,6 +1,8 @@
 namespace IngBackend.Services.UserService;
-using AutoMapper;
+
 using System.Linq.Expressions;
+using System.Net.Mail;
+using AutoMapper;
 using IngBackend.Enum;
 using IngBackend.Exceptions;
 using IngBackend.Interfaces.Repository;
@@ -10,7 +12,12 @@ using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 
-public class UserService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository, IPasswordHasher passwordHasher) : Service<User, UserInfoDTO, Guid>(unitOfWork, mapper)
+public class UserService(
+    IUnitOfWork unitOfWork,
+    IMapper mapper,
+    IRepositoryWrapper repository,
+    IPasswordHasher passwordHasher
+) : Service<User, UserInfoDTO, Guid>(unitOfWork, mapper)
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IMapper _mapper = mapper;
@@ -25,16 +32,12 @@ public class UserService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
 
     public async Task PostUser(UserInfoPostDTO req, Guid userId)
     {
-        var user = await _repository.User.GetUserByIdIncludeAll(userId).FirstOrDefaultAsync() ?? throw new UserNotFoundException();
+        var user =
+            await _repository
+                .User.GetByIdAsync(userId) ?? throw new UserNotFoundException();
 
-        foreach (var area in req.Areas)
-        {
-            await _repository.Area.PostArea(_mapper.Map<Area>(area), userId);
-
-        }
         _mapper.Map(req, user);
-
-
+        await _repository.Area.PostAreas(user);
         await _repository.User.UpdateAsync(user);
     }
 
@@ -51,7 +54,10 @@ public class UserService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
     /// <param name="email">The email address of the user to retrieve</param>
     /// <param name="includes">(optional) A list of related properties to retrieve</param>
     /// <returns>A `User` object containing the user information that matches the email address `email`, or null if no matching user exists</returns>
-    public async Task<UserInfoDTO?> GetUserByEmailAsync(string email, params Expression<Func<User, object>>[] includes)
+    public async Task<UserInfoDTO?> GetUserByEmailAsync(
+        string email,
+        params Expression<Func<User, object>>[] includes
+    )
     {
         var query = _repository.User.GetUserByEmail(email);
 
@@ -68,13 +74,17 @@ public class UserService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
         var user = await GetUserByIdIncludeAllAsync(userId);
         return user ?? throw new UserNotFoundException();
     }
+
     /// <summary>
     /// Asynchronously checks if a user exists with the specified ID and retrieves the user information if found.
     /// </summary>
     /// <param name="userId">The ID of the user to check and retrieve (Guid).</param>
     /// <returns>A `User` object containing the user information if found.</returns>
     /// <exception cref="UserNotFoundException">Throws a `UserNotFoundException` if no user exists with the specified ID.</exception>
-    public async Task<UserInfoDTO> CheckAndGetUserAsync(Guid userId, params Expression<Func<User, object>>[] includes)
+    public async Task<UserInfoDTO> CheckAndGetUserAsync(
+        Guid userId,
+        params Expression<Func<User, object>>[] includes
+    )
     {
         var user = await GetByIdAsync(userId, includes) ?? throw new UserNotFoundException();
         return user;
@@ -88,7 +98,11 @@ public class UserService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
     /// <returns>A `User` object containing the user information if found and has the allowed role.</returns>
     /// <exception cref="UserNotFoundException">Throws a `UserNotFoundException` if no user exists with the specified ID.</exception>
     /// <exception cref="ForbiddenException">Throws a `ForbiddenException` if the user exists but does not have the required role.</exception>
-    public async Task<UserInfoDTO> CheckAndGetUserAsync(Guid userId, UserRole allowedRole, params Expression<Func<User, object>>[] includes)
+    public async Task<UserInfoDTO> CheckAndGetUserAsync(
+        Guid userId,
+        UserRole allowedRole,
+        params Expression<Func<User, object>>[] includes
+    )
     {
         var user = await GetByIdAsync(userId, includes) ?? throw new UserNotFoundException();
 
@@ -108,7 +122,11 @@ public class UserService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
     /// <returns>A `User` object containing the user information if found and belongs to any of the allowed roles.</returns>
     /// <exception cref="UserNotFoundException">Throws a `UserNotFoundException` if no user exists with the specified ID.</exception>
     /// <exception cref="ForbiddenException">Throws a `ForbiddenException` if the user exists but does not belong to any of the allowed roles.</exception>
-    public async Task<UserInfoDTO> CheckAndGetUserAsync(Guid userId, IEnumerable<UserRole> allowedRoles, params Expression<Func<User, object>>[] includes)
+    public async Task<UserInfoDTO> CheckAndGetUserAsync(
+        Guid userId,
+        IEnumerable<UserRole> allowedRoles,
+        params Expression<Func<User, object>>[] includes
+    )
     {
         var user = await GetByIdAsync(userId, includes) ?? throw new UserNotFoundException();
 
@@ -153,7 +171,6 @@ public class UserService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
         user.Resumes.Add(_mapper.Map<Resume>(resumeDTO));
         await _unitOfWork.SaveChangesAsync();
     }
-
 
     public async Task<bool> VerifyEmailVerificationCode(UserInfoDTO req, string token)
     {

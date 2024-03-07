@@ -10,7 +10,6 @@ public interface IAreaRepository : IRepository<Area, Guid>
 
     IQueryable<AreaType> GetAreaTypeByIdIncludeAll(int id);
 
-    Task PostArea(Area postArea, Guid userId);
-
-
+    Task PostAreas(IEnumerable<Area> areas, Guid? userId);
+    Task PostAreas(User user);
 }

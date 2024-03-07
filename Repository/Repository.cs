@@ -109,6 +109,10 @@ public class Repository<TEntity, TKey>(DbContext context) : IRepository<TEntity,
     /// <inheritdoc />
     public void SetEntityState(TEntity entity, EntityState state) => Context.Entry(entity).State = state;
 
+    public void SetEntityState<TType>(TType entity, EntityState state) => Context.Entry(entity).State = state;
+
+    public void Attach<TType>(TType entity) => Context.Attach(entity);
+
     /// <inheritdoc />
     public IEnumerable<TEntity> GetLocal() => Context.Set<TEntity>().Local.AsEnumerable();
 

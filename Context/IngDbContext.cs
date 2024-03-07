@@ -1,4 +1,4 @@
-﻿using IngBackend.Interfaces.Service;
+using IngBackend.Interfaces.Service;
 using IngBackend.Models.DBEntity;
 using IngBackend.Services;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +9,6 @@ namespace IngBackend.Context;
 
 public class IngDbContext : DbContext
 {
-
     public IngDbContext(DbContextOptions<IngDbContext> options)
         : base(options) { }
 
@@ -38,47 +37,45 @@ public class IngDbContext : DbContext
                 r => r.HasOne<Resume>().WithMany().OnDelete(DeleteBehavior.NoAction)
             );
 
-        modelBuilder.Entity<TagType>()
-            .HasIndex(t => t.Value).IsUnique();
-        modelBuilder.Entity<TagType>()
-            .Property(t => t.Id).ValueGeneratedOnAdd();
+        modelBuilder.Entity<TagType>().HasIndex(t => t.Value).IsUnique();
+        modelBuilder.Entity<TagType>().Property(t => t.Id).ValueGeneratedOnAdd();
 
-        modelBuilder.Entity<AreaType>()
-            .HasIndex(t => t.Value).IsUnique();
-        modelBuilder.Entity<AreaType>()
-            .Property(t => t.Id).ValueGeneratedOnAdd();
+        modelBuilder.Entity<AreaType>().HasIndex(t => t.Value).IsUnique();
+        modelBuilder.Entity<AreaType>().Property(t => t.Id).ValueGeneratedOnAdd();
 
         modelBuilder.Entity<ListLayout>()
-            .HasMany(l => l.Items)
-            .WithMany(t => t.ListLayouts);
-
-
+        .HasMany(l => l.Items)
+        .WithMany(t => t.ListLayouts)
+        .UsingEntity(
+                        "ListLayoutTag",
+                        l => l.HasOne(typeof(Tag)).WithMany().HasForeignKey("TagId").HasPrincipalKey(nameof(Models.DBEntity.Tag.Id)),
+                        r => r.HasOne(typeof(ListLayout)).WithMany().HasForeignKey("ListLayoutId").HasPrincipalKey(nameof(ListLayout.Id)),
+                        j => j.HasKey("TagId", "ListLayoutId"));
 
         // Data seeding
 
-        TagType tagType = new()
-        {
-            Id = 1,
-            Name = "Custom",
-            Value = "Custom",
-            Color = "#000"
-        };
+        TagType tagType =
+            new()
+            {
+                Id = 1,
+                Name = "Custom",
+                Value = "Custom",
+                Color = "#000"
+            };
 
         modelBuilder.Entity<TagType>().HasData(tagType);
 
-
         // Dummy data
 
-        Tag tag = new()
-        {
-            Id = new Guid("1f2e6d84-7a4c-4d0b-9b8f-3e8f5a2c6d9a"),
-            Name = "React",
-            TypeId = 1,
-            Count = 0,
-        };
+        Tag tag =
+            new()
+            {
+                Id = new Guid("1f2e6d84-7a4c-4d0b-9b8f-3e8f5a2c6d9a"),
+                Name = "React",
+                TypeId = 1,
+                Count = 0,
+            };
         modelBuilder.Entity<Tag>().HasData(tag);
-
-
 
         PasswordHasher hasher = new PasswordHasher();
         User user = new User
@@ -89,7 +86,6 @@ public class IngDbContext : DbContext
             HashedPassword = hasher.HashPassword("testtest"),
             Role = Enum.UserRole.Intern
         };
-
 
         User internalUser = new User
         {
@@ -102,3 +98,4 @@ public class IngDbContext : DbContext
         modelBuilder.Entity<User>().HasData(user, internalUser);
     }
 }
+

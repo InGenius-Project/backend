@@ -380,5 +380,7 @@ appsettings.Secrets.json
 # database (dev)
 *.db
 *.db-*
+*.sqlite
+*.sqlite-*
 
 .vscode/tasks.json

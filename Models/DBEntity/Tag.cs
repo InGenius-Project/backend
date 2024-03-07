@@ -28,8 +28,8 @@ public class Tag : BaseEntity, IEntity<Guid>
     public virtual List<User>? User { get; set; }
 
     // TODO: Test timestamp here  
-    // [Timestamp]
-    // public byte[] Timestamp { get; set; }
+    [ConcurrencyCheck]
+    public Guid Version { get; set; }
 }
 
 public class TagType : BaseEntity, IEntity<int>
@@ -42,9 +42,10 @@ public class TagType : BaseEntity, IEntity<int>
     [StringLength(20)]
     public required string Value { get; set; } // unique
     public required string Color { get; set; }
+
     // TODO: Test timestamp here  
-    // [Timestamp]
-    // public byte[] Timestamp { get; set; }
+    [ConcurrencyCheck]
+    public Guid Version { get; set; }
 }
 
 

@@ -20,7 +20,7 @@ public class Area : BaseEntity, IEntity<Guid>
     public Resume? Resume { get; set; }
 
     [JsonIgnore]
-    public User? User { get; set; }
+    public virtual User? User { get; set; }
     [JsonIgnore]
     public Guid? UserId { get; set; }
     [JsonIgnore]
@@ -36,10 +36,13 @@ public class Area : BaseEntity, IEntity<Guid>
     public ImageTextLayout? ImageTextLayout { get; set; }
 
     [JsonIgnore]
-    public ListLayout? ListLayout { get; set; }
+    public virtual ListLayout? ListLayout { get; set; }
 
     [JsonIgnore]
     public KeyValueListLayout? KeyValueListLayout { get; set; }
+
+    [ConcurrencyCheck]
+    public Guid Version { get; set; }
 }
 
 public class AreaType : BaseEntity, IEntity<int>
@@ -111,15 +114,18 @@ public class ListLayout : BaseEntity, IEntity<Guid>
     [Key]
     public Guid Id { get; set; }
 
-    public List<Tag> Items { get; set; } = new List<Tag>();
+    public virtual List<Tag> Items { get; set; } = new List<Tag>();
 
     [JsonIgnore]
     // [Required]
-    public Area Area { get; set; }
+    public virtual Area Area { get; set; }
 
     [ForeignKey("Area")]
     // [Required]       
     public Guid AreaId { get; set; }
+
+    [ConcurrencyCheck]
+    public Guid Version { get; set; }
 }
 
 public class KeyValueListLayout : BaseEntity, IEntity<Guid>
