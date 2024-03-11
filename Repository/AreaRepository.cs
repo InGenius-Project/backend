@@ -44,8 +44,17 @@ public class AreaRepository(IngDbContext context, IMapper mapper)
         _context.Entry(entity).State = EntityState.Unchanged;
     }
 
+    public void Update<T>(T entity)
+    {
+        _context.Update(entity);
+    }
+
     // 在 ListLayout 中替換成追蹤中的 Tag 與 TagType 實體
-    private void AttachLocalTagAndTagTypeToListLayout(ListLayout listLayout, IEnumerable<Tag> tags, IEnumerable<TagType> tagTypes)
+    private void AttachLocalTagAndTagTypeToListLayout(
+        ListLayout listLayout,
+        IEnumerable<Tag> tags,
+        IEnumerable<TagType> tagTypes
+    )
     {
         for (var i = 0; i < listLayout.Items.Count; i++)
         {
@@ -70,11 +79,11 @@ public class AreaRepository(IngDbContext context, IMapper mapper)
         }
     }
 
-    private void PostUserAreas(User user) 
+    private void PostUserAreas(User user)
     {
         // 獲取 Tags 與 TagTypes 的追蹤實體
-        // var tags = _context.Tag;
-        // var tagTypes = _context.TagType;
+        var tags = _context.Tag;
+        var tagTypes = _context.TagType;
 
         void SaveListLayout(Area area)
         {
@@ -82,17 +91,17 @@ public class AreaRepository(IngDbContext context, IMapper mapper)
             // 需要追蹤 Tag 以及 ListLayout
             if (area.ListLayout != null)
             {
-                // 先把 Tag 的 Type 設為 null 
+                // 先把 Tag 的 Type 設為 null
                 // 否則開始追蹤 ListLayout 的時候會有一樣的 TagType 被追蹤
                 // 進而導致 Concurrency 問題
-                // area.ListLayout.Items.ForEach(tag => tag.Type = null);
+                area.ListLayout.Items.ForEach(tag => tag.Type = null);
                 _context.Attach(area.ListLayout);
-                // _context.AttachRange(area.ListLayout.Items);
-                // area.ListLayout.Items.ForEach(tag => _context.Attach(tag.Type));
+                _context.AttachRange(area.ListLayout.Items);
+                area.ListLayout.Items.ForEach(tag => _context.Attach(tag.Type));
 
                 // 在 ListLayout 中替換成追蹤中的 Tag 與 TagType 實體
-                // AttachLocalTagAndTagTypeToListLayout(area.ListLayout, tags, tagTypes);
-                // _context.Update(area.ListLayout);
+                AttachLocalTagAndTagTypeToListLayout(area.ListLayout, tags, tagTypes);
+                _context.Update(area.ListLayout);
             }
         }
         user.Areas.ForEach(SaveListLayout);
@@ -110,7 +119,7 @@ public class AreaRepository(IngDbContext context, IMapper mapper)
             // 需要追蹤 Tag 以及 ListLayout
             if (area.ListLayout != null)
             {
-                // 先把 Tag 的 Type 設為 null 
+                // 先把 Tag 的 Type 設為 null
                 // 否則開始追蹤 ListLayout 的時候會有一樣的 TagType 被追蹤
                 // 進而導致 Concurrency 問題
                 area.ListLayout.Items.ForEach(tag => tag.Type = null);
@@ -131,7 +140,8 @@ public class AreaRepository(IngDbContext context, IMapper mapper)
         areas.ToList().ForEach(SaveListLayout);
     }
 
-    public async Task PostAreas(IEnumerable<Area> areas, Guid? userId) => PostUserAreas(areas, userId);
+    public async Task PostAreas(IEnumerable<Area> areas, Guid? userId) =>
+        PostUserAreas(areas, userId);
 
     public async Task PostAreas(User user) => PostUserAreas(user);
 }

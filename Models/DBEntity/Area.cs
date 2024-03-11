@@ -1,8 +1,8 @@
-using IngBackend.Enum;
-using IngBackend.Interfaces.Repository;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using IngBackend.Enum;
+using IngBackend.Interfaces.Repository;
 
 namespace IngBackend.Models.DBEntity;
 
@@ -21,14 +21,18 @@ public class Area : BaseEntity, IEntity<Guid>
 
     [JsonIgnore]
     public virtual User? User { get; set; }
+
     [JsonIgnore]
     public Guid? UserId { get; set; }
+
     [JsonIgnore]
     public Recruitment? Recruitment { get; set; }
+
     [JsonIgnore]
     [ForeignKey("AreaType")]
     public int? AreaTypeId { get; set; }
     public AreaType? AreaType { get; set; } // default area
+
     [JsonIgnore]
     public TextLayout? TextLayout { get; set; }
 
@@ -40,9 +44,6 @@ public class Area : BaseEntity, IEntity<Guid>
 
     [JsonIgnore]
     public KeyValueListLayout? KeyValueListLayout { get; set; }
-
-    [ConcurrencyCheck]
-    public Guid Version { get; set; }
 }
 
 public class AreaType : BaseEntity, IEntity<int>
@@ -61,9 +62,6 @@ public class AreaType : BaseEntity, IEntity<int>
     [JsonIgnore]
     public List<TagType>? ListTagTypes { get; set; }
 }
-
-
-
 
 public class TextLayout : BaseEntity, IEntity<Guid>
 {
@@ -121,11 +119,8 @@ public class ListLayout : BaseEntity, IEntity<Guid>
     public virtual Area Area { get; set; }
 
     [ForeignKey("Area")]
-    // [Required]       
+    // [Required]
     public Guid AreaId { get; set; }
-
-    [ConcurrencyCheck]
-    public Guid Version { get; set; }
 }
 
 public class KeyValueListLayout : BaseEntity, IEntity<Guid>

@@ -1,10 +1,9 @@
-﻿using IngBackend.Enum;
-using IngBackend.Interfaces.Repository;
-using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
-
+using IngBackend.Enum;
+using IngBackend.Interfaces.Repository;
+using Microsoft.EntityFrameworkCore;
 
 namespace IngBackend.Models.DBEntity;
 
@@ -36,6 +35,7 @@ public class User : BaseEntity, IEntity<Guid>
 
     [JsonIgnore]
     public virtual List<Area> Areas { get; set; } = new List<Area> { };
+
     [JsonIgnore]
     public List<Resume> Resumes { get; set; } = new List<Resume> { };
 
@@ -44,7 +44,6 @@ public class User : BaseEntity, IEntity<Guid>
 
     public List<VerificationCode>? EmailVerifications { get; set; }
 }
-
 
 public class Recruitment : BaseEntity, IEntity<Guid>
 {
@@ -70,9 +69,9 @@ public class Recruitment : BaseEntity, IEntity<Guid>
 public class VerificationCode : BaseEntity, IEntity<int>
 {
     [Key]
-
     public int Id { get; set; }
     public Guid UserId { get; set; }
+
     [Required]
     public User User { get; set; }
 

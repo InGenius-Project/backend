@@ -12,4 +12,6 @@ public interface IAreaRepository : IRepository<Area, Guid>
 
     Task PostAreas(IEnumerable<Area> areas, Guid? userId);
     Task PostAreas(User user);
+    void Update<TEntity>(TEntity entity);
 }
+

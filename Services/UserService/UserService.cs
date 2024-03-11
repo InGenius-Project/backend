@@ -32,12 +32,51 @@ public class UserService(
 
     public async Task PostUser(UserInfoPostDTO req, Guid userId)
     {
-        var user =
-            await _repository
-                .User.GetByIdAsync(userId) ?? throw new UserNotFoundException();
-
+        var user = await _repository.User.GetByIdAsync(userId) ?? throw new UserNotFoundException();
         _mapper.Map(req, user);
-        await _repository.Area.PostAreas(user);
+
+        // 獲取 Tags 與 TagTypes 的追蹤實體
+        var tags = _repository.Tag.GetAll();
+        var tagTypes = _repository.TagType.GetAll();
+
+        user.Areas.ForEach(area =>
+        {
+            // 為防止重複插入關聯 (Many-To-Many)
+            // 需要追蹤 Tag 以及 ListLayout
+            if (area.ListLayout != null)
+            {
+                // 先把 Tag 的 Type 設為 null
+                // 否則開始追蹤 ListLayout 的時候會有一樣的 TagType 被追蹤
+                // 進而導致 Concurrency 問題
+                area.ListLayout.Items.ForEach(tag => tag.Type = null);
+
+                // 在 ListLayout 中替換成追蹤中的 Tag 與 TagType 實體
+                for (var i = 0; i < area.ListLayout.Items.Count; i++)
+                {
+                    var tag = area.ListLayout.Items[i];
+                    // 替換 TagType 實體
+                    if (!tag.TypeId.Equals(Guid.Empty))
+                    {
+                        tag.Type =
+                            tagTypes.FirstOrDefault(x => x.Id.Equals(tag.TypeId))
+                            ?? throw new NotFoundException("Tag Type Id not found");
+                    }
+                    // 替換 Tag 實體
+                    if (!tag.Id.Equals(Guid.Empty))
+                    {
+                        // 找尋 Database 中的 Tag
+                        var tagFind = tags.FirstOrDefault(x => tag.Id.Equals(x.Id));
+                        if (tagFind != null)
+                        {
+                            // 更新 Tag 的內容
+                            _mapper.Map(tag, tagFind);
+                            area.ListLayout.Items[i] = tagFind;
+                        }
+                    }
+                }
+                _repository.Area.Attach(area.ListLayout);
+            }
+        });
         await _repository.User.UpdateAsync(user);
     }
 
