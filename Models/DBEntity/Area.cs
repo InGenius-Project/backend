@@ -1,8 +1,8 @@
-using IngBackend.Enum;
-using IngBackend.Interfaces.Repository;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using IngBackend.Enum;
+using IngBackend.Interfaces.Repository;
 
 namespace IngBackend.Models.DBEntity;
 
@@ -16,17 +16,26 @@ public class Area : BaseEntity, IEntity<Guid>
     public required string Title { get; set; }
     public LayoutType? LayoutType { get; set; } // custom area
 
+    public Guid? ResumeId { get; set; }
+
     [JsonIgnore]
     public Resume? Resume { get; set; }
 
+    public Guid? UserId { get; set; }
+
     [JsonIgnore]
     public User? User { get; set; }
+
+    public Guid? RecruitmentId { get; set; }
+
     [JsonIgnore]
     public Recruitment? Recruitment { get; set; }
+
     [JsonIgnore]
     [ForeignKey("AreaType")]
-    public int AreaTypeId { get; set; }
+    public int? AreaTypeId { get; set; }
     public AreaType? AreaType { get; set; } // default area
+
     [JsonIgnore]
     public TextLayout? TextLayout { get; set; }
 
@@ -56,9 +65,6 @@ public class AreaType : BaseEntity, IEntity<int>
     [JsonIgnore]
     public List<TagType>? ListTagTypes { get; set; }
 }
-
-
-
 
 public class TextLayout : BaseEntity, IEntity<Guid>
 {

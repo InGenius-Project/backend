@@ -1,19 +1,25 @@
-﻿using IngBackend.Interfaces.Repository;
+﻿using System.Linq.Expressions;
+using IngBackend.Interfaces.Repository;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 
 namespace IngBackend.Interfaces.Service;
-public interface IService<TEntity, TDto, TKey> where TEntity : IEntity<TKey> where TDto : class
+
+public interface IService<TEntity, TDto, TKey>
+    where TEntity : IEntity<TKey>
+    where TDto : class
 {
     IEnumerable<TDto> GetAll();
     IEnumerable<TDto> GetAll(params Expression<Func<TEntity, object>>[] includes);
     IEnumerable<TDto> GetAll(Expression<Func<TEntity, bool>> predicate);
 
-    IEnumerable<TDto> GetAll(Expression<Func<TEntity, bool>> predicate, params Expression<Func<TEntity, object>>[] includes);
+    IEnumerable<TDto> GetAll(
+        Expression<Func<TEntity, bool>> predicate,
+        params Expression<Func<TEntity, object>>[] includes
+    );
 
     Task<TDto?> GetByIdAsync(TKey id);
     Task<TDto?> GetByIdAsync(TKey id, params Expression<Func<TEntity, object>>[] includes);
-    Task AddAsync(TDto dto);
+    Task<TDto> AddAsync(TDto dto);
     Task DeleteByIdAsync(TKey key);
     Task UpdateAsync(TDto dto);
     Task SaveChangesAsync();
@@ -26,7 +32,11 @@ public interface IService<TEntity, TDto, TKey> where TEntity : IEntity<TKey> whe
     /// <param name="entity">要載入集合屬性的實體。</param>
     /// <param name="navigationProperty">指定要載入的集合屬性。</param>
     /// <returns>表示非同步載入操作的 <see cref="Task"/> 物件。</returns>
-    Task LoadCollectionAsync<TProperty>(TEntity entity, Expression<Func<TEntity, IEnumerable<TProperty>>> navigationProperty) where TProperty : class;
+    Task LoadCollectionAsync<TProperty>(
+        TEntity entity,
+        Expression<Func<TEntity, IEnumerable<TProperty>>> navigationProperty
+    )
+        where TProperty : class;
 
     /// <summary>
     /// 非同步加載多個實體對象集合的導覽屬性，透過提供的導覽屬性表達式和一個實體對象集合。
@@ -37,7 +47,11 @@ public interface IService<TEntity, TDto, TKey> where TEntity : IEntity<TKey> whe
     /// <returns>異步操作任務。</returns>
     /// <exception cref="ArgumentNullException">當 entities 或 navigationProperty 為 null 時拋出。</exception>
     /// <exception cref="ArgumentException">當 navigationProperty 表達式不是有效的導覽屬性表達式時拋出。</exception>
-    Task LoadCollectionAsync<TProperty>(IEnumerable<TProperty> entities, Expression<Func<TProperty, IEnumerable<TEntity>>> navigationProperty) where TProperty : class;
+    Task LoadCollectionAsync<TProperty>(
+        IEnumerable<TProperty> entities,
+        Expression<Func<TProperty, IEnumerable<TEntity>>> navigationProperty
+    )
+        where TProperty : class;
 
     /// <summary>
     /// 設定實體狀態

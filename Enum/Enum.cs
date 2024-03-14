@@ -10,7 +10,7 @@ public enum UserRole
 
 public enum LayoutType
 {
-    Text ,
+    Text,
     ImageText,
     List,
     KeyValueList

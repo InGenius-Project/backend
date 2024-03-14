@@ -1,13 +1,13 @@
+using System.Diagnostics;
+using System.Linq;
 using AutoMapper;
 using IngBackend.Enum;
-using System.Diagnostics;
 using IngBackend.Exceptions;
 using IngBackend.Interfaces.Repository;
 using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace IngBackend.Services.AreaService;
 
@@ -20,25 +20,25 @@ public class AreaService : Service<Area, AreaDTO, Guid>
 
     private readonly IRepository<AreaType, int> _areaTypeRepository;
 
-
-    public AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository) : base(unitOfWork, mapper)
+    public AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository)
+        : base(unitOfWork, mapper)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _repository = repository;
         _areaTypeRepository = unitOfWork.Repository<AreaType, int>();
-
     }
+
     public async Task<AreaDTO?> GetAreaIncludeAllById(Guid areaId)
     {
         var area = _repository.Area.GetAreaByIdIncludeAll(areaId);
         return await _mapper.ProjectTo<AreaDTO>(area).FirstOrDefaultAsync();
     }
 
-    public async Task CheckAreaOwnership(Guid areaId, UserInfoDTO req)
+    public async Task CheckAreaOwnership(Guid areaId, UserInfoDTO user)
     {
         var area = await _repository.Area.GetByIdAsync(areaId);
-        if (area == null || area.User?.Id != req.Id)
+        if (area == null || area.User?.Id != user.Id)
         {
             throw new ForbiddenException();
         }
@@ -64,13 +64,12 @@ public class AreaService : Service<Area, AreaDTO, Guid>
         }
     }
 
-
     public async Task<List<AreaTypeDTO>> GetAllAreaTypes(UserRole[] userRoles)
     {
         var areaTypes = _areaTypeRepository
             .GetAll()
             .Where(a => a.UserRole.Any(ur => userRoles.Contains(ur)));
-        return await _mapper.ProjectTo<AreaTypeDTO>(areaTypes).ToListAsync(); ;
+        return await _mapper.ProjectTo<AreaTypeDTO>(areaTypes).ToListAsync();
+        ;
     }
-
 }

@@ -1,11 +1,11 @@
-﻿using AutoMapper;
+﻿using System.Linq.Expressions;
+using AutoMapper;
 using IngBackend.Exceptions;
 using IngBackend.Interfaces.Repository;
 using IngBackend.Interfaces.Service;
 using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Models.DTO;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 
 namespace IngBackend.Services;
 
@@ -20,7 +20,8 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public Service(IUnitOfWork unitOfWork, IMapper mapper) : base()
+    public Service(IUnitOfWork unitOfWork, IMapper mapper)
+        : base()
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
@@ -40,7 +41,6 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
             {
                 throw new EntityNotFoundException($"No {typeof(TDto).Name}s were found");
             }
-
         }
         catch (EntityNotFoundException ex)
         {
@@ -65,7 +65,10 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
     }
 
     /// <inheritdoc />
-    public IEnumerable<TDto> GetAll(Expression<Func<TEntity, bool>> predicate, params Expression<Func<TEntity, object>>[] includes)
+    public IEnumerable<TDto> GetAll(
+        Expression<Func<TEntity, bool>> predicate,
+        params Expression<Func<TEntity, object>>[] includes
+    )
     {
         var query = _unitOfWork.Repository<TEntity, TKey>().GetAll(predicate, includes);
 
@@ -85,7 +88,6 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
 
             return _mapper.Map<TDto>(result);
         }
-
         catch (EntityNotFoundException ex)
         {
             var message = $"Error retrieving {typeof(TDto).Name} with Id: {id}";
@@ -94,18 +96,22 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
         }
     }
 
-    public async Task<TDto?> GetByIdAsync(TKey id, params Expression<Func<TEntity, object>>[] includes)
+    public async Task<TDto?> GetByIdAsync(
+        TKey id,
+        params Expression<Func<TEntity, object>>[] includes
+    )
     {
         var query = _unitOfWork.Repository<TEntity, TKey>().GetAll(includes);
 
         return _mapper.Map<TDto>(await query.FirstOrDefaultAsync(e => e.Id.Equals(id)));
     }
 
-
-    public virtual async Task AddAsync(TDto dto)
+    public async Task<TDto> AddAsync(TDto dto)
     {
-        await _unitOfWork.Repository<TEntity, TKey>().AddAsync(_mapper.Map<TEntity>(dto));
+        var newEntity = _mapper.Map<TEntity>(dto);
+        await _unitOfWork.Repository<TEntity, TKey>().AddAsync(newEntity);
         await _unitOfWork.SaveChangesAsync();
+        return _mapper.Map<TDto>(newEntity);
     }
 
     public async Task DeleteByIdAsync(TKey id)
@@ -125,7 +131,6 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
     {
         await _unitOfWork.SaveChangesAsync();
     }
-
 
     // /// <inheritdoc />
     // public virtual async Task AddRangeAsync(IEnumerable<TEntity> entities)
@@ -195,15 +200,21 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
 
 
     /// <inheritdoc />
-    public async Task LoadCollectionAsync<TProperty>(TEntity entity, Expression<Func<TEntity, IEnumerable<TProperty>>> navigationProperty)
-    where TProperty : class
+    public async Task LoadCollectionAsync<TProperty>(
+        TEntity entity,
+        Expression<Func<TEntity, IEnumerable<TProperty>>> navigationProperty
+    )
+        where TProperty : class
     {
         await _unitOfWork.LoadCollectionAsync(entity, navigationProperty);
     }
 
     /// <inheritdoc />
-    public async Task LoadCollectionAsync<TProperty>(IEnumerable<TProperty> entities, Expression<Func<TProperty, IEnumerable<TEntity>>> navigationProperty)
-    where TProperty : class
+    public async Task LoadCollectionAsync<TProperty>(
+        IEnumerable<TProperty> entities,
+        Expression<Func<TProperty, IEnumerable<TEntity>>> navigationProperty
+    )
+        where TProperty : class
     {
         await _unitOfWork.LoadCollectionAsync(entities, navigationProperty);
     }
@@ -220,3 +231,4 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
         return _unitOfWork.Repository<TEntity, TKey>().GetLocal();
     }
 }
+

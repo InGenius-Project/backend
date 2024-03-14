@@ -381,3 +381,4 @@ appsettings.Secrets.json
 *.db
 *.db-*
 
+changelog.txt
