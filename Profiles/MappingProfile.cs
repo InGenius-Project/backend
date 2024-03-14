@@ -43,6 +43,7 @@ public class MappingProfile : Profile
         // Area
         CreateMap<Area, AreaDTO>()
             .ForMember(dest => dest.AreaTypeId, opt => opt.MapFrom(src => src.AreaType.Id))
+            .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
             .ForMember(
                 dest => dest.Title,
                 opt =>

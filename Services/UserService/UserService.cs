@@ -46,11 +46,12 @@ public class UserService : Service<User, UserInfoDTO, Guid>
         await _repository.User.UpdateAsync(user);
     }
 
-    public async Task AddAsync(UserSignUpDTO req)
+    public async Task<UserInfoDTO> AddAsync(UserSignUpDTO req)
     {
         var user = _mapper.Map<User>(req);
         await _repository.User.AddAsync(user);
         await _unitOfWork.SaveChangesAsync();
+        return _mapper.Map<UserInfoDTO>(user);
     }
 
     /// <summary>

@@ -381,4 +381,6 @@ appsettings.Secrets.json
 *.db
 *.db-*
 
+*.sqlite
+*.sqlite-*
 changelog.txt

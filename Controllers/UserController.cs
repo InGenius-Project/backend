@@ -107,9 +107,8 @@ public class UserController : BaseController
             throw new BadRequestException("帳號已經存在");
         }
 
-        await _userService.AddAsync(req);
+        var user = await _userService.AddAsync(req);
 
-        var user = _mapper.Map<UserInfoDTO>(req);
         // TODO: Add student verification function
         if (user.Role == UserRole.Intern)
         {
@@ -124,9 +123,6 @@ public class UserController : BaseController
         var token = await _userService.GenerateEmailConfirmationTokenAsync(user);
         var subject = "[noreply] InG 註冊驗證碼";
         var message = $"<h1>您的驗證碼是: {token}，此驗證碼於10分鐘後失效</h1>";
-
-        await _userService.UpdateAsync(user);
-        await _userService.SaveChangesAsync();
 
         // TODO: add send email process to background job
         _backgroundJobClient.Enqueue(

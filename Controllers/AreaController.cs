@@ -9,7 +9,6 @@ using IngBackend.Services.AreaService;
 using IngBackend.Services.TagService;
 using IngBackend.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IngBackend.Controllers;
