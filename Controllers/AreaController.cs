@@ -69,19 +69,19 @@ public class AreaController : BaseController
         var parsedAreaId = req.Id ?? Guid.Empty;
         var area = await _areaService.GetAreaIncludeAllById(parsedAreaId);
 
+        // Add User Relationship
         req.UserId = userId;
 
         // Add Area
         if (area == null)
         {
             var newAreaDTO = _mapper.Map<AreaDTO>(req);
-            Console.WriteLine("Bruh: {0}", newAreaDTO.Title);
             newAreaDTO = await _areaService.AddAsync(newAreaDTO);
             return newAreaDTO;
         }
 
         // Patch Area
-        await _areaService.CheckAreaOwnership(area.Id, user);
+        await _areaService.CheckAreaOwnership(area.Id, user.Id);
         _mapper.Map(req, area);
         await _areaService.UpdateAsync(area);
 
@@ -180,7 +180,7 @@ public class AreaController : BaseController
         Guid userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         UserInfoDTO user = await _userService.CheckAndGetUserIncludeAllAsync(userId);
 
-        await _areaService.CheckAreaOwnership(areaId, user);
+        await _areaService.CheckAreaOwnership(areaId, user.Id);
 
         var area =
             await _areaService.GetAreaIncludeAllById(areaId)
@@ -217,7 +217,7 @@ public class AreaController : BaseController
         var user = await _userService.CheckAndGetUserIncludeAllAsync(userId);
 
         // Check CheckAreaOwnership
-        await _areaService.CheckAreaOwnership(areaId, user);
+        await _areaService.CheckAreaOwnership(areaId, user.Id);
 
         AreaDTO? area =
             await _areaService.GetAreaIncludeAllById(areaId)
@@ -228,5 +228,18 @@ public class AreaController : BaseController
 
         MemoryStream imageStream = new(image.Data);
         return File(imageStream, image.ContentType);
+    }
+
+    [HttpPost("listlayout")]
+    public async Task<IActionResult> PostListLayout(Guid areaId, [FromBody] ListLayoutDTO req)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        var user = await _userService.CheckAndGetUserAsync(userId);
+
+        // Check Ownership
+        await _areaService.CheckAreaOwnership(areaId, user.Id);
+
+        await _areaService.UpdateLayoutAsync(areaId, req);
+        return Ok();
     }
 }

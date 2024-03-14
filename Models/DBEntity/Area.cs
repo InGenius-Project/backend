@@ -36,17 +36,33 @@ public class Area : BaseEntity, IEntity<Guid>
     public int? AreaTypeId { get; set; }
     public AreaType? AreaType { get; set; } // default area
 
+    public Guid? TextLayoutId { get; set; }
+
     [JsonIgnore]
     public TextLayout? TextLayout { get; set; }
+
+    public Guid? ImageTextLayoutId { get; set; }
 
     [JsonIgnore]
     public ImageTextLayout? ImageTextLayout { get; set; }
 
+    public Guid? ListLayoutId { get; set; }
+
     [JsonIgnore]
     public ListLayout? ListLayout { get; set; }
 
+    public Guid? KeyValueListLayoutId { get; set; }
+
     [JsonIgnore]
     public KeyValueListLayout? KeyValueListLayout { get; set; }
+
+    public void ClearLayouts()
+    {
+        KeyValueListLayoutId = null;
+        ImageTextLayoutId = null;
+        ListLayoutId = null;
+        TextLayoutId = null;
+    }
 }
 
 public class AreaType : BaseEntity, IEntity<int>

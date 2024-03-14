@@ -31,14 +31,18 @@ public class AreaService : Service<Area, AreaDTO, Guid>
 
     public async Task<AreaDTO?> GetAreaIncludeAllById(Guid areaId)
     {
-        var area = _repository.Area.GetAreaByIdIncludeAll(areaId);
+        var area = _repository.Area.GetAreaByIdIncludeAll(areaId).AsNoTracking();
         return await _mapper.ProjectTo<AreaDTO>(area).FirstOrDefaultAsync();
     }
 
-    public async Task CheckAreaOwnership(Guid areaId, UserInfoDTO user)
+    public async Task CheckAreaOwnership(Guid areaId, Guid userId)
     {
-        var area = await _repository.Area.GetByIdAsync(areaId);
-        if (area == null || area.User?.Id != user.Id)
+        var area = await _repository
+            .Area.GetAll()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id.Equals(areaId));
+
+        if (area == null || area.UserId != userId)
         {
             throw new ForbiddenException();
         }
@@ -71,5 +75,18 @@ public class AreaService : Service<Area, AreaDTO, Guid>
             .Where(a => a.UserRole.Any(ur => userRoles.Contains(ur)));
         return await _mapper.ProjectTo<AreaTypeDTO>(areaTypes).ToListAsync();
         ;
+    }
+
+    public async Task UpdateLayoutAsync(Guid areaId, ListLayoutDTO listLayoutDTO)
+    {
+        var area = await _repository.Area.GetByIdAsync(areaId);
+        if (area == null)
+        {
+            throw new NotFoundException("area not found.");
+        }
+
+        area.ClearLayouts();
+        area.ListLayout = _mapper.Map<ListLayout>(listLayoutDTO);
+        await _repository.Area.SaveAsync();
     }
 }

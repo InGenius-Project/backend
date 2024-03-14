@@ -103,7 +103,9 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
     {
         var query = _unitOfWork.Repository<TEntity, TKey>().GetAll(includes);
 
-        return _mapper.Map<TDto>(await query.FirstOrDefaultAsync(e => e.Id.Equals(id)));
+        return _mapper.Map<TDto>(
+            await query.AsNoTracking().FirstOrDefaultAsync(e => e.Id.Equals(id))
+        );
     }
 
     public async Task<TDto> AddAsync(TDto dto)
@@ -231,4 +233,3 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
         return _unitOfWork.Repository<TEntity, TKey>().GetLocal();
     }
 }
-
