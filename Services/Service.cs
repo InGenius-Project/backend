@@ -77,23 +77,8 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
 
     public async Task<TDto?> GetByIdAsync(TKey id)
     {
-        try
-        {
-            var result = await _unitOfWork.Repository<TEntity, TKey>().GetByIdAsync(id);
-
-            if (result is null)
-            {
-                throw new EntityNotFoundException($"Entity with ID {id} not found.");
-            }
-
-            return _mapper.Map<TDto>(result);
-        }
-        catch (EntityNotFoundException ex)
-        {
-            var message = $"Error retrieving {typeof(TDto).Name} with Id: {id}";
-
-            throw new EntityNotFoundException(message, ex);
-        }
+        var result = await _unitOfWork.Repository<TEntity, TKey>().GetByIdAsync(id);
+        return _mapper.Map<TDto>(result);
     }
 
     public async Task<TDto?> GetByIdAsync(

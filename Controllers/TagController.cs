@@ -1,15 +1,14 @@
 ﻿using AutoMapper;
+using AutoWrapper.Wrappers;
+using IngBackend.Enum;
+using IngBackend.Exceptions;
+using IngBackend.Interfaces.Service;
 using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
-using IngBackend.Exceptions;
 using IngBackend.Services.TagService;
 using IngBackend.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using IngBackend.Enum;
-using Microsoft.EntityFrameworkCore;
-using AutoWrapper.Wrappers;
-using IngBackend.Interfaces.Service;
 
 namespace IngBackend.Controllers;
 
@@ -23,13 +22,12 @@ public class TagController : BaseController
     private readonly TagService _tagService;
     private readonly IService<TagType, TagTypeDTO, int> _tagTypeService;
 
-
-
     public TagController(
         IMapper mapper,
         UserService userService,
         TagService tagService,
-        IService<TagType, TagTypeDTO, int> tagTypeService)
+        IService<TagType, TagTypeDTO, int> tagTypeService
+    )
     {
         _userService = userService;
         _mapper = mapper;
@@ -41,13 +39,13 @@ public class TagController : BaseController
     [ProducesResponseType(typeof(ResponseDTO<TagDTO>), StatusCodes.Status200OK)]
     public async Task<TagDTO> GetTag(Guid id)
     {
-        var tag = await _tagService.GetByIdAsync(id)
-         ?? throw new NotFoundException("標籤不存在");
+        var tag = await _tagService.GetByIdAsync(id) ?? throw new NotFoundException("標籤不存在");
 
         var tagDTO = _mapper.Map<TagDTO>(tag);
 
         return tagDTO;
     }
+
     [HttpGet]
     [ProducesResponseType(typeof(ResponseDTO<List<TagDTO>>), StatusCodes.Status200OK)]
     public async Task<List<TagDTO>> GetTags([FromQuery] string? type)
@@ -65,6 +63,7 @@ public class TagController : BaseController
         var tagsDTO = _mapper.Map<List<TagDTO>>(tags);
         return tagsDTO;
     }
+
     [HttpPost]
     [ProducesResponseType(typeof(ResponseDTO<>), StatusCodes.Status200OK)]
     public async Task<ApiResponse> PostTag([FromBody] TagDTO req)
@@ -72,37 +71,24 @@ public class TagController : BaseController
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
 
-        var tagType = await _tagTypeService.GetByIdAsync(req.Type.Id);
-        if (tagType == null)
+        var tag = await _tagService.GetByIdAsync(req.Id);
+
+        // Add new tag
+        if (tag == null)
         {
-            throw new TagNotFoundException(req.Id.ToString());
+            await _tagService.AddAsync(req);
+            return new ApiResponse("標籤已新增");
         }
 
-        var existingTag = await _tagService.GetByIdAsync(req.Id);
-        if (existingTag == null)
-        {
-            var newTag = _mapper.Map<TagDTO>(req);
-            newTag.Type = tagType;
-
-            await _tagService.AddAsync(newTag);
-        }
-        else
-        {
-            _mapper.Map(req, existingTag);
-            existingTag.Type = tagType;
-
-            await _tagService.UpdateAsync(existingTag);
-        }
-
-        return new ApiResponse("標籤已新增");
+        await _tagService.UpdateAsync(tag);
+        return new ApiResponse("標籤已更改");
     }
 
     [HttpGet("type/{id}")]
     [ProducesResponseType(typeof(ResponseDTO<TagTypeDTO>), StatusCodes.Status200OK)]
     public async Task<TagTypeDTO> GetTagType(int id)
     {
-        var tagType = await _tagTypeService.GetByIdAsync(id)
-            ?? throw new NotFoundException("標籤");
+        var tagType = await _tagTypeService.GetByIdAsync(id) ?? throw new NotFoundException("標籤");
 
         return tagType;
     }
@@ -151,5 +137,4 @@ public class TagController : BaseController
 
         return new ApiResponse("刪除成功");
     }
-
 }

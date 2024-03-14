@@ -1,11 +1,16 @@
 using System.Text;
+using AutoWrapper;
 using Hangfire;
 using IngBackend.Context;
+using IngBackend.Interfaces.Repository;
 using IngBackend.Interfaces.Service;
 using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Profiles;
+using IngBackend.Repository;
 using IngBackend.Services;
 using IngBackend.Services.AreaService;
+using IngBackend.Services.RecruitmentService;
+using IngBackend.Services.TagService;
 using IngBackend.Services.TokenServices;
 using IngBackend.Services.UnitOfWork;
 using IngBackend.Services.UserService;
@@ -13,15 +18,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Text;
-using AutoWrapper;
-using IngBackend.Helpers;
-using IngBackend.Services.RecruitmentService;
-using IngBackend.Services.TagService;
-using Azure;
-using IngBackend.Models.DTO;
-using IngBackend.Interfaces.Repository;
-using IngBackend.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,7 +51,7 @@ else
 
 // Add services to the container.
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped(typeof(IService<,,>), typeof(Service<,,>));// Repository Wrapper
+builder.Services.AddScoped(typeof(IService<,,>), typeof(Service<,,>)); // Repository Wrapper
 builder.Services.AddScoped<IRepositoryWrapper, RepositoryWrapper>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddScoped<TokenService>();
@@ -64,6 +60,7 @@ builder.Services.AddScoped<AreaService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<TagService>();
 builder.Services.AddScoped<RecruitmentService>();
+
 // builder.Services.AddScoped<ApiResponseMiddleware>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
 builder.Services.AddControllers();
@@ -188,12 +185,14 @@ if (app.Environment.IsDevelopment())
 
 // Middleware
 // app.UseMiddleware<ApiResponseMiddleware>();
-app.UseApiResponseAndExceptionWrapper(new AutoWrapperOptions
-{
-    // UseApiProblemDetailsException = true,
-    ShowIsErrorFlagForSuccessfulResponse = true,
-    ShowStatusCode = true,
-});
+app.UseApiResponseAndExceptionWrapper(
+    new AutoWrapperOptions
+    {
+        // UseApiProblemDetailsException = true,
+        ShowIsErrorFlagForSuccessfulResponse = true,
+        ShowStatusCode = true,
+    }
+);
 
 app.UseCors(devCorsPolicy);
 app.UseHttpsRedirection();

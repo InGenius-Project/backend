@@ -31,17 +31,43 @@ public class IngDbContext : DbContext
                 r => r.HasOne<Resume>().WithMany().OnDelete(DeleteBehavior.NoAction)
             );
 
-        modelBuilder.Entity<TagType>()
-            .HasIndex(t => t.Value).IsUnique();
-        modelBuilder.Entity<TagType>()
-            .Property(t => t.Id).ValueGeneratedOnAdd();
+        modelBuilder.Entity<TagType>().HasIndex(t => t.Value).IsUnique();
+        modelBuilder.Entity<TagType>().Property(t => t.Id).ValueGeneratedOnAdd();
 
-        modelBuilder.Entity<AreaType>()
-            .HasIndex(t => t.Value).IsUnique();
-        modelBuilder.Entity<AreaType>()
-            .Property(t => t.Id).ValueGeneratedOnAdd();
+        // TODO: Default data
+        modelBuilder
+            .Entity<TagType>()
+            .HasData(
+                new TagType
+                {
+                    Id = 1,
+                    Name = "custom",
+                    Value = "custom",
+                    Color = "#ffffff"
+                }
+            );
 
+        modelBuilder.Entity<AreaType>().HasIndex(t => t.Value).IsUnique();
+        modelBuilder.Entity<AreaType>().Property(t => t.Id).ValueGeneratedOnAdd();
 
-
+        // TODO: Default Data
+        modelBuilder
+            .Entity<AreaType>()
+            .HasData(
+                new AreaType
+                {
+                    Id = 1,
+                    Name = "custom",
+                    Value = "unique",
+                    Description = "whatever",
+                    UserRole = new List<Enum.UserRole>
+                    {
+                        Enum.UserRole.InternalUser,
+                        Enum.UserRole.Admin
+                    },
+                    LayoutType = Enum.LayoutType.List,
+                    CreatedAt = DateTime.UtcNow
+                }
+            );
     }
 }

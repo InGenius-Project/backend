@@ -77,7 +77,8 @@ public class AreaController : BaseController
         {
             var newAreaDTO = _mapper.Map<AreaDTO>(req);
             newAreaDTO = await _areaService.AddAsync(newAreaDTO);
-            return newAreaDTO;
+            var areaEntity = await _areaService.GetAreaIncludeAllById(newAreaDTO.Id);
+            return areaEntity;
         }
 
         // Patch Area

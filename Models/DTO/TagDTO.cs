@@ -1,14 +1,11 @@
-﻿using IngBackend.Enum;
-
-namespace IngBackend.Models.DTO;
+﻿namespace IngBackend.Models.DTO;
 
 public class TagDTO
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = "";
-    public TagTypeDTO Type { get; set; } = new TagTypeDTO();
+    public int TagTypeId { get; set; }
 }
-
 
 public class TagTypeDTO
 {
@@ -17,3 +14,4 @@ public class TagTypeDTO
     public string Value { get; set; }
     public string Color { get; set; }
 }
+
