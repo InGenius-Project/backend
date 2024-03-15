@@ -1,20 +1,24 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 
 namespace IngBackend.Interfaces.Repository;
 
-public interface IRepository<TEntity, Tkey> where TEntity : IEntity<Tkey>
+public interface IRepository<TEntity, Tkey>
+    where TEntity : IEntity<Tkey>
 {
     Task AddAsync(TEntity entity);
     Task<TEntity?> GetByIdAsync(Tkey id);
     IQueryable<TEntity> GetAll();
     IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> predicate);
     IQueryable<TEntity> GetAll(params Expression<Func<TEntity, object>>[] includes);
-    IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> predicate, params Expression<Func<TEntity, object>>[] includes);
+    IQueryable<TEntity> GetAll(
+        Expression<Func<TEntity, bool>> predicate,
+        params Expression<Func<TEntity, object>>[] includes
+    );
     Task UpdateAsync(TEntity entity);
     Task DeleteByIdAsync(Tkey key);
     Task SaveAsync();
-
+    void Attach<TTEntity>(TTEntity entity);
 
     // /// <summary>
     // /// 新增多筆實體到資料庫。
@@ -35,7 +39,9 @@ public interface IRepository<TEntity, Tkey> where TEntity : IEntity<Tkey>
     /// </summary>
     /// <param name="includes">導覽屬性的表達式</param>
     /// <returns>包含指定導覽屬性的所有實體集合</returns>
-    Task<IEnumerable<TEntity>> CollectionAsync<TProperty>(Expression<Func<TEntity, IEnumerable<TProperty>>> navigationProperty);
+    Task<IEnumerable<TEntity>> CollectionAsync<TProperty>(
+        Expression<Func<TEntity, IEnumerable<TProperty>>> navigationProperty
+    );
 
     /// <summary>
     /// 設定實體狀態

@@ -3,7 +3,7 @@
 public class TagPostDTO
 {
     public Guid? Id { get; set; }
-    public string Name { get; set; } = "";
+    public string Name { get; set; }
     public int TagTypeId { get; set; }
 }
 
@@ -18,8 +18,9 @@ public class TagTypePostDTO
 public class TagDTO
 {
     public Guid Id { get; set; }
-    public string Name { get; set; } = "";
+    public string Name { get; set; }
     public int TagTypeId { get; set; }
+    public TagTypeDTO TagType { get; set; }
 }
 
 public class TagTypeDTO

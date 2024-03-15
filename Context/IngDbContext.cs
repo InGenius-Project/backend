@@ -33,6 +33,7 @@ public class IngDbContext : DbContext
 
         modelBuilder.Entity<TagType>().HasIndex(t => t.Value).IsUnique();
         modelBuilder.Entity<TagType>().Property(t => t.Id).ValueGeneratedOnAdd();
+        modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
 
         // TODO: Default data
         modelBuilder

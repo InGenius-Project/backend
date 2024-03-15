@@ -232,7 +232,7 @@ public class AreaController : BaseController
     }
 
     [HttpPost("listlayout")]
-    public async Task<IActionResult> PostListLayout(Guid areaId, [FromBody] ListLayoutDTO req)
+    public async Task<IActionResult> PostListLayout(Guid areaId, [FromBody] ListLayoutPostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         var user = await _userService.CheckAndGetUserAsync(userId);
@@ -240,7 +240,8 @@ public class AreaController : BaseController
         // Check Ownership
         await _areaService.CheckAreaOwnership(areaId, user.Id);
 
-        await _areaService.UpdateLayoutAsync(areaId, req);
+        var listLayoutDTO = _mapper.Map<ListLayoutDTO>(req);
+        await _areaService.UpdateLayoutAsync(areaId, listLayoutDTO);
         return Ok();
     }
 }

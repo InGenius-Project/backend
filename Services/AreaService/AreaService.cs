@@ -39,6 +39,7 @@ public class AreaService : Service<Area, AreaDTO, Guid>
     {
         var area = await _repository
             .Area.GetAll()
+            .Include(a => a.User)
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id.Equals(areaId));
 
@@ -79,14 +80,30 @@ public class AreaService : Service<Area, AreaDTO, Guid>
 
     public async Task UpdateLayoutAsync(Guid areaId, ListLayoutDTO listLayoutDTO)
     {
-        var area = await _repository.Area.GetByIdAsync(areaId);
+        var area = await _repository
+            .Area.GetAll()
+            .Include(a => a.ListLayout)
+            .ThenInclude(l => l.Items)
+            .FirstOrDefaultAsync(a => a.Id.Equals(areaId));
+
         if (area == null)
         {
             throw new NotFoundException("area not found.");
         }
 
         area.ClearLayouts();
-        area.ListLayout = _mapper.Map<ListLayout>(listLayoutDTO);
+
+        if (area.ListLayout == null)
+        {
+            area.ListLayout = _mapper.Map<ListLayout>(listLayoutDTO);
+            _repository.Area.Attach(area.ListLayout);
+        }
+        else
+        {
+            _mapper.Map(listLayoutDTO, area.ListLayout);
+            area.ListLayoutId = area.ListLayout.Id;
+            area.ListLayout.AreaId = area.Id;
+        }
         await _repository.Area.SaveAsync();
     }
 }

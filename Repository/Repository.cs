@@ -1,7 +1,6 @@
-﻿
+﻿using System.Linq.Expressions;
 using IngBackend.Interfaces.Repository;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 
 namespace IngBackend.Repository;
 
@@ -16,10 +15,12 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
         _context = context;
         _dbSet = context.Set<TEntity>();
     }
+
     public async Task AddAsync(TEntity entity)
     {
         await _context.Set<TEntity>().AddAsync(entity);
     }
+
     public async Task DeleteByIdAsync(TKey id)
     {
         var entityToDelete = await _dbSet.FindAsync(id);
@@ -30,6 +31,7 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
             await SaveAsync();
         }
     }
+
     public async Task<TEntity?> GetByIdAsync(TKey id)
     {
         return await _context.Set<TEntity>().FindAsync(id);
@@ -54,7 +56,6 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
         return query;
     }
 
-
     public IQueryable<TEntity> GetAll(params Expression<Func<TEntity, object>>[] includes)
     {
         IQueryable<TEntity> query = _dbSet;
@@ -67,8 +68,10 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
         return query;
     }
 
-
-    public IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> predicate, params Expression<Func<TEntity, object>>[] includes)
+    public IQueryable<TEntity> GetAll(
+        Expression<Func<TEntity, bool>> predicate,
+        params Expression<Func<TEntity, object>>[] includes
+    )
     {
         IQueryable<TEntity> query = _dbSet;
 
@@ -94,6 +97,11 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
     public async Task SaveAsync()
     {
         await _context.SaveChangesAsync();
+    }
+
+    public void Attach<TTEntity>(TTEntity entity)
+    {
+        _context.Attach(entity);
     }
 
     // /// <summary>
@@ -186,7 +194,9 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
     // }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<TEntity>> CollectionAsync<TProperty>(Expression<Func<TEntity, IEnumerable<TProperty>>> navigationProperty)
+    public async Task<IEnumerable<TEntity>> CollectionAsync<TProperty>(
+        Expression<Func<TEntity, IEnumerable<TProperty>>> navigationProperty
+    )
     {
         var query = _context.Set<TEntity>().AsQueryable();
         var result = await query.Include(navigationProperty).ToListAsync();

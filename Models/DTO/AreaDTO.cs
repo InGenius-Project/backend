@@ -87,6 +87,12 @@ public class ListLayoutDTO
     public List<TagDTO>? Items { get; set; }
 }
 
+public class ListLayoutPostDTO
+{
+    public Guid? Id { get; set; }
+    public List<TagPostDTO>? Items { get; set; }
+}
+
 public class KeyValueListLayoutDTO
 {
     public Guid Id { get; set; }

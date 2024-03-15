@@ -39,22 +39,22 @@ public class Area : BaseEntity, IEntity<Guid>
     public Guid? TextLayoutId { get; set; }
 
     [JsonIgnore]
-    public TextLayout? TextLayout { get; set; }
+    public virtual TextLayout? TextLayout { get; set; }
 
     public Guid? ImageTextLayoutId { get; set; }
 
     [JsonIgnore]
-    public ImageTextLayout? ImageTextLayout { get; set; }
+    public virtual ImageTextLayout? ImageTextLayout { get; set; }
 
     public Guid? ListLayoutId { get; set; }
 
     [JsonIgnore]
-    public ListLayout? ListLayout { get; set; }
+    public virtual ListLayout? ListLayout { get; set; }
 
     public Guid? KeyValueListLayoutId { get; set; }
 
     [JsonIgnore]
-    public KeyValueListLayout? KeyValueListLayout { get; set; }
+    public virtual KeyValueListLayout? KeyValueListLayout { get; set; }
 
     public void ClearLayouts()
     {
@@ -133,13 +133,12 @@ public class ListLayout : BaseEntity, IEntity<Guid>
 
     public List<Tag>? Items { get; set; }
 
-    [JsonIgnore]
-    [Required]
-    public required Area Area { get; set; }
-
-    [ForeignKey("Area")]
     [Required]
     public Guid AreaId;
+
+    [JsonIgnore]
+    [Required]
+    public virtual required Area Area { get; set; }
 }
 
 public class KeyValueListLayout : BaseEntity, IEntity<Guid>

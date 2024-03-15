@@ -5,6 +5,7 @@ using IngBackend.Exceptions;
 using IngBackend.Interfaces.Service;
 using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
+using IngBackend.Services.AreaService;
 using IngBackend.Services.TagService;
 using IngBackend.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
@@ -21,18 +22,21 @@ public class TagController : BaseController
     private readonly IMapper _mapper;
     private readonly TagService _tagService;
     private readonly IService<TagType, TagTypeDTO, int> _tagTypeService;
+    private readonly AreaService _areaService;
 
     public TagController(
         IMapper mapper,
         UserService userService,
         TagService tagService,
-        IService<TagType, TagTypeDTO, int> tagTypeService
+        IService<TagType, TagTypeDTO, int> tagTypeService,
+        AreaService areaService
     )
     {
         _userService = userService;
         _mapper = mapper;
         _tagService = tagService;
         _tagTypeService = tagTypeService;
+        _areaService = areaService;
     }
 
     [HttpGet("{id}")]

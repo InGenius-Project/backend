@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
+using AutoMapper.EquivalencyExpression;
 using IngBackend.Interfaces.Service;
-using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
 
@@ -75,7 +75,12 @@ public class MappingProfile : Profile
 
         // ListLayout
         CreateMap<ListLayoutDTO, ListLayout>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.AreaId, opt => opt.Ignore())
+            .ForMember(dest => dest.Area, opt => opt.Ignore())
             .ReverseMap();
+
+        CreateMap<ListLayoutPostDTO, ListLayoutDTO>();
 
         // KeyValueListLayout
         CreateMap<KeyValueListLayoutDTO, KeyValueListLayout>()
@@ -83,8 +88,11 @@ public class MappingProfile : Profile
         CreateMap<KeyValueItem, KeyValueItemDTO>().ReverseMap();
 
         // Tag
-        CreateMap<Tag, TagDTO>()
-            .ReverseMap();
+        CreateMap<TagDTO, Tag>()
+            .EqualityComparison((dto, entity) => dto.Id.Equals(entity.Id));
+
+        CreateMap<Tag, TagDTO>();
+
         CreateMap<TagPostDTO, TagDTO>().ReverseMap();
         CreateMap<TagType, TagTypeDTO>().ReverseMap();
         CreateMap<TagTypePostDTO, TagTypeDTO>().ReverseMap();

@@ -1,4 +1,6 @@
 using System.Text;
+using AutoMapper.EntityFramework;
+using AutoMapper.EquivalencyExpression;
 using AutoWrapper;
 using Hangfire;
 using IngBackend.Context;
@@ -42,7 +44,11 @@ string? connectionString = builder.Configuration.GetConnectionString("Default");
 
 if (env.IsDevelopment())
 {
-    builder.Services.AddDbContext<IngDbContext>(options => options.UseSqlite(connectionString));
+    builder.Services.AddDbContext<IngDbContext>(options =>
+    {
+        options.UseSqlite(connectionString);
+        options.EnableSensitiveDataLogging();
+    });
 }
 else
 {
@@ -112,15 +118,13 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // AutoMapper
-builder.Services.AddAutoMapper(
-    cfg =>
-        cfg.AddProfile(
-            new MappingProfile(
-                builder.Services.BuildServiceProvider().GetService<IPasswordHasher>()
-            )
-        ),
-    AppDomain.CurrentDomain.GetAssemblies()
-);
+builder.Services.AddAutoMapper(cfg =>
+{
+    cfg.AddCollectionMappers();
+    cfg.AddProfile(
+        new MappingProfile(builder.Services.BuildServiceProvider().GetService<IPasswordHasher>())
+    );
+});
 
 builder
     .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
