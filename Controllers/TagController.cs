@@ -66,17 +66,19 @@ public class TagController : BaseController
 
     [HttpPost]
     [ProducesResponseType(typeof(ResponseDTO<>), StatusCodes.Status200OK)]
-    public async Task<ApiResponse> PostTag([FromBody] TagDTO req)
+    public async Task<ApiResponse> PostTag([FromBody] TagPostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
 
-        var tag = await _tagService.GetByIdAsync(req.Id);
+        var tagId = req.Id ?? Guid.Empty;
+        var tag = await _tagService.GetByIdAsync(tagId);
 
         // Add new tag
         if (tag == null)
         {
-            await _tagService.AddAsync(req);
+            var newEntity = _mapper.Map<TagDTO>(req);
+            await _tagService.AddAsync(newEntity);
             return new ApiResponse("標籤已新增");
         }
 
@@ -103,15 +105,23 @@ public class TagController : BaseController
 
     [HttpPost("type")]
     [ProducesResponseType(typeof(ResponseDTO<>), StatusCodes.Status200OK)]
-    public async Task<ApiResponse> PostTagType([FromBody] TagTypeDTO req)
+    public async Task<ApiResponse> PostTagType([FromBody] TagTypePostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId, [UserRole.Admin, UserRole.InternalUser]);
 
-        var tagType = await _tagTypeService.GetByIdAsync(req.Id);
+        if (req.Id == null)
+        {
+            var newTagType = _mapper.Map<TagTypeDTO>(req);
+            await _tagTypeService.AddAsync(newTagType);
+            return new ApiResponse("新增成功");
+        }
+
+        var tagType = await _tagTypeService.GetByIdAsync((int)req.Id);
         if (tagType == null)
         {
-            await _tagTypeService.AddAsync(req);
+            var newTagType = _mapper.Map<TagTypeDTO>(req);
+            await _tagTypeService.AddAsync(newTagType);
             return new ApiResponse("新增成功");
         }
         _mapper.Map(req, tagType);
