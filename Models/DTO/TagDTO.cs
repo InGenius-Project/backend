@@ -20,7 +20,7 @@ public class TagDTO
     public Guid Id { get; set; }
     public string Name { get; set; }
     public int TagTypeId { get; set; }
-    public TagTypeDTO TagType { get; set; }
+    public TagTypeDTO Type { get; set; }
 }
 
 public class TagTypeDTO
