@@ -1,4 +1,6 @@
-﻿using AutoMapper;
+namespace IngBackend.Controllers;
+
+using AutoMapper;
 using AutoWrapper.Wrappers;
 using IngBackend.Enum;
 using IngBackend.Exceptions;
@@ -11,8 +13,6 @@ using IngBackend.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace IngBackend.Controllers;
-
 [Route("api/[controller]")]
 [Authorize]
 [ApiController]
@@ -23,7 +23,7 @@ public class AreaController : BaseController
     private readonly AreaService _areaService;
     private readonly TagService _tagService;
     private readonly IMapper _mapper;
-    private readonly IService<AreaType, AreaTypeDTO, int> _areaTypeService;
+    private readonly AreaTypeService _areaTypeService;
     private readonly IService<TagType, TagTypeDTO, int> _tagTypeService;
 
     public AreaController(
@@ -32,7 +32,7 @@ public class AreaController : BaseController
         ResumeService resumeService,
         AreaService areaService,
         TagService tagService,
-        IService<AreaType, AreaTypeDTO, int> areaTypeService,
+        AreaTypeService areaTypeService,
         IService<TagType, TagTypeDTO, int> tagTypeService
     )
     {
@@ -116,20 +116,19 @@ public class AreaController : BaseController
 
     [HttpGet("type")]
     [ProducesResponseType(typeof(ResponseDTO<List<AreaTypeDTO>>), StatusCodes.Status200OK)]
-    public List<AreaTypeDTO> GetAreaTypes([FromQuery] UserRole[]? roles)
+    public List<AreaTypeDTO> GetAreaTypes([FromQuery] UserRole[] roles)
     {
-        var areaTypes = _areaTypeService
-            .GetAll(at => roles.Any(r => at.UserRole.Contains(r)))
-            .ToList();
+        var areaTypes = _areaTypeService.GetByRoles(roles);
         return areaTypes;
     }
 
     [HttpPost("type")]
+    [Authorize(Roles = "Admin, InternalUser")]
     [ProducesResponseType(typeof(ResponseDTO<>), StatusCodes.Status200OK)]
     public async Task<ApiResponse> PostAreaType([FromBody] AreaTypePostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        await _userService.CheckAndGetUserAsync(userId, [UserRole.Admin, UserRole.InternalUser]);
+        await _userService.CheckAndGetUserAsync(userId);
 
         if (req.Id == null || req.Id == 0)
         {
@@ -147,10 +146,6 @@ public class AreaController : BaseController
         }
 
         _mapper.Map(req, areaType);
-        areaType.ListTagTypes = _tagTypeService
-            .GetAll()
-            .Where(t => req.ListTagTypeIds.Contains(t.Id))
-            .ToList();
 
         await _areaTypeService.UpdateAsync(areaType);
         return new ApiResponse("更新成功");

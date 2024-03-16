@@ -9,5 +9,7 @@ public interface IRepositoryWrapper
     IResumeRepository Resume { get; }
     IRecruitmentRepository Recruitment { get; }
     IRepository<AreaType, int> AreaType { get; }
+    IRepository<TagType, int> TagType { get; }
     void Save();
 }
+

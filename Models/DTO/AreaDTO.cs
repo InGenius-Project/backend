@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 using IngBackend.Enum;
 using IngBackend.Models.DBEntity;
 
@@ -50,9 +50,15 @@ public class AreaTypeDTO
     public List<TagTypeDTO>? ListTagTypes { get; set; }
 }
 
-public class AreaTypePostDTO : AreaTypeDTO
+public class AreaTypePostDTO
 {
-    public List<int> ListTagTypeIds { get; set; } = new List<int>();
+    public int? Id { get; set; }
+    public required string Name { get; set; }
+    public required string Value { get; set; } // unique
+    public required string Description { get; set; }
+    public required List<UserRole> UserRole { get; set; }
+    public required LayoutType LayoutType { get; set; }
+    public List<TagTypeDTO>? ListTagTypes { get; set; }
 }
 
 public class AreaFormDataDTO

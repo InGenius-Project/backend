@@ -13,8 +13,7 @@ public class RepositoryWrapper : IRepositoryWrapper
     private IRecruitmentRepository _recruitmentRepository;
 
     private IRepository<AreaType, int> _areaTypeRepository;
-
-
+    private IRepository<TagType, int> _tagTypeRepository;
 
     public IUserRepository User
     {
@@ -52,8 +51,6 @@ public class RepositoryWrapper : IRepositoryWrapper
         }
     }
 
-
-
     public IAreaRepository Area
     {
         get
@@ -76,9 +73,19 @@ public class RepositoryWrapper : IRepositoryWrapper
             }
             return _areaTypeRepository;
         }
-
     }
 
+    public IRepository<TagType, int> TagType
+    {
+        get
+        {
+            if (_tagTypeRepository == null)
+            {
+                _tagTypeRepository = new Repository<TagType, int>(_context);
+            }
+            return _tagTypeRepository;
+        }
+    }
 
     public RepositoryWrapper(IngDbContext context)
     {

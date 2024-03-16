@@ -63,6 +63,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<ResumeService>();
 builder.Services.AddScoped<AreaService>();
+builder.Services.AddScoped<AreaTypeService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<TagService>();
 builder.Services.AddScoped<RecruitmentService>();

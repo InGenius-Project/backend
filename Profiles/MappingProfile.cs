@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using AutoMapper.EquivalencyExpression;
 using IngBackend.Interfaces.Service;
 using IngBackend.Models.DBEntity;
@@ -60,9 +60,11 @@ public class MappingProfile : Profile
         CreateMap<AreaDTO, Area>();
         CreateMap<AreaType, AreaTypeDTO>();
         CreateMap<AreaTypeDTO, AreaType>()
-            .ForMember(dest => dest.ListTagTypes, opt => opt.Ignore());
+            .EqualityComparison((dto, entity) => dto.Id.Equals(entity.Id));
         CreateMap<AreaTypePostDTO, AreaType>()
-            .ForMember(dest => dest.ListTagTypes, opt => opt.Ignore());
+            .EqualityComparison((dto, entity) => dto.Id.Equals(entity.Id));
+
+        CreateMap<AreaTypePostDTO, AreaTypeDTO>();
 
         // TextLayout
         CreateMap<TextLayoutDTO, TextLayout>()
