@@ -62,6 +62,27 @@ public class Area : BaseEntity, IEntity<Guid>
         ImageTextLayoutId = null;
         ListLayoutId = null;
         TextLayoutId = null;
+
+        if (KeyValueListLayout != null)
+        {
+            KeyValueListLayout.AreaId = null;
+            KeyValueListLayout.Area = null;
+        }
+        if (ImageTextLayout != null)
+        {
+            ImageTextLayout.AreaId = null;
+            ImageTextLayout.Area = null;
+        }
+        if (ListLayout != null)
+        {
+            ListLayout.AreaId = null;
+            ListLayout.Area = null;
+        }
+        if (TextLayout != null)
+        {
+            TextLayout.AreaId = null;
+            TextLayout.Area = null;
+        }
     }
 }
 
@@ -94,7 +115,7 @@ public class TextLayout : BaseEntity, IEntity<Guid>
 
     [ForeignKey("Area")]
     [Required]
-    public Guid AreaId;
+    public Guid? AreaId;
 }
 
 public class Image : BaseEntity, IEntity<Guid>
@@ -123,7 +144,7 @@ public class ImageTextLayout : BaseEntity, IEntity<Guid>
 
     [ForeignKey("Area")]
     [Required]
-    public Guid AreaId;
+    public Guid? AreaId;
 }
 
 public class ListLayout : BaseEntity, IEntity<Guid>
@@ -134,7 +155,7 @@ public class ListLayout : BaseEntity, IEntity<Guid>
     public List<Tag>? Items { get; set; }
 
     [Required]
-    public Guid AreaId;
+    public Guid? AreaId;
 
     [JsonIgnore]
     [Required]
@@ -153,7 +174,7 @@ public class KeyValueListLayout : BaseEntity, IEntity<Guid>
 
     [ForeignKey("Area")]
     [Required]
-    public Guid AreaId;
+    public Guid? AreaId;
 }
 
 public class KeyValueItem : BaseEntity, IEntity<Guid>
