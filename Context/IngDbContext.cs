@@ -1,18 +1,11 @@
-﻿using IngBackend.Models.DBEntity;
+﻿namespace IngBackend.Context;
+using IngBackend.Models.DBEntity;
+using IngBackend.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
 
-namespace IngBackend.Context;
-
-public class IngDbContext : DbContext
+public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(options)
 {
-    public IngDbContext(DbContextOptions<IngDbContext> options)
-        : base(options) { }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        base.OnConfiguring(optionsBuilder);
-    }
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => base.OnConfiguring(optionsBuilder);
 
     public DbSet<User> User { get; set; }
     public DbSet<Resume> Resume { get; set; }
@@ -61,14 +54,37 @@ public class IngDbContext : DbContext
                     Name = "custom",
                     Value = "unique",
                     Description = "whatever",
-                    UserRole = new List<Enum.UserRole>
-                    {
+                    UserRole =
+                    [
                         Enum.UserRole.InternalUser,
                         Enum.UserRole.Admin
-                    },
+                    ],
                     LayoutType = Enum.LayoutType.List,
                     CreatedAt = DateTime.UtcNow
                 }
             );
+
+
+        var hasher = new PasswordHasher();
+        var user = new User
+        {
+            Id = new Guid("f5a41815-6233-4a4a-9e62-108f0d09a8ce"),
+            Username = "User",
+            Email = "user@gmail.com",
+            HashedPassword = hasher.HashPassword("testtest"),
+            Role = Enum.UserRole.Intern
+        };
+
+
+        var internalUser = new User
+        {
+            Id = new Guid("d6e2c7c3-89a5-4d8e-b74b-7af6f79e7348"),
+            Username = "Internal",
+            Email = "i@gmail.com",
+            HashedPassword = hasher.HashPassword("testtest"),
+            Role = Enum.UserRole.InternalUser
+        };
+        modelBuilder.Entity<User>().HasData(user, internalUser);
     }
+
 }
