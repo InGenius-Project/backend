@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿namespace IngBackend.Controllers;
+using AutoMapper;
 using AutoWrapper.Wrappers;
 using Hangfire;
 using IngBackend.Enum;
@@ -7,40 +8,27 @@ using IngBackend.Interfaces.Service;
 using IngBackend.Models.DTO;
 using IngBackend.Services;
 using IngBackend.Services.TokenServices;
-using IngBackend.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
-namespace IngBackend.Controllers;
 
 [ApiController]
 [Authorize]
 [Route("api/[controller]")]
-public class UserController : BaseController
+public class UserController(
+    TokenService tokenService,
+    IUserService userService,
+    IMapper mapper,
+    IPasswordHasher passwordHasher,
+    IBackgroundJobClient backgroundJobClient,
+    EmailService emailService
+    ) : BaseController
 {
-    private readonly TokenService _tokenService;
-    private readonly UserService _userService;
-    private readonly IMapper _mapper;
-    private readonly IBackgroundJobClient _backgroundJobClient;
-    public readonly IPasswordHasher _passwordHasher;
-    private readonly EmailService _emailService;
-
-    public UserController(
-        TokenService tokenService,
-        UserService userService,
-        IMapper mapper,
-        IPasswordHasher passwordHasher,
-        IBackgroundJobClient backgroundJobClient,
-        EmailService emailService
-    )
-    {
-        _tokenService = tokenService;
-        _userService = userService;
-        _mapper = mapper;
-        _passwordHasher = passwordHasher;
-        _backgroundJobClient = backgroundJobClient;
-        _emailService = emailService;
-    }
+    private readonly TokenService _tokenService = tokenService;
+    private readonly IUserService _userService = userService;
+    private readonly IMapper _mapper = mapper;
+    private readonly IBackgroundJobClient _backgroundJobClient = backgroundJobClient;
+    public readonly IPasswordHasher _passwordHasher = passwordHasher;
+    private readonly EmailService _emailService = emailService;
 
     /// <summary>
     /// 取得當前已登入的使用者資訊
@@ -51,12 +39,7 @@ public class UserController : BaseController
     public async Task<UserInfoDTO> GetUser()
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.GetUserByIdIncludeAllAsync(userId);
-
-        if (user == null)
-        {
-            throw new UserNotFoundException();
-        }
+        var user = await _userService.GetUserByIdIncludeAllAsync(userId) ?? throw new UserNotFoundException();
 
         return user;
     }
@@ -79,11 +62,7 @@ public class UserController : BaseController
             throw new BadRequestException("驗證碼不得為空");
         }
 
-        var user = await _userService.GetByIdAsync(userId, user => user.EmailVerifications);
-        if (user == null)
-        {
-            throw new UserNotFoundException();
-        }
+        var user = await _userService.GetByIdAsync(userId, user => user.EmailVerifications) ?? throw new UserNotFoundException();
 
         var result = await _userService.VerifyEmailVerificationCode(user, verifyCode);
         if (!result)

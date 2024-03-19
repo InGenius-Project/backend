@@ -1,8 +1,7 @@
+namespace IngBackend.Models.DTO;
 using System.Text.Json.Serialization;
 using IngBackend.Enum;
 using IngBackend.Models.DBEntity;
-
-namespace IngBackend.Models.DTO;
 
 public class AreaDTO
 {
@@ -29,7 +28,7 @@ public class AreaPostDTO
     public required int Sequence { get; set; }
     public required bool IsDisplayed { get; set; }
     public required string Title { get; set; }
-    public LayoutType? Arrangement { get; set; }
+    public LayoutType? LayoutType { get; set; }
     public int? AreaTypeId { get; set; }
 
     // relation
@@ -84,7 +83,7 @@ public class ImageDTO
 public class ImageTextLayoutDTO
 {
     public Guid Id { get; set; }
-    public ImageDTO Image { get; set; }
+    public ImageDTO? Image { get; set; }
 }
 
 public class ListLayoutDTO

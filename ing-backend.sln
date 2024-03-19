@@ -3,11 +3,16 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34202.233
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ing-backend", "ing-backend.csproj", "{24C63DCE-05F3-4742-B8A0-0B61D28E5A8E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IngBackend.Api", "IngBackend.Api.csproj", "{24C63DCE-05F3-4742-B8A0-0B61D28E5A8E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A6692301-1438-4E38-933A-5D3388CCE734}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IngBackend.Test", "..\IngBackend.Test\IngBackend.Test.csproj", "{3F11FBEE-4117-4473-B13E-34255E1D9284}"
+	ProjectSection(ProjectDependencies) = postProject
+		{24C63DCE-05F3-4742-B8A0-0B61D28E5A8E} = {24C63DCE-05F3-4742-B8A0-0B61D28E5A8E}
 	EndProjectSection
 EndProject
 Global
@@ -20,6 +25,10 @@ Global
 		{24C63DCE-05F3-4742-B8A0-0B61D28E5A8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{24C63DCE-05F3-4742-B8A0-0B61D28E5A8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{24C63DCE-05F3-4742-B8A0-0B61D28E5A8E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F11FBEE-4117-4473-B13E-34255E1D9284}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F11FBEE-4117-4473-B13E-34255E1D9284}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F11FBEE-4117-4473-B13E-34255E1D9284}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F11FBEE-4117-4473-B13E-34255E1D9284}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

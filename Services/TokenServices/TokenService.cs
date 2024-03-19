@@ -1,22 +1,17 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+namespace IngBackend.Services.TokenServices;
+
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using IngBackend.Models.DBEntity;
+using IngBackend.Interfaces.Service;
 using IngBackend.Models.DTO;
 using Microsoft.IdentityModel.Tokens;
 
-namespace IngBackend.Services.TokenServices;
-
-public class TokenService
+public class TokenService(IConfiguration config) : ITokenService
 {
-    private readonly IConfiguration _config;
+    private readonly IConfiguration _config = config;
 
-    public TokenService(IConfiguration config)
-    {
-        _config = config;
-    }
-
-    public TokenDTO GenerateToken(UserInfoDTO user)
+    public virtual TokenDTO GenerateToken(UserInfoDTO user)
     {
         var claims = new[]
         {

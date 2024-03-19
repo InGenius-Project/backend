@@ -1,3 +1,4 @@
+namespace IngBackend.Services.UserService;
 using System.Linq.Expressions;
 using AutoMapper;
 using IngBackend.Enum;
@@ -9,28 +10,17 @@ using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 
-namespace IngBackend.Services.UserService;
-
-public class UserService : Service<User, UserInfoDTO, Guid>
+public class UserService(
+    IUnitOfWork unitOfWork,
+    IMapper mapper,
+    IRepositoryWrapper repository,
+    IPasswordHasher passwordHasher
+    ) : Service<User, UserInfoDTO, Guid>(unitOfWork, mapper), IUserService
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-    private readonly IRepositoryWrapper _repository;
-    private readonly IPasswordHasher _passwordHasher;
-
-    public UserService(
-        IUnitOfWork unitOfWork,
-        IMapper mapper,
-        IRepositoryWrapper repository,
-        IPasswordHasher passwordHasher
-    )
-        : base(unitOfWork, mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-        _repository = repository;
-        _passwordHasher = passwordHasher;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
+    private readonly IRepositoryWrapper _repository = repository;
+    private readonly IPasswordHasher _passwordHasher = passwordHasher;
 
     public async Task<UserInfoDTO?> GetUserByIdIncludeAllAsync(Guid userId)
     {
@@ -152,12 +142,8 @@ public class UserService : Service<User, UserInfoDTO, Guid>
 
     public async Task<UserInfoDTO> VerifyHashedPasswordAsync(UserSignInDTO req)
     {
-        var query = _repository.User.GetUserByEmail(req.Email.ToLower());
-        var user = await query.FirstOrDefaultAsync();
-        if (user == null)
-        {
-            throw new BadRequestException("帳號或密碼錯誤");
-        }
+        var query = _repository.User.GetUserByEmail(req.Email.ToLower(System.Globalization.CultureInfo.CurrentCulture));
+        var user = await query.FirstOrDefaultAsync() ?? throw new BadRequestException("帳號或密碼錯誤");
         var passwordValid = _passwordHasher.VerifyHashedPassword(user.HashedPassword, req.Password);
         if (!passwordValid)
         {
@@ -168,11 +154,7 @@ public class UserService : Service<User, UserInfoDTO, Guid>
 
     public async Task AddUserResumeAsync(UserInfoDTO userDTO, ResumeDTO resumeDTO)
     {
-        var user = await _repository.User.GetByIdAsync(userDTO.Id);
-        if (user == null)
-        {
-            throw new UserNotFoundException();
-        }
+        var user = await _repository.User.GetByIdAsync(userDTO.Id) ?? throw new UserNotFoundException();
 
         user.Resumes.Add(_mapper.Map<Resume>(resumeDTO));
         await _unitOfWork.SaveChangesAsync();
@@ -183,7 +165,10 @@ public class UserService : Service<User, UserInfoDTO, Guid>
         var user = await _repository.User.GetUserByIdIncludeAll(req.Id).FirstOrDefaultAsync();
 
         if (user.EmailVerifications == null)
+        {
             return false;
+        }
+
         var result = user.EmailVerifications.Any(e =>
             e.Code == token && e.ExpiresTime > DateTime.UtcNow
         );
@@ -199,11 +184,7 @@ public class UserService : Service<User, UserInfoDTO, Guid>
 
     public async Task<string> GenerateEmailConfirmationTokenAsync(UserInfoDTO req)
     {
-        var user = _repository.User.GetUserByIdIncludeAll(req.Id).FirstOrDefault();
-        if (user == null)
-        {
-            throw new UserNotFoundException();
-        }
+        var user = _repository.User.GetUserByIdIncludeAll(req.Id).FirstOrDefault() ?? throw new UserNotFoundException();
         Random random = new();
         var length = 6;
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -216,7 +197,7 @@ public class UserService : Service<User, UserInfoDTO, Guid>
             );
         } while (!IsEmailVerificationCodeAvailable(user, token));
 
-        user.EmailVerifications ??= new List<VerificationCode>() { };
+        user.EmailVerifications ??= [];
         user.EmailVerifications.Add(
             new VerificationCode { Code = token, ExpiresTime = DateTime.UtcNow.AddMinutes(10) }
         );
