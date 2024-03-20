@@ -1,31 +1,24 @@
+namespace IngBackend.Services.AreaService;
 using AutoMapper;
 using IngBackend.Enum;
 using IngBackend.Exceptions;
 using IngBackend.Interfaces.Repository;
+using IngBackend.Interfaces.Service;
 using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 
-namespace IngBackend.Services.AreaService;
-
-public class AreaService : Service<Area, AreaDTO, Guid>
+public class AreaService(
+    IUnitOfWork unitOfWork,
+    IMapper mapper,
+    IRepositoryWrapper repository) :
+        Service<Area, AreaDTO, Guid>(unitOfWork, mapper), IAreaService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper = mapper;
+    private readonly IRepositoryWrapper _repository = repository;
 
-    private readonly IMapper _mapper;
-    private readonly IRepositoryWrapper _repository;
-
-    private readonly IRepository<AreaType, int> _areaTypeRepository;
-
-    public AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository)
-        : base(unitOfWork, mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-        _repository = repository;
-        _areaTypeRepository = unitOfWork.Repository<AreaType, int>();
-    }
+    private readonly IRepository<AreaType, int> _areaTypeRepository = unitOfWork.Repository<AreaType, int>();
 
     public async Task<AreaDTO?> GetAreaIncludeAllById(Guid areaId)
     {
@@ -49,12 +42,7 @@ public class AreaService : Service<Area, AreaDTO, Guid>
 
     public async void ClearArea(AreaDTO req)
     {
-        var area = await _repository.Area.GetByIdAsync(req.Id);
-
-        if (area == null)
-        {
-            throw new AreaNotFoundException();
-        }
+        var area = await _repository.Area.GetByIdAsync(req.Id) ?? throw new AreaNotFoundException();
 
         var properties = area.GetType().GetProperties();
 
@@ -82,12 +70,7 @@ public class AreaService : Service<Area, AreaDTO, Guid>
             .Area.GetAll()
             .Include(a => a.ListLayout)
             .ThenInclude(l => l.Items)
-            .FirstOrDefaultAsync(a => a.Id.Equals(areaId));
-
-        if (area == null)
-        {
-            throw new NotFoundException("area not found.");
-        }
+            .FirstOrDefaultAsync(a => a.Id.Equals(areaId)) ?? throw new NotFoundException("area not found.");
 
         area.ClearLayouts();
 

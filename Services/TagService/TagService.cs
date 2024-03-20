@@ -1,27 +1,17 @@
-using System.Runtime.CompilerServices;
+namespace IngBackend.Services.TagService;
 using AutoMapper;
 using IngBackend.Interfaces.Repository;
+using IngBackend.Interfaces.Service;
 using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 
-namespace IngBackend.Services.TagService;
-
-public class TagService : Service<Tag, TagDTO, Guid>
+public class TagService(IUnitOfWork unitOfWork, IMapper mapper) :
+Service<Tag, TagDTO, Guid>(unitOfWork, mapper), ITagService
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IRepository<Tag, Guid> _tagRepository;
-    private readonly IMapper _mapper;
-    private readonly IRepository<TagType, int> _tagTypeRepository;
-
-    public TagService(IUnitOfWork unitOfWork, IMapper mapper) : base(unitOfWork, mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-        _tagRepository = unitOfWork.Repository<Tag, Guid>();
-        _tagTypeRepository = unitOfWork.Repository<TagType, int>();
-    }
+    private readonly IRepository<Tag, Guid> _tagRepository = unitOfWork.Repository<Tag, Guid>();
+    private readonly IMapper _mapper = mapper;
 
     public async Task<List<TagDTO>?> GetAllTagsByType(string? type)
     {
@@ -31,7 +21,7 @@ public class TagService : Service<Tag, TagDTO, Guid>
 
         if (tags == null)
         {
-            return new List<TagDTO>();
+            return [];
         }
         return await _mapper.ProjectTo<List<TagDTO>>(tags).FirstOrDefaultAsync();
     }

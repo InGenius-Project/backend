@@ -4,30 +4,24 @@ using AutoMapper;
 using IngBackend.Enum;
 using IngBackend.Exceptions;
 using IngBackend.Interfaces.Repository;
+using IngBackend.Interfaces.Service;
 using IngBackend.Interfaces.UnitOfWork;
 using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 
-public class AreaTypeService : Service<AreaType, AreaTypeDTO, int>
+public class AreaTypeService(
+    IUnitOfWork unitOfWork,
+    IMapper mapper,
+    IRepositoryWrapper repository) :
+        Service<AreaType, AreaTypeDTO, int>(unitOfWork, mapper),
+        IAreaTypeService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper = mapper;
+    private readonly IRepositoryWrapper _repository = repository;
+    private readonly IRepository<AreaType, int> _areaTypeRepository = unitOfWork.Repository<AreaType, int>();
 
-    private readonly IMapper _mapper;
-    private readonly IRepositoryWrapper _repository;
-
-    private readonly IRepository<AreaType, int> _areaTypeRepository;
-
-    public AreaTypeService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository)
-        : base(unitOfWork, mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-        _repository = repository;
-        _areaTypeRepository = unitOfWork.Repository<AreaType, int>();
-    }
-
-    public async Task AddAsync(AreaTypeDTO areaTypeDto)
+    public new async Task AddAsync(AreaTypeDTO areaTypeDto)
     {
         var areaType = _mapper.Map<AreaType>(areaTypeDto);
 
@@ -38,17 +32,12 @@ public class AreaTypeService : Service<AreaType, AreaTypeDTO, int>
         await _areaTypeRepository.SaveAsync();
     }
 
-    public async Task UpdateAsync(AreaTypeDTO areaTypeDto)
+    public new async Task UpdateAsync(AreaTypeDTO areaTypeDto)
     {
         var areaType = await _areaTypeRepository
             .GetAll()
             .Include(a => a.ListTagTypes)
-            .FirstOrDefaultAsync(a => a.Id.Equals(areaTypeDto.Id));
-
-        if (areaType == null)
-        {
-            throw new NotFoundException("areaType not found.");
-        }
+            .FirstOrDefaultAsync(a => a.Id.Equals(areaTypeDto.Id)) ?? throw new NotFoundException("areaType not found.");
 
         // TODO: 新增 TagType 的權限問題
         _mapper.Map(areaTypeDto, areaType);

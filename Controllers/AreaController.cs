@@ -5,45 +5,24 @@ using AutoWrapper.Wrappers;
 using IngBackend.Enum;
 using IngBackend.Exceptions;
 using IngBackend.Interfaces.Service;
-using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
-using IngBackend.Services.AreaService;
-using IngBackend.Services.TagService;
-using IngBackend.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [Route("api/[controller]")]
 [Authorize]
 [ApiController]
-public class AreaController : BaseController
+public class AreaController(
+    IMapper mapper,
+    IUserService userService,
+    IAreaService areaService,
+    IAreaTypeService areaTypeService
+    ) : BaseController
 {
-    private readonly ResumeService _resumeService;
-    private readonly UserService _userService;
-    private readonly AreaService _areaService;
-    private readonly TagService _tagService;
-    private readonly IMapper _mapper;
-    private readonly AreaTypeService _areaTypeService;
-    private readonly IService<TagType, TagTypeDTO, int> _tagTypeService;
-
-    public AreaController(
-        IMapper mapper,
-        UserService userService,
-        ResumeService resumeService,
-        AreaService areaService,
-        TagService tagService,
-        AreaTypeService areaTypeService,
-        IService<TagType, TagTypeDTO, int> tagTypeService
-    )
-    {
-        _resumeService = resumeService;
-        _userService = userService;
-        _areaService = areaService;
-        _tagService = tagService;
-        _areaTypeService = areaTypeService;
-        _tagTypeService = tagTypeService;
-        _mapper = mapper;
-    }
+    private readonly IUserService _userService = userService;
+    private readonly IAreaService _areaService = areaService;
+    private readonly IMapper _mapper = mapper;
+    private readonly IAreaTypeService _areaTypeService = areaTypeService;
 
     [HttpGet("{areaId}")]
     [ProducesResponseType(typeof(ResponseDTO<AreaDTO>), StatusCodes.Status200OK)]
@@ -130,7 +109,7 @@ public class AreaController : BaseController
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
 
-        if (req.Id == null || req.Id == 0)
+        if (req.Id is null or 0)
         {
             var newAreaTypeDto = _mapper.Map<AreaTypeDTO>(req);
             await _areaTypeService.AddAsync(newAreaTypeDto);
@@ -173,8 +152,8 @@ public class AreaController : BaseController
     [HttpPost("image")]
     public async Task<IActionResult> UploadAreaImage([FromQuery] Guid areaId, IFormFile image)
     {
-        Guid userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        UserInfoDTO user = await _userService.CheckAndGetUserIncludeAllAsync(userId);
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        var user = await _userService.CheckAndGetUserIncludeAllAsync(userId);
 
         await _areaService.CheckAreaOwnership(areaId, user.Id);
 
@@ -215,12 +194,12 @@ public class AreaController : BaseController
         // Check CheckAreaOwnership
         await _areaService.CheckAreaOwnership(areaId, user.Id);
 
-        AreaDTO? area =
+        var area =
             await _areaService.GetAreaIncludeAllById(areaId)
             ?? throw new NotFoundException("area 不存在");
 
         _ = area.ImageTextLayout ?? throw new BadRequestException("此 Area 沒有 Image Text Layout");
-        ImageDTO? image = area.ImageTextLayout.Image ?? throw new NotFoundException("沒有圖片資料");
+        var image = area.ImageTextLayout.Image ?? throw new NotFoundException("沒有圖片資料");
 
         MemoryStream imageStream = new(image.Data);
         return File(imageStream, image.ContentType);
