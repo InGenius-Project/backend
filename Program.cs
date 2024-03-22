@@ -1,5 +1,4 @@
 using System.Text;
-using AutoMapper.EntityFramework;
 using AutoMapper.EquivalencyExpression;
 using AutoWrapper;
 using Hangfire;
@@ -25,7 +24,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddJsonFile("appsettings.Secrets.json");
 
-IWebHostEnvironment env = builder.Environment;
+var env = builder.Environment;
 
 // Development
 if (env.IsDevelopment())
@@ -40,7 +39,7 @@ if (env.IsProduction())
 }
 
 // Connnect to database
-string? connectionString = builder.Configuration.GetConnectionString("Default");
+var connectionString = builder.Configuration.GetConnectionString("Default");
 
 if (env.IsDevelopment())
 {
@@ -62,10 +61,10 @@ builder.Services.AddScoped<IRepositoryWrapper, RepositoryWrapper>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<ResumeService>();
-builder.Services.AddScoped<AreaService>();
-builder.Services.AddScoped<AreaTypeService>();
-builder.Services.AddScoped<UserService>();
-builder.Services.AddScoped<TagService>();
+builder.Services.AddScoped<IAreaService, AreaService>();
+builder.Services.AddScoped<IAreaTypeService, AreaTypeService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<RecruitmentService>();
 
 // builder.Services.AddScoped<ApiResponseMiddleware>();

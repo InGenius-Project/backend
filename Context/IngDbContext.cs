@@ -1,11 +1,13 @@
-﻿namespace IngBackend.Context;
+namespace IngBackend.Context;
+
 using IngBackend.Models.DBEntity;
 using IngBackend.Services;
 using Microsoft.EntityFrameworkCore;
 
 public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(options)
 {
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => base.OnConfiguring(optionsBuilder);
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
+        base.OnConfiguring(optionsBuilder);
 
     public DbSet<User> User { get; set; }
     public DbSet<Resume> Resume { get; set; }
@@ -38,6 +40,13 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
                     Name = "custom",
                     Value = "custom",
                     Color = "#ffffff"
+                },
+                new TagType
+                {
+                    Id = 2,
+                    Name = "fake",
+                    Value = "fake",
+                    Color = "#ffffff"
                 }
             );
 
@@ -54,16 +63,11 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
                     Name = "custom",
                     Value = "unique",
                     Description = "whatever",
-                    UserRole =
-                    [
-                        Enum.UserRole.InternalUser,
-                        Enum.UserRole.Admin
-                    ],
+                    UserRole = [Enum.UserRole.InternalUser, Enum.UserRole.Admin],
                     LayoutType = Enum.LayoutType.List,
                     CreatedAt = DateTime.UtcNow
                 }
             );
-
 
         var hasher = new PasswordHasher();
         var user = new User
@@ -75,7 +79,6 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             Role = Enum.UserRole.Intern
         };
 
-
         var internalUser = new User
         {
             Id = new Guid("d6e2c7c3-89a5-4d8e-b74b-7af6f79e7348"),
@@ -86,5 +89,4 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
         };
         modelBuilder.Entity<User>().HasData(user, internalUser);
     }
-
 }

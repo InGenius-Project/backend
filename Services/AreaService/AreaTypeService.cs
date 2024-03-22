@@ -10,16 +10,16 @@ using IngBackend.Models.DBEntity;
 using IngBackend.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 
-public class AreaTypeService(
-    IUnitOfWork unitOfWork,
-    IMapper mapper,
-    IRepositoryWrapper repository) :
-        Service<AreaType, AreaTypeDTO, int>(unitOfWork, mapper),
+public class AreaTypeService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository)
+    : Service<AreaType, AreaTypeDTO, int>(unitOfWork, mapper),
         IAreaTypeService
 {
     private readonly IMapper _mapper = mapper;
     private readonly IRepositoryWrapper _repository = repository;
-    private readonly IRepository<AreaType, int> _areaTypeRepository = unitOfWork.Repository<AreaType, int>();
+    private readonly IRepository<AreaType, int> _areaTypeRepository = unitOfWork.Repository<
+        AreaType,
+        int
+    >();
 
     public new async Task AddAsync(AreaTypeDTO areaTypeDto)
     {
@@ -34,14 +34,15 @@ public class AreaTypeService(
 
     public new async Task UpdateAsync(AreaTypeDTO areaTypeDto)
     {
-        var areaType = await _areaTypeRepository
-            .GetAll()
-            .Include(a => a.ListTagTypes)
-            .FirstOrDefaultAsync(a => a.Id.Equals(areaTypeDto.Id)) ?? throw new NotFoundException("areaType not found.");
+        var areaType =
+            await _areaTypeRepository
+                .GetAll()
+                .Include(a => a.ListTagTypes)
+                .FirstOrDefaultAsync(a => a.Id.Equals(areaTypeDto.Id))
+            ?? throw new NotFoundException("areaType not found.");
 
         // TODO: 新增 TagType 的權限問題
         _mapper.Map(areaTypeDto, areaType);
-        Console.WriteLine("{0}", areaTypeDto.Value);
         await _areaTypeRepository.SaveAsync();
     }
 

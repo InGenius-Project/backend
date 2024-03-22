@@ -13,11 +13,25 @@ public interface IUserService : IService<User, UserInfoDTO, Guid>
     Task<UserInfoDTO?> GetUserByIdIncludeAllAsync(Guid userId);
     Task PostUser(UserInfoPostDTO req, Guid userId);
     Task<UserInfoDTO> AddAsync(UserSignUpDTO req);
-    Task<UserInfoDTO?> GetUserByEmailAsync(string email, params Expression<Func<User, object>>[] includes);
+    Task<UserInfoDTO?> GetUserByEmailAsync(
+        string email,
+        params Expression<Func<User, object>>[] includes
+    );
     Task<UserInfoDTO> CheckAndGetUserIncludeAllAsync(Guid userId);
-    Task<UserInfoDTO> CheckAndGetUserAsync(Guid userId, params Expression<Func<User, object>>[] includes);
-    Task<UserInfoDTO> CheckAndGetUserAsync(Guid userId, UserRole allowedRole, params Expression<Func<User, object>>[] includes);
-    Task<UserInfoDTO> CheckAndGetUserAsync(Guid userId, IEnumerable<UserRole> allowedRoles, params Expression<Func<User, object>>[] includes);
+    Task<UserInfoDTO> CheckAndGetUserAsync(
+        Guid userId,
+        params Expression<Func<User, object>>[] includes
+    );
+    Task<UserInfoDTO> CheckAndGetUserAsync(
+        Guid userId,
+        UserRole allowedRole,
+        params Expression<Func<User, object>>[] includes
+    );
+    Task<UserInfoDTO> CheckAndGetUserAsync(
+        Guid userId,
+        IEnumerable<UserRole> allowedRoles,
+        params Expression<Func<User, object>>[] includes
+    );
     Task<ResumeDTO?> GetResumesByUserId(Guid userId);
     Task<UserInfoDTO> VerifyHashedPasswordAsync(UserSignInDTO req);
     Task AddUserResumeAsync(UserInfoDTO userDTO, ResumeDTO resumeDTO);
@@ -25,4 +39,3 @@ public interface IUserService : IService<User, UserInfoDTO, Guid>
     Task<string> GenerateEmailConfirmationTokenAsync(UserInfoDTO req);
     bool VerifyEducationEmail(string email);
 }
-

@@ -59,10 +59,10 @@ public class MappingProfile : Profile
 
         CreateMap<AreaDTO, Area>();
         CreateMap<AreaType, AreaTypeDTO>();
-        CreateMap<AreaTypeDTO, AreaType>()
-            .EqualityComparison((dto, entity) => dto.Id.Equals(entity.Id));
+        CreateMap<AreaTypeDTO, AreaType>().EqualityComparison((dto, entity) => dto.Id == entity.Id);
+
         CreateMap<AreaTypePostDTO, AreaType>()
-            .EqualityComparison((dto, entity) => dto.Id.Equals(entity.Id));
+            .EqualityComparison((dto, entity) => dto.Id == entity.Id);
 
         CreateMap<AreaTypePostDTO, AreaTypeDTO>();
 
