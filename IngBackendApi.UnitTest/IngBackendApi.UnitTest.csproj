@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\IngBackendApi\IngBackendApi.csproj" />
+    <ProjectReference Include="..\IngBackendApi.Application\IngBackendApi.Application.csproj" />
   </ItemGroup>
 
 </Project>

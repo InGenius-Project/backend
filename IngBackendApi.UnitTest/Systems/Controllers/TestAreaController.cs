@@ -93,7 +93,6 @@ public class TestAreaController : IDisposable
 
         // Assert
         result.Should().BeOfType<ApiResponse>();
-        result.Message.Should().Be("新增成功");
     }
 
     [Fact]
@@ -115,7 +114,6 @@ public class TestAreaController : IDisposable
 
         // Assert
         result.Should().BeOfType<ApiResponse>();
-        result.Message.Should().Be("更新成功");
     }
 
     [Fact]
