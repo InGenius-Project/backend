@@ -52,7 +52,6 @@ public class AreaTypeService : Service<AreaType, AreaTypeDTO, int>
 
         // TODO: 新增 TagType 的權限問題
         _mapper.Map(areaTypeDto, areaType);
-        Console.WriteLine("{0}", areaTypeDto.Value);
         await _areaTypeRepository.SaveAsync();
     }
 

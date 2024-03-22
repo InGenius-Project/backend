@@ -96,7 +96,10 @@ public class MappingProfile : Profile
         CreateMap<Tag, TagDTO>();
 
         CreateMap<TagPostDTO, TagDTO>().ReverseMap();
-        CreateMap<TagType, TagTypeDTO>().ReverseMap();
+        CreateMap<TagType, TagTypeDTO>()
+            .EqualityComparison((dto, entity) => dto.Id.Equals(entity.Id))
+            .ReverseMap();
+            
         CreateMap<TagTypePostDTO, TagTypeDTO>().ReverseMap();
     }
 
