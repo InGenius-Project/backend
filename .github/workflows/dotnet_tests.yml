@@ -26,4 +26,4 @@ jobs:
       run: dotnet build --no-restore IngBackendApi.Application
 
     - name: Test
-      run: dotnet test IngBackendApi.UnitTest/IngBackendApi.UnitTest.csproj --no-build --verbosity normal 
+      run: dotnet test IngBackendApi.Application --no-build --verbosity normal 
