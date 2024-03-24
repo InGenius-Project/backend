@@ -64,12 +64,16 @@ public class TestAreaTypeService : IDisposable
         await _areaTypeService.UpdateAsync(updateAreaTypeDto);
 
         // Assert
-        areaType.Should().Match<AreaType>(src =>
-            src.Name == updateAreaTypeDto.Name &&
-            src.Value == updateAreaTypeDto.Value &&
-            src.Description == updateAreaTypeDto.Description &&
-            src.UserRole == updateAreaTypeDto.UserRole &&
-            src.LayoutType == updateAreaTypeDto.LayoutType);
+        areaType.Name.Should().Be(updateAreaTypeDto.Name);
+        areaType.Value.Should().Be(updateAreaTypeDto.Value);
+        areaType.Description.Should().Be(updateAreaTypeDto.Description);
+        areaType.LayoutType.Should().Be(updateAreaTypeDto.LayoutType);
+
+        if (updateAreaTypeDto.UserRole != null)
+        {
+            var result = areaType.UserRole?.All(x => updateAreaTypeDto.UserRole.Any(y => y == x));
+            result.Should().BeTrue();
+        }
 
         if (updateAreaTypeDto.ListTagTypes != null)
         {
