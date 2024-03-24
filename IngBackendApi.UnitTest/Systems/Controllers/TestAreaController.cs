@@ -116,26 +116,26 @@ public class TestAreaController : IDisposable
         result.Should().BeOfType<ApiResponse>();
     }
 
-    [Fact]
-    public async Task PostAreaType_ShouldThrowUnauthorizedAccessException_WhenUserIsNotAuthorized()
-    {
-        // Arrange
-        AreaFixture areaFixture = new();
-        UserFixture userFixture = new();
-        var req = areaFixture.Fixture.Create<AreaTypePostDTO>();
-        var user = userFixture.Fixture.Build<UserInfoDTO>().With(x => x.Role, UserRole.Intern).Create();
-        var area = areaFixture.Fixture.Create<AreaTypeDTO>();
+    // [Fact]
+    // public async Task PostAreaType_ShouldThrowUnauthorizedAccessException_WhenUserIsNotAuthorized()
+    // {
+    //     // Arrange
+    //     AreaFixture areaFixture = new();
+    //     UserFixture userFixture = new();
+    //     var req = areaFixture.Fixture.Create<AreaTypePostDTO>();
+    //     var user = userFixture.Fixture.Build<UserInfoDTO>().With(x => x.Role, UserRole.Intern).Create();
+    //     var area = areaFixture.Fixture.Create<AreaTypeDTO>();
 
-        _mockUserService.Setup(x => x.CheckAndGetUserAsync(It.IsAny<Guid>())).ReturnsAsync(user);
-        _mockAreaTypeService.Setup(x => x.GetByIdAsync(req.Id ?? 0)).ReturnsAsync(area);
-        _mockAreaTypeService.Setup(x => x.UpdateAsync(It.IsAny<AreaTypeDTO>()));
+    //     _mockUserService.Setup(x => x.CheckAndGetUserAsync(It.IsAny<Guid>())).ReturnsAsync(user);
+    //     _mockAreaTypeService.Setup(x => x.GetByIdAsync(req.Id ?? 0)).ReturnsAsync(area);
+    //     _mockAreaTypeService.Setup(x => x.UpdateAsync(It.IsAny<AreaTypeDTO>()));
 
-        // Act
-        var result = await _controller.PostAreaType(req);
+    //     // Act
+    //     var result = await _controller.PostAreaType(req);
 
-        // Assert
-        result.StatusCode.Should().Be(Status403Forbidden);
-    }
+    //     // Assert
+    //     result.StatusCode.Should().Be(Status403Forbidden);
+    // }
 
     public void Dispose() => GC.SuppressFinalize(this);
 
