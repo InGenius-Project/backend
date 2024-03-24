@@ -115,13 +115,6 @@ public class TestUserController : IDisposable
         Assert.Equal(StatusCodes.Status200OK, result.StatusCode);
     }
 
-    [Fact]
-    public void FailedTest()
-    {
-        Asset.True(false);
-    }
-
-
     public void Dispose() => GC.SuppressFinalize(this);
 }
 
