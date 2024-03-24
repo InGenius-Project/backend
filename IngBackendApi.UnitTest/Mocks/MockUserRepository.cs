@@ -1,5 +1,6 @@
-namespace IngBackendApi.Test.Mocks;
+namespace IngBackendApi.UnitTest.Mocks;
 
+using IngBackendApi.Context;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Repository;
@@ -7,9 +8,8 @@ using IngBackendApi.Test.Fixtures;
 
 internal class MockUserRepository
 {
-    public static Mock<IUserRepository> GetMock()
+    public static Mock<IUserRepository> GetMock(IngDbContext context)
     {
-        var context = MemoryContextFixture.Generate();
         UserFixture userFixture = new();
         var user1 = userFixture.Create();
         var user2 = userFixture.Create();

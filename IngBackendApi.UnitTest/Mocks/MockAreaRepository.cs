@@ -1,4 +1,4 @@
-namespace IngBackendApi.Test.Mocks;
+namespace IngBackendApi.UnitTest.Mocks;
 
 using System;
 using System.Collections.Generic;
@@ -13,10 +13,9 @@ using IngBackendApi.Context;
 
 internal class MockAreaRepository
 {
-    public static Mock<IAreaRepository> GetMock()
+    public static Mock<IAreaRepository> GetMock(IngDbContext context)
     {
         var areaFixture = new AreaFixture();
-        var context = MemoryContextFixture.Generate();
 
         var mockAreaRepository = new Mock<IAreaRepository>();
         var stubAreaRepository = new AreaRepository(context);

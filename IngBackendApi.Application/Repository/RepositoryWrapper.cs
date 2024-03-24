@@ -1,12 +1,13 @@
+namespace IngBackend.Repository;
+
+using IngBackendApi.Repository;
 using IngBackendApi.Context;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Models.DBEntity;
 
-namespace IngBackendApi.Repository;
-
-public class RepositoryWrapper : IRepositoryWrapper
+public class RepositoryWrapper(IngDbContext context) : IRepositoryWrapper
 {
-    private readonly IngDbContext _context;
+    private readonly IngDbContext _context = context;
     private IUserRepository _userRepository;
     private IAreaRepository _areaRepository;
     private IResumeRepository _resumeRepository;
@@ -19,10 +20,7 @@ public class RepositoryWrapper : IRepositoryWrapper
     {
         get
         {
-            if (_userRepository == null)
-            {
-                _userRepository = new UserRepository(_context);
-            }
+            _userRepository ??= new UserRepository(_context);
             return _userRepository;
         }
     }
@@ -31,10 +29,7 @@ public class RepositoryWrapper : IRepositoryWrapper
     {
         get
         {
-            if (_resumeRepository == null)
-            {
-                _resumeRepository = new ResumeRepository(_context);
-            }
+            _resumeRepository ??= new ResumeRepository(_context);
             return _resumeRepository;
         }
     }
@@ -43,10 +38,7 @@ public class RepositoryWrapper : IRepositoryWrapper
     {
         get
         {
-            if (_recruitmentRepository == null)
-            {
-                _recruitmentRepository = new RecruitmentRepository(_context);
-            }
+            _recruitmentRepository ??= new RecruitmentRepository(_context);
             return _recruitmentRepository;
         }
     }
@@ -55,10 +47,7 @@ public class RepositoryWrapper : IRepositoryWrapper
     {
         get
         {
-            if (_areaRepository == null)
-            {
-                _areaRepository = new AreaRepository(_context);
-            }
+            _areaRepository ??= new AreaRepository(_context);
             return _areaRepository;
         }
     }
@@ -67,10 +56,7 @@ public class RepositoryWrapper : IRepositoryWrapper
     {
         get
         {
-            if (_areaTypeRepository == null)
-            {
-                _areaTypeRepository = new Repository<AreaType, int>(_context);
-            }
+            _areaTypeRepository ??= new Repository<AreaType, int>(_context);
             return _areaTypeRepository;
         }
     }
@@ -79,21 +65,10 @@ public class RepositoryWrapper : IRepositoryWrapper
     {
         get
         {
-            if (_tagTypeRepository == null)
-            {
-                _tagTypeRepository = new Repository<TagType, int>(_context);
-            }
+            _tagTypeRepository ??= new Repository<TagType, int>(_context);
             return _tagTypeRepository;
         }
     }
 
-    public RepositoryWrapper(IngDbContext context)
-    {
-        _context = context;
-    }
-
-    public void Save()
-    {
-        _context.SaveChanges();
-    }
+    public void Save() => _context.SaveChanges();
 }

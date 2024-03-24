@@ -1,11 +1,13 @@
-namespace IngBackendApi.Test.Systems.Services;
+namespace IngBackendApi.UnitTest.Systems.Services;
 
 using AutoMapper;
 using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Interfaces.UnitOfWork;
+using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Profiles;
 using IngBackendApi.Services.AreaService;
+using IngBackendApi.Test.Fixtures;
 using IngBackendApi.Test.Mocks;
 
 public class TestAreaService : IDisposable
@@ -15,30 +17,34 @@ public class TestAreaService : IDisposable
     private readonly AreaService _areaService;
     private readonly Mock<IRepositoryWrapper> _repository;
 
+    private readonly IRepository<AreaType, int> _areaTypeRepository;
+
     public TestAreaService()
     {
 
+        var context = MemoryContextFixture.Generate();
         _mockUnitofWork = new Mock<IUnitOfWork>();
-        _repository = MockRepositoryWrapper.GetMock();
+        _repository = MockRepositoryWrapper.GetMock(context);
 
         MappingProfile mappingProfile = new();
         MapperConfiguration configuration = new(cfg => cfg.AddProfile(mappingProfile));
         _mapper = new Mapper(configuration);
         _areaService = new AreaService(_mockUnitofWork.Object, _mapper, _repository.Object);
 
-    }
+        _areaTypeRepository = _mockUnitofWork.Object.Repository<AreaType, int>();
 
+    }
     [Fact]
-    public async void CheckAreaOwnership_InvalidUser_ThrowForbiddenException()
+    public void CheckAreaOwnership_ValidUserId_DoesNotThrowException()
     {
         // Arrange
-        var existUser = await _repository.Object.User.GetByIdAsync(Guid.Empty);
+        var existArea = _repository.Object.Area.GetByIdAsync(Guid.Empty).Result;
 
         // Act
-        Action act = () => _areaService.CheckAreaOwnership(existUser.Id, Guid.NewGuid());
+        Task act() => _areaService.CheckAreaOwnership(existArea.Id, Guid.NewGuid());
 
         // Assert
-        act.Should().Throw<ForbiddenException>();
+        Assert.ThrowsAsync<ForbiddenException>(act);
     }
 
 

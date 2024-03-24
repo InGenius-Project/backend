@@ -1,3 +1,4 @@
+using IngBackend.Repository;
 using IngBackendApi.Context;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Models.DBEntity;

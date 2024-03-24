@@ -1,14 +1,16 @@
 namespace IngBackendApi.Test.Mocks;
 
+using IngBackendApi.Context;
 using IngBackendApi.Interfaces.Repository;
+using IngBackendApi.UnitTest.Mocks;
 
 public class MockRepositoryWrapper
 {
-    public static Mock<IRepositoryWrapper> GetMock()
+    public static Mock<IRepositoryWrapper> GetMock(IngDbContext context)
     {
         Mock<IRepositoryWrapper> mock = new();
-        var mockUserRepository = MockUserRepository.GetMock();
-        var mockAreaRepository = MockAreaRepository.GetMock();
+        var mockUserRepository = MockUserRepository.GetMock(context);
+        var mockAreaRepository = MockAreaRepository.GetMock(context);
 
         mock.Setup(m => m.User).Returns(() => mockUserRepository.Object);
         mock.Setup(m => m.Area).Returns(() => mockAreaRepository.Object);

@@ -1,4 +1,4 @@
-namespace IngBackendApi.Test.Systems.Services;
+namespace IngBackendApi.UnitTest.Systems.Services;
 
 using AutoMapper;
 using IngBackendApi.Context;
@@ -34,7 +34,7 @@ public class TestUserService : IDisposable
 
         _context = MemoryContextFixture.Generate();
 
-        _repository = MockRepositoryWrapper.GetMock();
+        _repository = MockRepositoryWrapper.GetMock(_context);
 
         _passwordHasher = new Mock<IPasswordHasher>();
 

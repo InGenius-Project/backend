@@ -1,43 +1,35 @@
-﻿using AutoMapper;
+﻿namespace IngBackend.Controllers;
+
+using IngBackendApi.Controllers;
+using AutoMapper;
 using AutoWrapper.Wrappers;
 using IngBackendApi.Enum;
 using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
-using IngBackendApi.Services.AreaService;
 using IngBackendApi.Services.TagService;
 using IngBackendApi.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
-namespace IngBackendApi.Controllers;
+using IngBackendApi.Services.AreaService;
 
 [Route("api/[controller]")]
 [Authorize]
 [ApiController]
-public class TagController : BaseController
+public class TagController(
+    IMapper mapper,
+    UserService userService,
+    TagService tagService,
+    IService<TagType, TagTypeDTO, int> tagTypeService,
+    AreaService areaService
+    ) : BaseController
 {
-    private readonly UserService _userService;
-    private readonly IMapper _mapper;
-    private readonly TagService _tagService;
-    private readonly IService<TagType, TagTypeDTO, int> _tagTypeService;
-    private readonly AreaService _areaService;
-
-    public TagController(
-        IMapper mapper,
-        UserService userService,
-        TagService tagService,
-        IService<TagType, TagTypeDTO, int> tagTypeService,
-        AreaService areaService
-    )
-    {
-        _userService = userService;
-        _mapper = mapper;
-        _tagService = tagService;
-        _tagTypeService = tagTypeService;
-        _areaService = areaService;
-    }
+    private readonly UserService _userService = userService;
+    private readonly IMapper _mapper = mapper;
+    private readonly TagService _tagService = tagService;
+    private readonly IService<TagType, TagTypeDTO, int> _tagTypeService = tagTypeService;
+    private readonly AreaService _areaService = areaService;
 
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(ResponseDTO<TagDTO>), StatusCodes.Status200OK)]

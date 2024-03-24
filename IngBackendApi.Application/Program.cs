@@ -2,12 +2,12 @@ using System.Text;
 using AutoMapper.EquivalencyExpression;
 using AutoWrapper;
 using Hangfire;
+using IngBackend.Repository;
 using IngBackendApi.Context;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Interfaces.UnitOfWork;
 using IngBackendApi.Profiles;
-using IngBackendApi.Repository;
 using IngBackendApi.Services;
 using IngBackendApi.Services.AreaService;
 using IngBackendApi.Services.RecruitmentService;
@@ -75,10 +75,7 @@ builder.Services.AddScoped<EmailService>();
 // Json Serializer
 builder
     .Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.PropertyNamingPolicy = null;
-    });
+    .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
 
 // Add Logger
 builder.Logging.ClearProviders();
@@ -111,7 +108,7 @@ builder.Services.AddSwaggerGen(c =>
                         Id = "Bearer"
                     }
                 },
-                new string[] { }
+                Array.Empty<string>()
             }
         }
     );
@@ -128,27 +125,22 @@ builder.Services.AddAutoMapper(cfg =>
 
 builder
     .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+    .AddJwtBearer(options => options.TokenValidationParameters = new TokenValidationParameters
     {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(builder.Configuration["Secrets:JwtSecretKey"])
             )
-        };
     });
 
 // CORS
 var devCorsPolicy = "_devCorsPolicy";
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy(
+builder.Services.AddCors(options => options.AddPolicy(
         name: devCorsPolicy,
         policy =>
         {
@@ -168,14 +160,10 @@ builder.Services.AddCors(options =>
                 .AllowAnyMethod()
                 .AllowCredentials();
         }
-    );
-});
+    ));
 
 // Hangfire (Memory Storage)
-builder.Services.AddHangfire(config =>
-{
-    config.UseInMemoryStorage();
-});
+builder.Services.AddHangfire(config => config.UseInMemoryStorage());
 builder.Services.AddHangfireServer();
 
 var app = builder.Build();

@@ -1,4 +1,4 @@
-namespace IngBackendApi.Test.Systems.Services;
+namespace IngBackendApi.UnitTest.Systems.Services;
 
 using AutoMapper;
 using IngBackendApi.Interfaces.Repository;
@@ -7,29 +7,31 @@ using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
 using IngBackendApi.Profiles;
 using IngBackendApi.Services.AreaService;
+using IngBackendApi.Services.UnitOfWork;
 using IngBackendApi.Test.Fixtures;
 using IngBackendApi.Test.Mocks;
 
 public class TestAreaTypeService : IDisposable
 {
-    private readonly Mock<IUnitOfWork> _mockUnitofWork;
+    private readonly IUnitOfWork _unitofWork;
     private readonly IMapper _mapper;
     private readonly AreaTypeService _areaTypeService;
     private readonly Mock<IRepositoryWrapper> _repository;
-    private readonly Mock<IRepository<AreaType, int>> _areaTypeRepository;
+    private readonly IRepository<AreaType, int> _areaTypeRepository;
     public TestAreaTypeService()
     {
 
-        _mockUnitofWork = new Mock<IUnitOfWork>();
-        _repository = MockRepositoryWrapper.GetMock();
+        var context = MemoryContextFixture.Generate();
+        _unitofWork = new UnitOfWork(context);
+        _repository = MockRepositoryWrapper.GetMock(context);
 
         MappingProfile mappingProfile = new();
         MapperConfiguration configuration = new(cfg => cfg.AddProfile(mappingProfile));
         _mapper = new Mapper(configuration);
 
-        _areaTypeService = new AreaTypeService(_mockUnitofWork.Object, _mapper, _repository.Object);
+        _areaTypeService = new AreaTypeService(_unitofWork, _mapper, _repository.Object);
 
-        _areaTypeRepository = new Mock<IRepository<AreaType, int>>();
+        _areaTypeRepository = _unitofWork.Repository<AreaType, int>();
 
     }
     [Fact]
@@ -43,7 +45,7 @@ public class TestAreaTypeService : IDisposable
         await _areaTypeService.AddAsync(areaTypeDto);
 
         // Assert
-        var areaType = _areaTypeRepository.Object.GetAll().First();
+        var areaType = _areaTypeRepository.GetAll().First();
         areaType.Should().NotBeNull();
 
     }
@@ -52,12 +54,9 @@ public class TestAreaTypeService : IDisposable
     public async Task UpdateAsync_WhenCalled_ShouldUpdateArea()
     {
         // Arrange
-        var areaFixture = new AreaFixture();
-        var areaType = areaFixture.Fixture.Create<AreaType>();
-        var context = MemoryContextFixture.Generate();
-        context.Add(areaType);
-        await context.SaveChangesAsync();
+        var areaType = _repository.Object.AreaType.GetAll().First();
 
+        var areaFixture = new AreaFixture();
         var updateAreaTypeDto = areaFixture.Fixture.Create<AreaTypeDTO>();
         updateAreaTypeDto.Id = areaType.Id;
 
