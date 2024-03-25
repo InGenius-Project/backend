@@ -8,8 +8,8 @@ using IngBackendApi.Models.DTO;
 using IngBackendApi.Profiles;
 using IngBackendApi.Services.AreaService;
 using IngBackendApi.Services.UnitOfWork;
-using IngBackendApi.Test.Fixtures;
-using IngBackendApi.Test.Mocks;
+using IngBackendApi.UnitTest.Fixtures;
+using IngBackendApi.UnitTest.Mocks;
 
 public class TestAreaTypeService : IDisposable
 {

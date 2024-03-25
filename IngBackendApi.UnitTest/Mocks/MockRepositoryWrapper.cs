@@ -1,4 +1,4 @@
-namespace IngBackendApi.Test.Mocks;
+namespace IngBackendApi.UnitTest.Mocks;
 
 using IngBackendApi.Context;
 using IngBackendApi.Interfaces.Repository;

@@ -8,28 +8,25 @@ using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
-using IngBackendApi.Services.TagService;
-using IngBackendApi.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using IngBackendApi.Services.AreaService;
 
 [Route("api/[controller]")]
 [Authorize]
 [ApiController]
 public class TagController(
     IMapper mapper,
-    UserService userService,
-    TagService tagService,
+    IUserService userService,
+    ITagService tagService,
     IService<TagType, TagTypeDTO, int> tagTypeService,
-    AreaService areaService
+    IAreaService areaService
     ) : BaseController
 {
-    private readonly UserService _userService = userService;
+    private readonly IUserService _userService = userService;
     private readonly IMapper _mapper = mapper;
-    private readonly TagService _tagService = tagService;
+    private readonly ITagService _tagService = tagService;
     private readonly IService<TagType, TagTypeDTO, int> _tagTypeService = tagTypeService;
-    private readonly AreaService _areaService = areaService;
+    private readonly IAreaService _areaService = areaService;
 
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(ResponseDTO<TagDTO>), StatusCodes.Status200OK)]
@@ -37,9 +34,7 @@ public class TagController(
     {
         var tag = await _tagService.GetByIdAsync(id) ?? throw new NotFoundException("標籤不存在");
 
-        var tagDTO = _mapper.Map<TagDTO>(tag);
-
-        return tagDTO;
+        return tag;
     }
 
     [HttpGet]

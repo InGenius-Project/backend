@@ -1,4 +1,4 @@
-namespace IngBackendApi.Test.Systems.Controllers;
+namespace IngBackendApi.UnitTest.Systems.Controllers;
 
 using AutoMapper;
 using AutoWrapper.Wrappers;
@@ -7,7 +7,7 @@ using IngBackendApi.Enum;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Models.DTO;
 using IngBackendApi.Profiles;
-using IngBackendApi.Test.Fixtures;
+using IngBackendApi.UnitTest.Fixtures;
 using static Microsoft.AspNetCore.Http.StatusCodes;
 
 

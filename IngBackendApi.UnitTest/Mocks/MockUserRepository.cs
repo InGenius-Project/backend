@@ -4,7 +4,7 @@ using IngBackendApi.Context;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Repository;
-using IngBackendApi.Test.Fixtures;
+using IngBackendApi.UnitTest.Fixtures;
 
 internal class MockUserRepository
 {

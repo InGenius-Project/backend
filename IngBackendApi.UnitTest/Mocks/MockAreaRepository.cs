@@ -8,7 +8,7 @@ using Moq;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Repository;
-using IngBackendApi.Test.Fixtures;
+using IngBackendApi.UnitTest.Fixtures;
 using IngBackendApi.Context;
 
 internal class MockAreaRepository

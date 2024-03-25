@@ -1,4 +1,4 @@
-namespace IngBackendApi.Test.Fixtures;
+namespace IngBackendApi.UnitTest.Fixtures;
 
 using IngBackendApi.Context;
 using Microsoft.EntityFrameworkCore;
