@@ -23,5 +23,12 @@ Service<Tag, TagDTO, Guid>(unitOfWork, mapper), ITagService
         return _mapper.Map<List<TagDTO>>(tags);
     }
 
+    public new async Task<TagDTO> AddAsync(TagDTO tagDto)
+    {
+        var tag = _mapper.Map<Tag>(tagDto);
+        await _tagRepository.AddAsync(tag);
+        await _tagRepository.SaveAsync();
+        return _mapper.Map<TagDTO>(tag);
+    }
 }
 

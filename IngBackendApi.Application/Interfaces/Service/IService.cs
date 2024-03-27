@@ -20,7 +20,7 @@ public interface IService<TEntity, TDto, TKey>
     Task<TDto?> GetByIdAsync(TKey id);
     Task<TDto?> GetByIdAsync(TKey id, params Expression<Func<TEntity, object>>[] includes);
     Task<TDto> AddAsync(TDto dto);
-    Task DeleteByIdAsync(TKey key);
+    Task DeleteByIdAsync(TKey id);
     Task UpdateAsync(TDto dto);
     Task SaveChangesAsync();
 

@@ -57,24 +57,25 @@ public class TagController(
 
     [HttpPost]
     [ProducesResponseType(typeof(ResponseDTO<>), StatusCodes.Status200OK)]
-    public async Task<ApiResponse> PostTag([FromBody] TagPostDTO req)
+    public async Task<TagDTO> PostTag([FromBody] TagPostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
 
         var tagId = req.Id ?? Guid.Empty;
-        var tag = await _tagService.GetByIdAsync(tagId);
-
-        // Add new tag
-        if (tag == null)
+        var tagDto = await _tagService.GetByIdAsync(tagId);
+        if (tagDto == null)
         {
-            var newEntity = _mapper.Map<TagDTO>(req);
-            await _tagService.AddAsync(newEntity);
-            return new ApiResponse("標籤已新增");
+            // new tag
+            var newTag = _mapper.Map<TagDTO>(req);
+            newTag = await _tagService.AddAsync(newTag);
+            return newTag;
         }
 
-        await _tagService.UpdateAsync(tag);
-        return new ApiResponse("標籤已更改");
+        // update tag
+        _mapper.Map(req, tagDto);
+        await _tagService.UpdateAsync(tagDto);
+        return tagDto;
     }
 
     [HttpGet("type/{id}")]

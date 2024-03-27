@@ -78,6 +78,10 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
     public async Task<TDto?> GetByIdAsync(TKey id)
     {
         var result = await _unitOfWork.Repository<TEntity, TKey>().GetByIdAsync(id);
+        if (result != null)
+        {
+            Detach(result);
+        }
         return _mapper.Map<TDto>(result);
     }
 
@@ -114,10 +118,9 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
         await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task SaveChangesAsync()
-    {
-        await _unitOfWork.SaveChangesAsync();
-    }
+    public async Task SaveChangesAsync() => await _unitOfWork.SaveChangesAsync();
+
+    private void Detach(TEntity entity) => _unitOfWork.Repository<TEntity, TKey>().SetEntityState(entity, EntityState.Detached);
 
     // /// <inheritdoc />
     // public virtual async Task AddRangeAsync(IEnumerable<TEntity> entities)
