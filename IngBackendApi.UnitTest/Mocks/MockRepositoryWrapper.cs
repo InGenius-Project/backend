@@ -13,10 +13,12 @@ public class MockRepositoryWrapper
         var mockUserRepository = MockUserRepository.GetMock(context);
         var mockAreaRepository = MockAreaRepository.GetMock(context);
         var mockAreaTypeRepository = MockRepository.SetupMockRepository<AreaType, int>(context);
+        var mockTagTypeRepository = MockRepository.SetupMockRepository<TagType, int>(context);
 
         mock.Setup(m => m.User).Returns(() => mockUserRepository.Object);
         mock.Setup(m => m.Area).Returns(() => mockAreaRepository.Object);
         mock.Setup(m => m.AreaType).Returns(() => mockAreaTypeRepository.Object);
+        mock.Setup(m => m.TagType).Returns(() => mockTagTypeRepository.Object);
         mock.Setup(m => m.Save()).Callback(() => { return; });
 
         return mock;

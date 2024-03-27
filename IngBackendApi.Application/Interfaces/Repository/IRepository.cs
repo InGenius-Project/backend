@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using IngBackendApi.Models.DBEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace IngBackendApi.Interfaces.Repository;

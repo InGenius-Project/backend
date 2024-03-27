@@ -86,7 +86,7 @@ public class AreaController(
     public async Task<AreaTypeDTO> GetAreaType(int id)
     {
         var areaType =
-            await _areaTypeService.GetByIdAsync(id)
+            await _areaTypeService.GetByIdAsync(id, a => a.ListTagTypes)
             ?? throw new NotFoundException("Area type not found");
         var areaTypeDTO = _mapper.Map<AreaTypeDTO>(areaType);
 
@@ -205,7 +205,7 @@ public class AreaController(
         return File(imageStream, image.ContentType);
     }
 
-    [HttpPost("listlayout")]
+    [HttpPost("listlayout/{areaId}")]
     public async Task<IActionResult> PostListLayout(Guid areaId, [FromBody] ListLayoutPostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;

@@ -13,17 +13,15 @@ Service<Tag, TagDTO, Guid>(unitOfWork, mapper), ITagService
     private readonly IRepository<Tag, Guid> _tagRepository = unitOfWork.Repository<Tag, Guid>();
     private readonly IMapper _mapper = mapper;
 
-    public async Task<List<TagDTO>?> GetAllTagsByType(string? type)
+    public async Task<List<TagDTO>?> GetAllTagsByType(string[]? type)
     {
-        var tags = _tagRepository.GetAll()
+        var tags = await _tagRepository.GetAll()
             .Include(t => t.Type)
-            .Where(t => t.Type.Value == type);
+            .Where(t => type == null || type.Contains(t.TagTypeId.ToString()))
+            .ToListAsync();
 
-        if (tags == null)
-        {
-            return [];
-        }
-        return await _mapper.ProjectTo<List<TagDTO>>(tags).FirstOrDefaultAsync();
+        return _mapper.Map<List<TagDTO>>(tags);
     }
+
 }
 

@@ -5,7 +5,7 @@ namespace IngBackendApi.Interfaces.Service
 
     public interface ITagService : IService<Tag, TagDTO, Guid>
     {
-        Task<List<TagDTO>?> GetAllTagsByType(string? type);
+        Task<List<TagDTO>?> GetAllTagsByType(string[]? type);
     }
 
 }

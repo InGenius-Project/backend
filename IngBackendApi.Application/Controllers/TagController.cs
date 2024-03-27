@@ -39,7 +39,7 @@ public class TagController(
 
     [HttpGet]
     [ProducesResponseType(typeof(ResponseDTO<List<TagDTO>>), StatusCodes.Status200OK)]
-    public async Task<List<TagDTO>> GetTags([FromQuery] string? type)
+    public async Task<List<TagDTO>> GetTags([FromQuery] string[]? type)
     {
         var tags = new List<TagDTO>();
         if (type == null)
