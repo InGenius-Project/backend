@@ -61,8 +61,8 @@ public class TagController(
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
-
         var tagId = req.Id ?? Guid.Empty;
+
         var tagDto = await _tagService.GetByIdAsync(tagId);
         if (tagDto == null)
         {
@@ -71,6 +71,9 @@ public class TagController(
             newTag = await _tagService.AddAsync(newTag);
             return newTag;
         }
+
+        // check ownership
+        await _tagService.CheckOwnerShip(tagId, userId);
 
         // update tag
         _mapper.Map(req, tagDto);

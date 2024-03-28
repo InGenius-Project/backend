@@ -1,5 +1,8 @@
 namespace IngBackendApi.Services.TagService;
+
+using System.Globalization;
 using AutoMapper;
+using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Interfaces.UnitOfWork;
@@ -17,18 +20,30 @@ Service<Tag, TagDTO, Guid>(unitOfWork, mapper), ITagService
     {
         var tags = await _tagRepository.GetAll()
             .Include(t => t.Type)
-            .Where(t => type == null || type.Contains(t.TagTypeId.ToString()))
+            .Where(t => type == null || type.Contains(t.TagTypeId.ToString(CultureInfo.InvariantCulture)))
             .ToListAsync();
 
         return _mapper.Map<List<TagDTO>>(tags);
     }
 
-    public new async Task<TagDTO> AddAsync(TagDTO tagDto)
+    public async Task CheckOwnerShip(Guid tagId, Guid userId)
     {
-        var tag = _mapper.Map<Tag>(tagDto);
-        await _tagRepository.AddAsync(tag);
-        await _tagRepository.SaveAsync();
-        return _mapper.Map<TagDTO>(tag);
+        var tag = await _tagRepository.GetAll()
+            .AsNoTracking()
+            .Include(t => t.User)
+            .Where(t => t.Id == tagId)
+            .FirstOrDefaultAsync() ?? throw new NotFoundException("標籤不存在");
+
+        if (tag.User == null)
+        {
+            throw new UnauthorizedException();
+        }
+
+        var userExist = tag.User.Select(u => u.Id).Contains(userId);
+        if (!userExist)
+        {
+            throw new UnauthorizedException();
+        }
     }
 }
 

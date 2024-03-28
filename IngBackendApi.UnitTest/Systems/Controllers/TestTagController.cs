@@ -111,14 +111,14 @@ public class TestTagController : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("標籤已更改", result.Message);
+        Assert.Equal(tag.Id, result.Id);
         _mockTagService.Verify(x => x.UpdateAsync(tag), Times.Once);
     }
     [Fact]
     public async Task PostTag_AddTag_ReturnsApiResponse()
     {
         // Arrange
-        var id = Guid.NewGuid();
+        var id = Guid.Empty;
         var req = new TagPostDTO
         {
             Id = id,
@@ -131,14 +131,14 @@ public class TestTagController : IDisposable
         var user = userFixture.Fixture.Create<UserInfoDTO>();
         _mockUserService.Setup(x => x.CheckAndGetUserAsync(It.IsAny<Guid>())).ReturnsAsync(user);
         _mockTagService.Setup(x => x.GetByIdAsync(id)).ReturnsAsync(null as TagDTO);
-        _mockTagService.Setup(x => x.AddAsync(It.IsAny<TagDTO>())).Callback(() => { });
+        _mockTagService.Setup(x => x.AddAsync(It.IsAny<TagDTO>())).ReturnsAsync(new TagDTO() { Id = Guid.NewGuid(), Name = req.Name, TagTypeId = req.TagTypeId });
 
         // Act
         var result = await _controller.PostTag(req);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("標籤已新增", result.Message);
+        Assert.NotEqual(Guid.Empty, result.Id);
         _mockTagService.Verify(x => x.AddAsync(It.IsAny<TagDTO>()), Times.Once);
     }
 
