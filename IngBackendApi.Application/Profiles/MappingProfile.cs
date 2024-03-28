@@ -78,8 +78,6 @@ public class MappingProfile : Profile
         // ListLayout
         CreateMap<ListLayoutDTO, ListLayout>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
-            .ForMember(dest => dest.AreaId, opt => opt.Ignore())
-            .ForMember(dest => dest.Area, opt => opt.Ignore())
             .ReverseMap();
 
         CreateMap<ListLayoutPostDTO, ListLayoutDTO>();
@@ -99,7 +97,7 @@ public class MappingProfile : Profile
         CreateMap<TagType, TagTypeDTO>()
             .EqualityComparison((dto, entity) => dto.Id.Equals(entity.Id))
             .ReverseMap();
-            
+
         CreateMap<TagTypePostDTO, TagTypeDTO>().ReverseMap();
     }
 

@@ -72,12 +72,12 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
             await _repository
                 .Area.GetAll()
                 .Include(a => a.ListLayout)
+                .Include(a => a.ListLayout)
                 .ThenInclude(l => l.Items)
                 .FirstOrDefaultAsync(a => a.Id.Equals(areaId))
             ?? throw new NotFoundException("area not found.");
 
-        area.ClearLayouts();
-
+        area.ClearLayoutsExclude(a => a.ListLayout);
         if (area.ListLayout == null)
         {
             area.ListLayout = _mapper.Map<ListLayout>(listLayoutDTO);
@@ -88,6 +88,7 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
             _mapper.Map(listLayoutDTO, area.ListLayout);
             area.ListLayoutId = area.ListLayout.Id;
             area.ListLayout.AreaId = area.Id;
+            await _repository.Area.UpdateAsync(area);
         }
         await _repository.Area.SaveAsync();
     }

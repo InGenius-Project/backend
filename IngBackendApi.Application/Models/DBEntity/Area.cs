@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq.Expressions;
 using System.Text.Json.Serialization;
 using IngBackendApi.Enum;
 using IngBackendApi.Interfaces.Repository;
@@ -56,32 +57,34 @@ public class Area : BaseEntity, IEntity<Guid>
     [JsonIgnore]
     public virtual KeyValueListLayout? KeyValueListLayout { get; set; }
 
-    public void ClearLayouts()
+    public void ClearLayoutsExclude<TProperty>(Expression<Func<Area, TProperty>> propertyToRemain)
     {
-        KeyValueListLayoutId = null;
-        ImageTextLayoutId = null;
-        ListLayoutId = null;
-        TextLayoutId = null;
+        var propertyName = propertyToRemain?.Name?.ToString();
 
-        if (KeyValueListLayout != null)
+        switch (propertyName)
         {
-            KeyValueListLayout.AreaId = null;
-            KeyValueListLayout.Area = null;
-        }
-        if (ImageTextLayout != null)
-        {
-            ImageTextLayout.AreaId = null;
-            ImageTextLayout.Area = null;
-        }
-        if (ListLayout != null)
-        {
-            ListLayout.AreaId = null;
-            ListLayout.Area = null;
-        }
-        if (TextLayout != null)
-        {
-            TextLayout.AreaId = null;
-            TextLayout.Area = null;
+            case nameof(TextLayout):
+                ImageTextLayoutId = null;
+                ListLayoutId = null;
+                KeyValueListLayoutId = null;
+                break;
+            case nameof(ImageTextLayout):
+                TextLayoutId = null;
+                ListLayoutId = null;
+                KeyValueListLayoutId = null;
+                break;
+            case nameof(ListLayout):
+                TextLayoutId = null;
+                ImageTextLayoutId = null;
+                KeyValueListLayoutId = null;
+                break;
+            case nameof(KeyValueListLayout):
+                TextLayoutId = null;
+                ImageTextLayoutId = null;
+                ListLayoutId = null;
+                break;
+            default:
+                break;
         }
     }
 }

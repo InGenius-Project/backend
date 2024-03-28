@@ -205,7 +205,7 @@ public class AreaController(
         return File(imageStream, image.ContentType);
     }
 
-    [HttpPost("listlayout/{areaId}")]
+    [HttpPost("listlayout")]
     public async Task<IActionResult> PostListLayout(Guid areaId, [FromBody] ListLayoutPostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
