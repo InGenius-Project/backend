@@ -4,6 +4,7 @@ using AutoMapper;
 using AutoWrapper.Wrappers;
 using IngBackendApi.Controllers;
 using IngBackendApi.Enum;
+using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Models.DTO;
 using IngBackendApi.Profiles;
@@ -129,6 +130,7 @@ public class TestAreaController : IDisposable
         _mockUserService.Setup(x => x.CheckAndGetUserAsync(It.IsAny<Guid>())).ReturnsAsync(user);
         _mockAreaTypeService.Setup(x => x.GetByIdAsync(req.Id ?? 0)).ReturnsAsync(area);
         _mockAreaTypeService.Setup(x => x.UpdateAsync(It.IsAny<AreaTypeDTO>()));
+        _mockAreaTypeService.Setup(x => x.CheckOwnerShip(It.IsAny<int>(), It.IsAny<UserRole>())).ThrowsAsync(new ForbiddenException());
 
         // Act
         var result = await _controller.PostAreaType(req);

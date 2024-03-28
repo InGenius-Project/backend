@@ -36,13 +36,13 @@ Service<Tag, TagDTO, Guid>(unitOfWork, mapper), ITagService
 
         if (tag.User == null)
         {
-            throw new UnauthorizedException();
+            throw new ForbiddenException();
         }
 
         var userExist = tag.User.Select(u => u.Id).Contains(userId);
         if (!userExist)
         {
-            throw new UnauthorizedException();
+            throw new ForbiddenException();
         }
     }
 }

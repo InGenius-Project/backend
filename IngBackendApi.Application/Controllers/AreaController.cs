@@ -107,16 +107,20 @@ public class AreaController(
     public async Task<ApiResponse> PostAreaType([FromBody] AreaTypePostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        await _userService.CheckAndGetUserAsync(userId);
+        var user = await _userService.CheckAndGetUserAsync(userId);
+        var tagTypeId = req.Id.GetValueOrDefault(0);
 
-        if (req.Id is null or 0)
+        if (tagTypeId == 0)
         {
             var newAreaTypeDto = _mapper.Map<AreaTypeDTO>(req);
             await _areaTypeService.AddAsync(newAreaTypeDto);
             return new ApiResponse("新增成功");
         }
 
-        var areaType = await _areaTypeService.GetByIdAsync((int)req.Id);
+        // Check Ownership
+        await _areaTypeService.CheckOwnerShip(tagTypeId, user.Role);
+
+        var areaType = await _areaTypeService.GetByIdAsync(tagTypeId);
         if (areaType == null)
         {
             var newAreaTypeDto = _mapper.Map<AreaTypeDTO>(req);
