@@ -16,13 +16,12 @@ Service<Tag, TagDTO, Guid>(unitOfWork, mapper), ITagService
     private readonly IRepository<Tag, Guid> _tagRepository = unitOfWork.Repository<Tag, Guid>();
     private readonly IMapper _mapper = mapper;
 
-    public async Task<List<TagDTO>?> GetAllTagsByType(string[]? type)
+    public async Task<List<TagDTO>> GetAllTagsByTypes(string[] type)
     {
         var tags = await _tagRepository.GetAll()
             .Include(t => t.Type)
-            .Where(t => type == null || type.Contains(t.TagTypeId.ToString(CultureInfo.InvariantCulture)))
+            .Where(t => type.Contains(t.Type.Name))
             .ToListAsync();
-
         return _mapper.Map<List<TagDTO>>(tags);
     }
 

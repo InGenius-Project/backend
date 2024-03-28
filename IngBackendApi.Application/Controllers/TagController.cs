@@ -41,18 +41,13 @@ public class TagController(
     [ProducesResponseType(typeof(ResponseDTO<List<TagDTO>>), StatusCodes.Status200OK)]
     public async Task<List<TagDTO>> GetTags([FromQuery] string[]? type)
     {
-        var tags = new List<TagDTO>();
         if (type == null)
         {
-            tags = [.. _tagService.GetAll(t => t.Type)];
-        }
-        else
-        {
-            tags = await _tagService.GetAllTagsByType(type);
+            return _tagService.GetAll().ToList();
         }
 
-        var tagsDTO = _mapper.Map<List<TagDTO>>(tags);
-        return tagsDTO;
+        var tags = await _tagService.GetAllTagsByTypes(type);
+        return tags;
     }
 
     [HttpPost]
