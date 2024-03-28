@@ -9,7 +9,6 @@ using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Models.DTO;
 using IngBackendApi.Profiles;
 using IngBackendApi.UnitTest.Fixtures;
-using static Microsoft.AspNetCore.Http.StatusCodes;
 
 
 public class TestAreaController : IDisposable
@@ -118,7 +117,7 @@ public class TestAreaController : IDisposable
     }
 
     [Fact]
-    public async Task PostAreaType_ShouldThrowUnauthorizedAccessException_WhenUserIsNotAuthorized()
+    public async Task PostAreaType_ShouldThrowForbiddenException_WhenUserHaveNoPermission()
     {
         // Arrange
         AreaFixture areaFixture = new();
@@ -126,17 +125,16 @@ public class TestAreaController : IDisposable
         var req = areaFixture.Fixture.Create<AreaTypePostDTO>();
         var user = userFixture.Fixture.Build<UserInfoDTO>().With(x => x.Role, UserRole.Intern).Create();
         var area = areaFixture.Fixture.Create<AreaTypeDTO>();
+        req.Id = 1;
 
         _mockUserService.Setup(x => x.CheckAndGetUserAsync(It.IsAny<Guid>())).ReturnsAsync(user);
         _mockAreaTypeService.Setup(x => x.GetByIdAsync(req.Id ?? 0)).ReturnsAsync(area);
         _mockAreaTypeService.Setup(x => x.UpdateAsync(It.IsAny<AreaTypeDTO>()));
-        _mockAreaTypeService.Setup(x => x.CheckOwnerShip(It.IsAny<int>(), It.IsAny<UserRole>())).ThrowsAsync(new ForbiddenException());
+        _mockAreaTypeService.Setup(x => x.CheckOwnerShip(It.IsAny<int>(), It.IsAny<UserRole>())).Callback(() => throw new ForbiddenException());
 
-        // Act
-        var result = await _controller.PostAreaType(req);
-
-        // Assert
-        result.StatusCode.Should().Be(Status403Forbidden);
+        // Act and Assert
+        var excpetion = await Assert.ThrowsAsync<ApiException>(async () => await _controller.PostAreaType(req));
+        Assert.Equal("拒絕存取", excpetion.Message);
     }
 
     public void Dispose() => GC.SuppressFinalize(this);

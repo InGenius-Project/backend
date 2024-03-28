@@ -102,7 +102,7 @@ public class AreaController(
     }
 
     [HttpPost("type")]
-    [Authorize(Roles = "Admin, InternalUser")]
+    // [Authorize(Roles = "Admin, InternalUser")]
     [ProducesResponseType(typeof(ResponseDTO<>), StatusCodes.Status200OK)]
     public async Task<ApiResponse> PostAreaType([FromBody] AreaTypePostDTO req)
     {
