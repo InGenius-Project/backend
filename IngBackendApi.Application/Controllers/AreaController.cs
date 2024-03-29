@@ -64,8 +64,8 @@ public class AreaController(
         await _areaService.CheckAreaOwnership(area.Id, user.Id);
         _mapper.Map(req, area);
         await _areaService.UpdateAsync(area);
-
-        return _mapper.Map<AreaDTO>(req);
+        var areaDto = await _areaService.GetAreaIncludeAllById(area.Id) ?? throw new NotFoundException("找不到area");
+        return areaDto;
     }
 
     [HttpDelete("{areaId}")]

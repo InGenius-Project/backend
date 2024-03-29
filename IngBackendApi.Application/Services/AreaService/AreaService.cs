@@ -22,10 +22,22 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
         int
     >();
 
+    public new async Task UpdateAsync(AreaDTO areaDto)
+    {
+        var area = await _repository.Area.GetAreaByIdIncludeAll(areaDto.Id).FirstAsync();
+        _mapper.Map(areaDto, area);
+
+        var tagTypes = _repository.TagType.GetAll();
+        // remove tagType Entity
+        area.ListLayout?.Items?.ForEach(i => i.Type = tagTypes.FirstOrDefault(t => t.Id == i.TagTypeId));
+
+        await _repository.Area.UpdateAsync(area);
+    }
+
     public async Task<AreaDTO?> GetAreaIncludeAllById(Guid areaId)
     {
-        var area = _repository.Area.GetAreaByIdIncludeAll(areaId).AsNoTracking();
-        return await _mapper.ProjectTo<AreaDTO>(area).FirstOrDefaultAsync();
+        var area = await _repository.Area.GetAreaByIdIncludeAll(areaId).AsNoTracking().FirstOrDefaultAsync();
+        return _mapper.Map<AreaDTO>(area);
     }
 
     public async Task CheckAreaOwnership(Guid areaId, Guid userId)
@@ -88,7 +100,6 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
             _mapper.Map(listLayoutDTO, area.ListLayout);
             area.ListLayoutId = area.ListLayout.Id;
             area.ListLayout.AreaId = area.Id;
-            await _repository.Area.UpdateAsync(area);
         }
         await _repository.Area.SaveAsync();
     }

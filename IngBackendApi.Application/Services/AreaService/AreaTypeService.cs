@@ -44,6 +44,7 @@ public class AreaTypeService(IUnitOfWork unitOfWork, IMapper mapper, IRepository
         }
 
         _mapper.Map(areaTypeDto, areaType);
+
         await _areaTypeRepository.SaveAsync();
     }
 

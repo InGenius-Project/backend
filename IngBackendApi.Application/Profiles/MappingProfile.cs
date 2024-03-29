@@ -55,7 +55,8 @@ public class MappingProfile : Profile
                 }
             );
         CreateMap<AreaPostDTO, Area>();
-        CreateMap<AreaPostDTO, AreaDTO>();
+        CreateMap<AreaPostDTO, AreaDTO>()
+            .ForMember(dest => dest.ListLayout, opt => opt.Ignore());
 
         CreateMap<AreaDTO, Area>();
         CreateMap<AreaType, AreaTypeDTO>();

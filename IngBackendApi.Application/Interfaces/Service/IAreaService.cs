@@ -11,6 +11,7 @@ namespace IngBackendApi.Interfaces.Service
         void ClearArea(AreaDTO req);
         Task<List<AreaTypeDTO>> GetAllAreaTypes(UserRole[] userRoles);
         Task UpdateLayoutAsync(Guid areaId, ListLayoutDTO listLayoutDTO);
+        new Task UpdateAsync(AreaDTO areaDto);
     }
 
 }
