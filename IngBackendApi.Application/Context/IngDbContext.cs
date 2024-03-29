@@ -72,21 +72,39 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
         var hasher = new PasswordHasher();
         var user = new User
         {
-            Id = new Guid("f5a41815-6233-4a4a-9e62-108f0d09a8ce"),
+            Id = Guid.NewGuid(),
             Username = "User",
             Email = "user@gmail.com",
             HashedPassword = hasher.HashPassword("testtest"),
             Role = Enum.UserRole.Intern
         };
 
+        var companyUser = new User
+        {
+            Id = Guid.NewGuid(),
+            Username = "Company",
+            Email = "c@gmail.com",
+            HashedPassword = hasher.HashPassword("testtest"),
+            Role = Enum.UserRole.Company
+        };
+
         var internalUser = new User
         {
-            Id = new Guid("d6e2c7c3-89a5-4d8e-b74b-7af6f79e7348"),
+            Id = Guid.NewGuid(),
             Username = "Internal",
             Email = "i@gmail.com",
             HashedPassword = hasher.HashPassword("testtest"),
             Role = Enum.UserRole.InternalUser
         };
-        modelBuilder.Entity<User>().HasData(user, internalUser);
+
+        var adminUser = new User
+        {
+            Id = Guid.NewGuid(),
+            Username = "Admin",
+            Email = "a@gmail.com",
+            HashedPassword = hasher.HashPassword("testtest"),
+            Role = Enum.UserRole.Admin
+        };
+        modelBuilder.Entity<User>().HasData(user, internalUser, companyUser, adminUser);
     }
 }
