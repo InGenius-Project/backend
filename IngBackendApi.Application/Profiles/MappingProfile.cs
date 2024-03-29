@@ -1,11 +1,10 @@
+namespace IngBackendApi.Profiles;
+
 using AutoMapper;
 using AutoMapper.EquivalencyExpression;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
-
-namespace IngBackendApi.Profiles;
-
 public class MappingProfile : Profile
 {
     public MappingProfile()
@@ -86,9 +85,19 @@ public class MappingProfile : Profile
         CreateMap<ListLayoutPostDTO, ListLayoutDTO>();
 
         // KeyValueListLayout
-        CreateMap<KeyValueListLayoutDTO, KeyValueListLayout>()
+        CreateMap<KeyValueListLayoutPostDTO, KeyValueListLayoutDTO>()
             .ReverseMap();
-        CreateMap<KeyValueItem, KeyValueItemDTO>().ReverseMap();
+
+        CreateMap<KeyValueListLayoutDTO, KeyValueListLayout>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .EqualityComparison((dto, entity) => dto.Id == entity.Id)
+            .ReverseMap();
+        CreateMap<KeyValueItemPostDTO, KeyValueItemDTO>()
+            .EqualityComparison((dto, entity) => dto.Id == entity.Id);
+        CreateMap<KeyValueItemDTO, KeyValueItem>()
+            .EqualityComparison((dto, entity) => dto.Id == entity.Id);
+        CreateMap<KeyValueItem, KeyValueItemDTO>()
+            .EqualityComparison((dto, entity) => dto.Id == entity.Id);
 
         // Tag
         CreateMap<TagDTO, Tag>()

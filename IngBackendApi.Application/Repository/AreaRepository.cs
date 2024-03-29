@@ -25,6 +25,8 @@ public class AreaRepository : Repository<Area, Guid>, IAreaRepository
                     .ThenInclude(t => t.Type)
             .Include(a => a.KeyValueListLayout)
                 .ThenInclude(kv => kv.Items)
+                .ThenInclude(k => k.Key)
+                .ThenInclude(t => t.Type)
             .Include(a => a.AreaType)
             .Where(a => a.Id == id);
 

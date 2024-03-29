@@ -205,6 +205,20 @@ public class AreaController(
         return Ok();
     }
 
+    [HttpPost("keyvaluelistlayout")]
+    public async Task<IActionResult> PostKeyValueListLayout(Guid areaId, KeyValueListLayoutPostDTO keyValueListLayoutPostDTO)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        var user = await _userService.CheckAndGetUserAsync(userId);
+
+        // Check Ownership
+        await _areaService.CheckAreaOwnership(areaId, user.Id);
+
+        var keyValueListLayoutDTO = _mapper.Map<KeyValueListLayoutDTO>(keyValueListLayoutPostDTO);
+        await _areaService.UpdateLayoutAsync(areaId, keyValueListLayoutDTO);
+        return Ok();
+    }
+
     [AutoWrapIgnore]
     [AllowAnonymous]
     [HttpGet("image")]

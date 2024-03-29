@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 using IngBackendApi.Enum;
 using IngBackendApi.Interfaces.Repository;
+using IngBackendApi.Models.DTO;
 
 namespace IngBackendApi.Models.DBEntity;
 
@@ -199,6 +200,9 @@ public class KeyValueItem : BaseEntity, IEntity<Guid>
 {
     [Key]
     public Guid Id { get; set; }
+
+    [ForeignKey("Tag")]
+    public Guid? TagId { get; set; }
     public Tag? Key { get; set; }
     public string Value { get; set; } = "";
 }

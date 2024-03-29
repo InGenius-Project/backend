@@ -108,11 +108,18 @@ public class KeyValueListLayoutDTO
 
 public class KeyValueItemDTO
 {
-    public Guid Id { get; set; }
-    public Tag? Key { get; set; }
+    public Guid? Id { get; set; }
+    public Guid? TagId { get; set; }
+    public TagDTO? Key { get; set; }
     public string Value { get; set; } = "";
 }
 
+public class KeyValueItemPostDTO
+{
+    public Guid? Id { get; set; }
+    public Guid? TagId { get; set; }
+    public string Value { get; set; } = "";
+}
 
 // POST DTO
 
@@ -131,4 +138,9 @@ public class ImageTextLayoutPostDTO
     public Guid Id { get; set; }
     public string AltContent { get; set; } = "";
     public required IFormFile Image { get; set; }
+}
+
+public class KeyValueListLayoutPostDTO
+{
+    public List<KeyValueItemPostDTO>? Items { get; set; }
 }

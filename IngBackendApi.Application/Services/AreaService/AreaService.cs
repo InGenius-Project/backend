@@ -9,6 +9,7 @@ using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Interfaces.UnitOfWork;
 using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Update.Internal;
 
@@ -24,6 +25,7 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
     >();
 
     private readonly IRepository<Image, Guid> _imageRepository = unitOfWork.Repository<Image, Guid>();
+    private readonly IRepository<Tag, Guid> _tagRepository = unitOfWork.Repository<Tag, Guid>();
     private readonly IWebHostEnvironment _env = env;
 
     public new async Task UpdateAsync(AreaDTO areaDto)
@@ -160,6 +162,25 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
             area.ImageTextLayout.Image = newImage;
             area.ImageTextLayoutId = area.ImageTextLayout.Id;
             area.ImageTextLayout.AreaId = area.Id;
+        }
+        await _repository.Area.SaveAsync();
+    }
+
+    public async Task UpdateLayoutAsync(Guid areaId, KeyValueListLayoutDTO keyValueListLayoutDTO)
+    {
+        var area = _repository.Area.GetAreaByIdIncludeAllLayout(areaId)
+            ?? throw new NotFoundException("area not found.");
+
+        area.ClearLayoutsExclude(a => a.KeyValueListLayout);
+
+        if (area.KeyValueListLayout == null)
+        {
+            area.KeyValueListLayout = _mapper.Map<KeyValueListLayout>(keyValueListLayoutDTO);
+        }
+        else
+        {
+            _mapper.Map(keyValueListLayoutDTO, area.KeyValueListLayout);
+            area.KeyValueListLayout.AreaId = area.Id;
         }
         await _repository.Area.SaveAsync();
     }
