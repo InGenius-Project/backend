@@ -5,7 +5,7 @@ using IngBackendApi.Models.DTO;
 
 public interface ITagService : IService<Tag, TagDTO, Guid>
 {
-    Task<List<TagDTO>> GetAllTagsByTypes(string[] type);
+    Task<List<TagDTO>> GetAllTagsByTypeIds(int[] typeIds);
     new Task<TagDTO> AddAsync(TagDTO tagDto);
 
     /// <summary>
