@@ -5,6 +5,7 @@ using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Interfaces.UnitOfWork;
 using IngBackendApi.Models.DBEntity;
+using IngBackendApi.Models.DTO;
 using IngBackendApi.Profiles;
 using IngBackendApi.Services.AreaService;
 using IngBackendApi.UnitTest.Fixtures;
@@ -35,7 +36,7 @@ public class TestAreaService : IDisposable
 
     }
     [Fact]
-    public void CheckAreaOwnership_ValidUserId_DoesNotThrowException()
+    public void CheckAreaOwnership_InvalidOwnerId_ShouldThrowForbiddenException()
     {
         // Arrange
         var existArea = _repository.Object.Area.GetByIdAsync(Guid.Empty).Result;
@@ -46,7 +47,6 @@ public class TestAreaService : IDisposable
         // Assert
         Assert.ThrowsAsync<ForbiddenException>(act);
     }
-
 
     public void Dispose() => GC.SuppressFinalize(this);
 }
