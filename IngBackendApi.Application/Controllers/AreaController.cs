@@ -1,6 +1,7 @@
 namespace IngBackendApi.Controllers;
 
 using AutoMapper;
+using AutoWrapper.Filters;
 using AutoWrapper.Wrappers;
 using IngBackendApi.Enum;
 using IngBackendApi.Exceptions;
@@ -16,13 +17,15 @@ public class AreaController(
     IMapper mapper,
     IUserService userService,
     IAreaService areaService,
-    IAreaTypeService areaTypeService
+    IAreaTypeService areaTypeService,
+    IWebHostEnvironment env
     ) : BaseController
 {
     private readonly IUserService _userService = userService;
     private readonly IAreaService _areaService = areaService;
     private readonly IMapper _mapper = mapper;
     private readonly IAreaTypeService _areaTypeService = areaTypeService;
+    private readonly IWebHostEnvironment _env = env;
 
     [HttpGet("{areaId}")]
     [ProducesResponseType(typeof(ResponseDTO<AreaDTO>), StatusCodes.Status200OK)]
@@ -153,62 +156,6 @@ public class AreaController(
         return new ApiResponse("刪除成功");
     }
 
-    [HttpPost("image")]
-    public async Task<IActionResult> UploadAreaImage([FromQuery] Guid areaId, IFormFile image)
-    {
-        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.CheckAndGetUserIncludeAllAsync(userId);
-
-        await _areaService.CheckAreaOwnership(areaId, user.Id);
-
-        var area =
-            await _areaService.GetAreaIncludeAllById(areaId)
-            ?? throw new NotFoundException("area 不存在");
-
-        if (area.ImageTextLayout == null)
-        {
-            throw new BadRequestException("此 Area 沒有 Image Text Layout");
-        }
-
-        byte[] imageData;
-        using (MemoryStream memoryStream = new())
-        {
-            await image.CopyToAsync(memoryStream);
-            imageData = memoryStream.ToArray();
-        }
-
-        area.ImageTextLayout.Image = new ImageDTO()
-        {
-            Filename = image.FileName,
-            ContentType = image.ContentType,
-            Data = imageData
-        };
-
-        await _areaService.UpdateAsync(area);
-
-        return Accepted();
-    }
-
-    [HttpGet("image")]
-    public async Task<IActionResult> GetImage([FromQuery] Guid areaId)
-    {
-        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.CheckAndGetUserIncludeAllAsync(userId);
-
-        // Check CheckAreaOwnership
-        await _areaService.CheckAreaOwnership(areaId, user.Id);
-
-        var area =
-            await _areaService.GetAreaIncludeAllById(areaId)
-            ?? throw new NotFoundException("area 不存在");
-
-        _ = area.ImageTextLayout ?? throw new BadRequestException("此 Area 沒有 Image Text Layout");
-        var image = area.ImageTextLayout.Image ?? throw new NotFoundException("沒有圖片資料");
-
-        MemoryStream imageStream = new(image.Data);
-        return File(imageStream, image.ContentType);
-    }
-
     [HttpPost("listlayout")]
     public async Task<IActionResult> PostListLayout(Guid areaId, [FromBody] ListLayoutPostDTO req)
     {
@@ -235,5 +182,55 @@ public class AreaController(
         var textLayoutDTO = _mapper.Map<TextLayoutDTO>(req);
         await _areaService.UpdateLayoutAsync(areaId, textLayoutDTO);
         return Ok();
+    }
+
+    [HttpPost("imagetextlayout")]
+    public async Task<IActionResult> PostImageTextLayout(Guid areaId, string altContent, IFormFile image)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        var user = await _userService.CheckAndGetUserAsync(userId);
+
+        // Check Ownership
+        await _areaService.CheckAreaOwnership(areaId, user.Id);
+
+        // Check Image
+        CheckImage(image);
+
+        var imageTextLayoutDto = new ImageTextLayoutPostDTO()
+        {
+            AltContent = altContent,
+            Image = image
+        };
+        await _areaService.UpdateLayoutAsync(areaId, imageTextLayoutDto);
+        return Ok();
+    }
+
+    [AutoWrapIgnore]
+    [AllowAnonymous]
+    [HttpGet("image")]
+    public async Task<IActionResult> GetImage(Guid id)
+    {
+        var imageDto = await _areaService.GetImageByIdAsync(id) ?? throw new NotFoundException("Image not found");
+
+        var fullpath = Path.Combine(_env.WebRootPath, imageDto.Filepath);
+        Console.WriteLine(fullpath);
+        if (!System.IO.File.Exists(fullpath))
+        {
+            throw new NotFoundException("Image not found");
+        }
+        return PhysicalFile(fullpath, imageDto.ContentType);
+    }
+
+    private static void CheckImage(IFormFile image)
+    {
+        if (image.ContentType is not "image/jpeg" and not "image/png")
+        {
+            throw new BadRequestException("Image format must be JPEG or PNG");
+        }
+
+        if (image.Length > 10 * 1024 * 1024)
+        {
+            throw new BadRequestException("Image file size cannot exceed 10MB");
+        }
     }
 }

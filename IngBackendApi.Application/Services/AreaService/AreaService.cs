@@ -1,5 +1,6 @@
 namespace IngBackendApi.Services.AreaService;
 
+using System.Drawing.Drawing2D;
 using AutoMapper;
 using IngBackendApi.Enum;
 using IngBackendApi.Exceptions;
@@ -9,18 +10,21 @@ using IngBackendApi.Interfaces.UnitOfWork;
 using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Update.Internal;
 
-public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository)
+public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository, IWebHostEnvironment env)
     : Service<Area, AreaDTO, Guid>(unitOfWork, mapper),
         IAreaService
 {
     private readonly IMapper _mapper = mapper;
     private readonly IRepositoryWrapper _repository = repository;
-
     private readonly IRepository<AreaType, int> _areaTypeRepository = unitOfWork.Repository<
         AreaType,
         int
     >();
+
+    private readonly IRepository<Image, Guid> _imageRepository = unitOfWork.Repository<Image, Guid>();
+    private readonly IWebHostEnvironment _env = env;
 
     public new async Task UpdateAsync(AreaDTO areaDto)
     {
@@ -116,5 +120,83 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
             area.TextLayout.AreaId = area.Id;
         }
         await _repository.Area.SaveAsync();
+    }
+
+    public async Task UpdateLayoutAsync(Guid areaId, ImageTextLayoutPostDTO imageTextLayoutPostDTO)
+    {
+        var area = _repository.Area.GetAreaByIdIncludeAllLayout(areaId)
+            ?? throw new NotFoundException("area not found.");
+
+        area.ClearLayoutsExclude(a => a.ImageTextLayout);
+
+        // TODO: 保存圖片
+        var image = imageTextLayoutPostDTO.Image;
+        var directory = "images/area";
+        // 保存圖片
+        var newImage = await SaveImageAsync(image, directory);
+
+        if (area.ImageTextLayout == null)
+        {
+            // new image layout
+            area.ImageTextLayout = new ImageTextLayout
+            {
+                Image = newImage,
+                AltContent = imageTextLayoutPostDTO.AltContent,
+                Area = area
+            };
+            _repository.Area.Attach(area.ImageTextLayout);
+        }
+        else
+        {
+            // delete old image if exist
+            if (area.ImageTextLayout.Image != null)
+            {
+                var fullpath = Path.Combine(_env.WebRootPath, area.ImageTextLayout.Image.Filepath);
+                if (File.Exists(fullpath))
+                {
+                    File.Delete(fullpath);
+                }
+            }
+            area.ImageTextLayout.Image = newImage;
+            area.ImageTextLayoutId = area.ImageTextLayout.Id;
+            area.ImageTextLayout.AreaId = area.Id;
+        }
+        await _repository.Area.SaveAsync();
+    }
+
+    public async Task<ImageDTO?> GetImageByIdAsync(Guid imageId)
+    {
+        var image = await _imageRepository.GetByIdAsync(imageId);
+        if (image == null)
+        {
+            return null;
+        }
+        var imageDto = _mapper.Map<ImageDTO>(image);
+        return imageDto;
+    }
+
+    private async Task<Image> SaveImageAsync(IFormFile file, string path)
+    {
+        if (file.Length == 0)
+        {
+            throw new ArgumentException("File is empty");
+        }
+
+        var newImage = new Image
+        {
+            Filepath = "",
+            ContentType = file.ContentType
+        };
+        await _imageRepository.AddAsync(newImage);
+
+        var fileId = newImage.Id;
+        var fileName = fileId.ToString();
+        var fullPath = Path.Combine(_env.WebRootPath, path, fileName);
+        using (var stream = new FileStream(fullPath, FileMode.Create))
+        {
+            file.CopyTo(stream);
+        }
+        newImage.Filepath = Path.Combine(path, fileName);
+        return newImage;
     }
 }

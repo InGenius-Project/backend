@@ -145,20 +145,15 @@ public class Image : BaseEntity, IEntity<Guid>
 {
     [Key]
     public Guid Id { get; set; }
-    public required string Filename { get; set; }
+    public required string Filepath { get; set; }
     public required string ContentType { get; set; }
-
-    // Save as base64
-    // TODO: save as file
-    [Required]
-    public byte[] Data { get; set; }
 }
 
 public class ImageTextLayout : BaseEntity, IEntity<Guid>
 {
     [Key]
     public Guid Id { get; set; }
-    public string Content { get; set; } = "";
+    public string AltContent { get; set; } = "";
     public Image? Image { get; set; }
 
     [Required]

@@ -121,6 +121,7 @@ builder.Services.AddAutoMapper(cfg =>
     cfg.AddProfile(
         new MappingProfile(builder.Services.BuildServiceProvider().GetService<IPasswordHasher>())
     );
+    cfg.AddProfile(new MappingProfile(builder.Services.BuildServiceProvider().GetService<IConfiguration>()));
 });
 
 builder

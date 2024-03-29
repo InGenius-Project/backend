@@ -75,31 +75,29 @@ public class TextLayoutDTO
 public class ImageDTO
 {
     public Guid Id { get; set; }
-    public required string Filename { get; set; }
+    public string? Uri { get; set; }
+    public required string Filepath { get; set; }
     public required string ContentType { get; set; }
-    public required byte[] Data { get; set; }
+}
+
+public class ImageInfo
+{
+    public Guid Id { get; set; }
+    public string? Uri { get; set; }
+    public required string ContentType { get; set; }
 }
 
 public class ImageTextLayoutDTO
 {
     public Guid Id { get; set; }
-    public ImageDTO? Image { get; set; }
+    public string AltContent { get; set; } = "";
+    public ImageInfo? Image { get; set; }
 }
 
 public class ListLayoutDTO
 {
     public Guid? Id { get; set; }
     public List<TagDTO>? Items { get; set; }
-}
-
-public class ListLayoutPostDTO
-{
-    public List<TagPostDTO>? Items { get; set; }
-}
-
-public class TextLayoutPostDTO
-{
-    public required string Content { get; set; } = "";
 }
 
 public class KeyValueListLayoutDTO
@@ -113,4 +111,24 @@ public class KeyValueItemDTO
     public Guid Id { get; set; }
     public Tag? Key { get; set; }
     public string Value { get; set; } = "";
+}
+
+
+// POST DTO
+
+public class ListLayoutPostDTO
+{
+    public List<TagPostDTO>? Items { get; set; }
+}
+
+public class TextLayoutPostDTO
+{
+    public required string Content { get; set; } = "";
+}
+
+public class ImageTextLayoutPostDTO
+{
+    public Guid Id { get; set; }
+    public string AltContent { get; set; } = "";
+    public required IFormFile Image { get; set; }
 }

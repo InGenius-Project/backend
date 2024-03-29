@@ -79,7 +79,8 @@ public class MappingProfile : Profile
         // ImageLayout
         CreateMap<ImageTextLayoutDTO, ImageTextLayout>()
             .ReverseMap();
-        CreateMap<ImageDTO, Image>().ReverseMap();
+
+        CreateMap<ImageDTO, Image>();
 
         // ListLayout
         CreateMap<ListLayoutDTO, ListLayout>()
@@ -107,6 +108,15 @@ public class MappingProfile : Profile
         CreateMap<TagTypePostDTO, TagTypeDTO>().ReverseMap();
     }
 
+    public MappingProfile(IConfiguration configuration) : this()
+    {
+        CreateMap<Image, ImageDTO>()
+            .ForMember(dest => dest.Uri, opt => opt.MapFrom(src => GetImageUri(configuration, src)));
+
+        CreateMap<Image, ImageInfo>()
+            .ForMember(dest => dest.Uri, opt => opt.MapFrom(src => GetImageUri(configuration, src)));
+    }
+
     public MappingProfile(IPasswordHasher passwordHasher)
         : this()
     {
@@ -118,4 +128,6 @@ public class MappingProfile : Profile
             );
         CreateMap<User, UserInfoDTO>();
     }
+
+    private static string GetImageUri(IConfiguration configuration, Image image) => string.Format("{0}api/area/image?id={1}", configuration["Domain:Url"], image.Id);
 }
