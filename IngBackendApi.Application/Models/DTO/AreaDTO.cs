@@ -94,8 +94,12 @@ public class ListLayoutDTO
 
 public class ListLayoutPostDTO
 {
-    public Guid? Id { get; set; }
     public List<TagPostDTO>? Items { get; set; }
+}
+
+public class TextLayoutPostDTO
+{
+    public required string Content { get; set; } = "";
 }
 
 public class KeyValueListLayoutDTO

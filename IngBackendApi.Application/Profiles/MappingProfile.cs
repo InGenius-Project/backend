@@ -69,6 +69,11 @@ public class MappingProfile : Profile
 
         // TextLayout
         CreateMap<TextLayoutDTO, TextLayout>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ReverseMap();
+
+
+        CreateMap<TextLayoutPostDTO, TextLayoutDTO>()
             .ReverseMap();
 
         // ImageLayout

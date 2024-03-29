@@ -222,4 +222,18 @@ public class AreaController(
         await _areaService.UpdateLayoutAsync(areaId, listLayoutDTO);
         return Ok();
     }
+
+    [HttpPost("textlayout")]
+    public async Task<IActionResult> PostTextLayout(Guid areaId, [FromBody] TextLayoutPostDTO req)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        var user = await _userService.CheckAndGetUserAsync(userId);
+
+        // Check Ownership
+        await _areaService.CheckAreaOwnership(areaId, user.Id);
+
+        var textLayoutDTO = _mapper.Map<TextLayoutDTO>(req);
+        await _areaService.UpdateLayoutAsync(areaId, textLayoutDTO);
+        return Ok();
+    }
 }

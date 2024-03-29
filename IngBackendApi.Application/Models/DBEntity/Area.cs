@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text.Json.Serialization;
 using IngBackendApi.Enum;
 using IngBackendApi.Interfaces.Repository;
@@ -59,29 +60,48 @@ public class Area : BaseEntity, IEntity<Guid>
 
     public void ClearLayoutsExclude<TProperty>(Expression<Func<Area, TProperty>> propertyToRemain)
     {
-        var propertyName = propertyToRemain?.Name?.ToString();
+        if (propertyToRemain.Body is not MemberExpression memberExpression)
+        {
+            return;
+        }
+
+        var memberInfo = memberExpression.Member;
+        var propertyName = memberInfo.Name;
+
 
         switch (propertyName)
         {
             case nameof(TextLayout):
                 ImageTextLayoutId = null;
+                ImageTextLayout = null;
                 ListLayoutId = null;
+                ListLayout = null;
                 KeyValueListLayoutId = null;
+                KeyValueListLayout = null;
                 break;
             case nameof(ImageTextLayout):
                 TextLayoutId = null;
+                TextLayout = null;
                 ListLayoutId = null;
+                ListLayout = null;
                 KeyValueListLayoutId = null;
+                KeyValueListLayout = null;
                 break;
             case nameof(ListLayout):
                 TextLayoutId = null;
+                TextLayout = null;
                 ImageTextLayoutId = null;
+                ImageTextLayout = null;
                 KeyValueListLayoutId = null;
+                KeyValueListLayout = null;
                 break;
             case nameof(KeyValueListLayout):
                 TextLayoutId = null;
+                TextLayout = null;
                 ImageTextLayoutId = null;
+                ImageTextLayout = null;
                 ListLayoutId = null;
+                ListLayout = null;
                 break;
             default:
                 break;

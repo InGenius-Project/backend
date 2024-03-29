@@ -80,13 +80,7 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
 
     public async Task UpdateLayoutAsync(Guid areaId, ListLayoutDTO listLayoutDTO)
     {
-        var area =
-            await _repository
-                .Area.GetAll()
-                .Include(a => a.ListLayout)
-                .Include(a => a.ListLayout)
-                .ThenInclude(l => l.Items)
-                .FirstOrDefaultAsync(a => a.Id.Equals(areaId))
+        var area = _repository.Area.GetAreaByIdIncludeAllLayout(areaId)
             ?? throw new NotFoundException("area not found.");
 
         area.ClearLayoutsExclude(a => a.ListLayout);
@@ -100,6 +94,26 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
             _mapper.Map(listLayoutDTO, area.ListLayout);
             area.ListLayoutId = area.ListLayout.Id;
             area.ListLayout.AreaId = area.Id;
+        }
+        await _repository.Area.SaveAsync();
+    }
+
+    public async Task UpdateLayoutAsync(Guid areaId, TextLayoutDTO textLayoutDTO)
+    {
+        var area = _repository.Area.GetAreaByIdIncludeAllLayout(areaId)
+            ?? throw new NotFoundException("area not found.");
+
+        area.ClearLayoutsExclude(a => a.TextLayout);
+        if (area.TextLayout == null)
+        {
+            area.TextLayout = _mapper.Map<TextLayout>(textLayoutDTO);
+            _repository.Area.Attach(area.TextLayout);
+        }
+        else
+        {
+            _mapper.Map(textLayoutDTO, area.TextLayout);
+            area.TextLayoutId = area.TextLayout.Id;
+            area.TextLayout.AreaId = area.Id;
         }
         await _repository.Area.SaveAsync();
     }

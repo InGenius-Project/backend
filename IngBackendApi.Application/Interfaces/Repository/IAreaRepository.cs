@@ -6,5 +6,5 @@ public interface IAreaRepository : IRepository<Area, Guid>
 {
     IQueryable<Area> GetAreaByIdIncludeAll(Guid id);
 
-
+    Area GetAreaByIdIncludeAllLayout(Guid id);
 }
