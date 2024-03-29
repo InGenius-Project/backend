@@ -48,11 +48,7 @@ public class MappingProfile : Profile
             )
             .ForMember(
                 dest => dest.LayoutType,
-                opt =>
-                {
-                    opt.Condition((src, dest, srcMember) => src.AreaType != null);
-                    opt.MapFrom(src => src.AreaType!.LayoutType);
-                }
+                opt => opt.MapFrom(src => src.AreaType == null ? src.LayoutType : src.AreaType.LayoutType)
             );
         CreateMap<AreaPostDTO, Area>();
         CreateMap<AreaPostDTO, AreaDTO>()
