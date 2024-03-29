@@ -179,14 +179,14 @@ public class AreaFixture
         );
         #endregion
 
-        #region
+        #region Customize TextLayoutDTO
         Fixture.Customize<TextLayoutDTO>(c => c
             .With(p => p.Id, Guid.Empty)
             .With(p => p.Content, Fixture.Create<string>())
         );
         #endregion
 
-        #region
+        #region Customize ImageDTO
         Fixture.Customize<ImageDTO>(c => c
             .With(p => p.Id, Guid.Empty)
             .With(p => p.Filename, Fixture.Create<string>())
@@ -195,35 +195,35 @@ public class AreaFixture
         );
         #endregion
 
-        #region
+        #region Customize ImageTextLayoutDTO
         Fixture.Customize<ImageTextLayoutDTO>(c => c
             .With(p => p.Id, Guid.Empty)
             .With(p => p.Image, Fixture.Create<ImageDTO>())
         );
         #endregion
 
-        #region
+        #region Customize ListLayoutDTO
         Fixture.Customize<ListLayoutDTO>(c => c
             .With(p => p.Id, Fixture.Create<Guid?>())
             .With(p => p.Items, Fixture.Create<List<TagDTO>>())
         );
         #endregion
 
-        #region
+        #region Customize ListLayoutPostDTO
         Fixture.Customize<ListLayoutPostDTO>(c => c
             .With(p => p.Id, Fixture.Create<Guid?>())
             .With(p => p.Items, Fixture.Create<List<TagPostDTO>>())
         );
         #endregion
 
-        #region
+        #region Customize KeyValueListLayoutDTO
         Fixture.Customize<KeyValueListLayoutDTO>(c => c
             .With(p => p.Id, Guid.Empty)
             .With(p => p.Items, Fixture.Create<List<KeyValueItemDTO>>())
         );
         #endregion
 
-        #region
+        #region Customize KeyValueListLayoutPostDTO
         Fixture.Customize<KeyValueItemDTO>(c => c
             .With(p => p.Id, Guid.Empty)
             .With(p => p.Key, Fixture.Create<Tag>())
