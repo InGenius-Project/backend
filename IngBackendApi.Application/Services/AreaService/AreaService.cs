@@ -144,6 +144,7 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
             {
                 Image = newImage,
                 AltContent = imageTextLayoutPostDTO.AltContent,
+                TextContent = imageTextLayoutPostDTO.TextContent,
                 Area = area
             };
             _repository.Area.Attach(area.ImageTextLayout);
@@ -160,6 +161,8 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
                 }
             }
             area.ImageTextLayout.Image = newImage;
+            area.ImageTextLayout.AltContent = imageTextLayoutPostDTO.AltContent;
+            area.ImageTextLayout.TextContent = imageTextLayoutPostDTO.TextContent;
             area.ImageTextLayoutId = area.ImageTextLayout.Id;
             area.ImageTextLayout.AreaId = area.Id;
         }

@@ -1,13 +1,11 @@
+namespace IngBackendApi.Models.DBEntity;
+
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Text.Json.Serialization;
 using IngBackendApi.Enum;
 using IngBackendApi.Interfaces.Repository;
-using IngBackendApi.Models.DTO;
-
-namespace IngBackendApi.Models.DBEntity;
 
 public class Area : BaseEntity, IEntity<Guid>
 {
@@ -154,7 +152,8 @@ public class ImageTextLayout : BaseEntity, IEntity<Guid>
 {
     [Key]
     public Guid Id { get; set; }
-    public string AltContent { get; set; } = "";
+    public string? AltContent { get; set; }
+    public string? TextContent { get; set; }
     public Image? Image { get; set; }
 
     [Required]

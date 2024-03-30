@@ -91,6 +91,7 @@ public class ImageTextLayoutDTO
 {
     public Guid Id { get; set; }
     public string AltContent { get; set; } = "";
+    public string TextContent { get; set; } = "";
     public ImageInfo? Image { get; set; }
 }
 
@@ -136,6 +137,7 @@ public class ImageTextLayoutPostDTO
 {
     public Guid Id { get; set; }
     public string AltContent { get; set; } = "";
+    public string TextContent { get; set; } = "";
     public required IFormFile Image { get; set; }
 }
 
