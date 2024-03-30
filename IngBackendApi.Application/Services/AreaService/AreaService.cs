@@ -185,6 +185,18 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
         await _repository.Area.SaveAsync();
     }
 
+    public async Task UpdateAreaSequenceAsync(List<AreaSequencePostDTO> areaSequencePostDTOs, Guid userId)
+    {
+        var areaDtoIds = areaSequencePostDTOs.Select(a => a.Id).ToList();
+        var areas = await _repository.Area.GetAll().Where(a => areaDtoIds.Contains(a.Id)).ToListAsync();
+        areas.ForEach(async a =>
+        {
+            await CheckAreaOwnership(a.Id, userId);
+            a.Sequence = areaSequencePostDTOs.First(s => s.Id == a.Id)?.Sequence ?? a.Sequence;
+        });
+        await _repository.User.SaveAsync();
+    }
+
     public async Task<ImageDTO?> GetImageByIdAsync(Guid imageId)
     {
         var image = await _imageRepository.GetByIdAsync(imageId);

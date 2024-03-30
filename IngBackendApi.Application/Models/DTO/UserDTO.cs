@@ -30,7 +30,6 @@ public class UserInfoPostDTO
 {
     public ImageDTO? Avatar { get; set; }
     public string? Username { get; set; }
-    public List<AreaPostDTO>? Areas { get; set; }
     public List<TagDTO>? Tags { get; set; }
 }
 

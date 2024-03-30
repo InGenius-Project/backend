@@ -34,8 +34,7 @@ public class UserService(
             .Where(u => u.Id == userId)
             .Include(u => u.Avatar)
             .Include(u => u.Recruitments)
-            .Include(u => u.Areas)
-                .ThenInclude(a => a.AreaType).FirstOrDefaultAsync() ?? throw new UserNotFoundException();
+            .FirstOrDefaultAsync() ?? throw new UserNotFoundException();
         _mapper.Map(req, user);
         await _repository.User.UpdateAsync(user);
     }

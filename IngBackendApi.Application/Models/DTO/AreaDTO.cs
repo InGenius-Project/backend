@@ -122,7 +122,6 @@ public class KeyValueItemPostDTO
 }
 
 // POST DTO
-
 public class ListLayoutPostDTO
 {
     public List<TagPostDTO>? Items { get; set; }
@@ -143,4 +142,10 @@ public class ImageTextLayoutPostDTO
 public class KeyValueListLayoutPostDTO
 {
     public List<KeyValueItemPostDTO>? Items { get; set; }
+}
+
+public class AreaSequencePostDTO
+{
+    public Guid Id { get; set; }
+    public int Sequence { get; set; }
 }
