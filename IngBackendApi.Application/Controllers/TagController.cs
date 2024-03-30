@@ -39,11 +39,11 @@ public class TagController(
 
     [HttpGet]
     [ProducesResponseType(typeof(ResponseDTO<List<TagDTO>>), StatusCodes.Status200OK)]
-    public async Task<List<TagDTO>> GetTags([FromQuery] int[]? typeId)
+    public async Task<List<TagDTO>> GetTags([FromQuery] int[]? typeId = null)
     {
-        if (typeId == null)
+        if (typeId == null || typeId.Length == 0)
         {
-            return _tagService.GetAll().ToList();
+            return _tagService.GetAll(t => t.Type).ToList();
         }
 
         var tags = await _tagService.GetAllTagsByTypeIds(typeId);
