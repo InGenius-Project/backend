@@ -76,6 +76,7 @@ public class ImageDTO
 {
     public Guid Id { get; set; }
     public string? Uri { get; set; }
+    public string? AltContent { get; set; }
     public required string Filepath { get; set; }
     public required string ContentType { get; set; }
 }
@@ -84,13 +85,13 @@ public class ImageInfo
 {
     public Guid Id { get; set; }
     public string? Uri { get; set; }
+    public string? AltContent { get; set; }
     public required string ContentType { get; set; }
 }
 
 public class ImageTextLayoutDTO
 {
     public Guid Id { get; set; }
-    public string AltContent { get; set; } = "";
     public string TextContent { get; set; } = "";
     public ImageInfo? Image { get; set; }
 }

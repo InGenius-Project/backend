@@ -136,6 +136,7 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
         var directory = "images/area";
         // 保存圖片
         var newImage = await SaveImageAsync(image, directory);
+        newImage.AltContent = imageTextLayoutPostDTO.AltContent;
 
         if (area.ImageTextLayout == null)
         {
@@ -143,7 +144,6 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
             area.ImageTextLayout = new ImageTextLayout
             {
                 Image = newImage,
-                AltContent = imageTextLayoutPostDTO.AltContent,
                 TextContent = imageTextLayoutPostDTO.TextContent,
                 Area = area
             };
@@ -161,7 +161,6 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
                 }
             }
             area.ImageTextLayout.Image = newImage;
-            area.ImageTextLayout.AltContent = imageTextLayoutPostDTO.AltContent;
             area.ImageTextLayout.TextContent = imageTextLayoutPostDTO.TextContent;
             area.ImageTextLayoutId = area.ImageTextLayout.Id;
             area.ImageTextLayout.AreaId = area.Id;

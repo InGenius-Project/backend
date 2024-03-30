@@ -74,6 +74,7 @@ public class AreaFixture
         #region Customize Image
         Fixture.Customize<Image>(c => c
             .With(p => p.Id, Guid.Empty)
+            .With(p => p.AltContent, Fixture.Create<string>())
             .With(p => p.Filepath, Fixture.Create<string>())
             .With(p => p.ContentType, Fixture.Create<string>())
         );
@@ -82,7 +83,6 @@ public class AreaFixture
         #region Customize ImageTextLayout
         Fixture.Customize<ImageTextLayout>(c => c
             .With(p => p.Id, Guid.Empty)
-            .With(p => p.AltContent, Fixture.Create<string>())
             .With(p => p.Image, Fixture.Create<Image>())
             .Without(p => p.AreaId)
             .Without(p => p.Area)
@@ -189,6 +189,7 @@ public class AreaFixture
         Fixture.Customize<ImageDTO>(c => c
             .With(p => p.Id, Guid.Empty)
             .With(p => p.Filepath, Fixture.Create<string>())
+            .With(p => p.AltContent, Fixture.Create<string>())
             .With(p => p.ContentType, Fixture.Create<string>())
         );
         #endregion
@@ -196,7 +197,6 @@ public class AreaFixture
         #region Customize ImageTextLayoutDTO
         Fixture.Customize<ImageTextLayoutDTO>(c => c
             .With(p => p.Id, Guid.Empty)
-            .With(p => p.AltContent, Fixture.Create<string>())
             .With(p => p.Image, Fixture.Create<ImageInfo>())
         );
         #endregion

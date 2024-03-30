@@ -144,6 +144,7 @@ public class Image : BaseEntity, IEntity<Guid>
 {
     [Key]
     public Guid Id { get; set; }
+    public string? AltContent { get; set; }
     public required string Filepath { get; set; }
     public required string ContentType { get; set; }
 }
@@ -152,7 +153,6 @@ public class ImageTextLayout : BaseEntity, IEntity<Guid>
 {
     [Key]
     public Guid Id { get; set; }
-    public string? AltContent { get; set; }
     public string? TextContent { get; set; }
     public Image? Image { get; set; }
 
