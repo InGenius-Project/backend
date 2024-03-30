@@ -49,13 +49,20 @@ public class MappingProfile : Profile
                 dest => dest.LayoutType,
                 opt => opt.MapFrom(src => src.AreaType == null ? src.LayoutType : src.AreaType.LayoutType)
             );
-        CreateMap<AreaPostDTO, Area>();
+        CreateMap<AreaPostDTO, Area>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.ListLayoutId, opt => opt.Ignore())
+            .EqualityComparison((dto, entity) => dto.Id == entity.Id);
+
         CreateMap<AreaPostDTO, AreaDTO>()
             .ForMember(dest => dest.ListLayout, opt => opt.Ignore());
 
-        CreateMap<AreaDTO, Area>();
+        CreateMap<AreaDTO, Area>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .EqualityComparison((dto, entity) => dto.Id == entity.Id);
         CreateMap<AreaType, AreaTypeDTO>();
-        CreateMap<AreaTypeDTO, AreaType>().EqualityComparison((dto, entity) => dto.Id == entity.Id);
+        CreateMap<AreaTypeDTO, AreaType>()
+            .EqualityComparison((dto, entity) => dto.Id == entity.Id);
 
         CreateMap<AreaTypePostDTO, AreaType>()
             .EqualityComparison((dto, entity) => dto.Id == entity.Id);

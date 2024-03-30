@@ -67,7 +67,6 @@ public class AreaTypeService(IUnitOfWork unitOfWork, IMapper mapper, IRepository
         var area = await _areaTypeRepository
             .GetAll()
             .AsNoTracking()
-            .Include(a => a.UserRole)
             .FirstOrDefaultAsync(a => a.Id == areaTypeId) ?? throw new NotFoundException("area not found.");
 
         if (!area.UserRole.Contains(userRole))
