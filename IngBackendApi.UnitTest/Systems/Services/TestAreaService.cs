@@ -10,6 +10,7 @@ using IngBackendApi.Profiles;
 using IngBackendApi.Services.AreaService;
 using IngBackendApi.UnitTest.Fixtures;
 using IngBackendApi.UnitTest.Mocks;
+using Microsoft.AspNetCore.Hosting;
 
 public class TestAreaService : IDisposable
 {
@@ -30,7 +31,11 @@ public class TestAreaService : IDisposable
         MappingProfile mappingProfile = new();
         MapperConfiguration configuration = new(cfg => cfg.AddProfile(mappingProfile));
         _mapper = new Mapper(configuration);
-        _areaService = new AreaService(_mockUnitofWork.Object, _mapper, _repository.Object);
+
+        // TODO: fix mock
+        Mock<IWebHostEnvironment> env = new();
+
+        _areaService = new AreaService(_mockUnitofWork.Object, _mapper, _repository.Object, env.Object);
 
         _areaTypeRepository = _mockUnitofWork.Object.Repository<AreaType, int>();
 

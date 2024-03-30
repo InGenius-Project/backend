@@ -9,7 +9,7 @@ using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Models.DTO;
 using IngBackendApi.Profiles;
 using IngBackendApi.UnitTest.Fixtures;
-
+using Microsoft.AspNetCore.Hosting;
 
 public class TestAreaController : IDisposable
 {
@@ -29,11 +29,14 @@ public class TestAreaController : IDisposable
         MapperConfiguration configuration = new(cfg => cfg.AddProfile(mappingProfile));
         _mapper = new Mapper(configuration);
 
+        Mock<IWebHostEnvironment> env = new();
+
         _controller = new AreaController(
             _mapper,
             _mockUserService.Object,
             _mockAreaService.Object,
-            _mockAreaTypeService.Object
+            _mockAreaTypeService.Object,
+            env.Object
         );
 
     }
