@@ -14,6 +14,7 @@ namespace IngBackendApi.Interfaces.Service
         Task UpdateLayoutAsync(Guid areaId, TextLayoutDTO textLayoutDTO);
         Task UpdateLayoutAsync(Guid areaId, ImageTextLayoutPostDTO imageTextLayoutPostDTO);
         Task UpdateLayoutAsync(Guid areaId, KeyValueListLayoutDTO keyValueListLayoutDTO);
+        Task UpdateAreaSequenceAsync(List<AreaSequencePostDTO> areaSequencePostDTOs, Guid userId);
         new Task UpdateAsync(AreaDTO areaDto);
         Task<ImageDTO?> GetImageByIdAsync(Guid imageId);
     }

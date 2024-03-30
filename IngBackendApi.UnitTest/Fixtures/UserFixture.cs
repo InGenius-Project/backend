@@ -56,7 +56,7 @@ public class UserFixture
         Fixture.Customize<UserInfoPostDTO>(composer =>
             composer.Without(dto => dto.Avatar)
                    .With(dto => dto.Username, Fixture.Create<string>())
-                   .With(dto => dto.Areas, Fixture.CreateMany<AreaPostDTO>())
+                   //    .With(dto => dto.Areas, Fixture.CreateMany<AreaPostDTO>())
                    .Without(dto => dto.Tags)
         );
 

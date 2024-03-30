@@ -217,6 +217,15 @@ public class AreaController(
         return Ok();
     }
 
+    [HttpPost("sequence")]
+    public async Task<IActionResult> PostSequence(List<AreaSequencePostDTO> areaSequencePostDTOs)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        await _userService.CheckAndGetUserAsync(userId);
+        await _areaService.UpdateAreaSequenceAsync(areaSequencePostDTOs, userId);
+        return Ok();
+    }
+
     [AutoWrapIgnore]
     [AllowAnonymous]
     [HttpGet("image")]
