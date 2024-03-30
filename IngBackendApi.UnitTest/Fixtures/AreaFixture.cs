@@ -74,16 +74,15 @@ public class AreaFixture
         #region Customize Image
         Fixture.Customize<Image>(c => c
             .With(p => p.Id, Guid.Empty)
-            .With(p => p.Filename, Fixture.Create<string>())
+            .With(p => p.Filepath, Fixture.Create<string>())
             .With(p => p.ContentType, Fixture.Create<string>())
-            .With(p => p.Data, Fixture.Create<byte[]>())
         );
         #endregion
 
         #region Customize ImageTextLayout
         Fixture.Customize<ImageTextLayout>(c => c
             .With(p => p.Id, Guid.Empty)
-            .With(p => p.Content, Fixture.Create<string>())
+            .With(p => p.AltContent, Fixture.Create<string>())
             .With(p => p.Image, Fixture.Create<Image>())
             .Without(p => p.AreaId)
             .Without(p => p.Area)
@@ -189,16 +188,16 @@ public class AreaFixture
         #region Customize ImageDTO
         Fixture.Customize<ImageDTO>(c => c
             .With(p => p.Id, Guid.Empty)
-            .With(p => p.Filename, Fixture.Create<string>())
+            .With(p => p.Filepath, Fixture.Create<string>())
             .With(p => p.ContentType, Fixture.Create<string>())
-            .With(p => p.Data, Fixture.Create<byte[]>())
         );
         #endregion
 
         #region Customize ImageTextLayoutDTO
         Fixture.Customize<ImageTextLayoutDTO>(c => c
             .With(p => p.Id, Guid.Empty)
-            .With(p => p.Image, Fixture.Create<ImageDTO>())
+            .With(p => p.AltContent, Fixture.Create<string>())
+            .With(p => p.Image, Fixture.Create<ImageInfo>())
         );
         #endregion
 
@@ -211,7 +210,6 @@ public class AreaFixture
 
         #region Customize ListLayoutPostDTO
         Fixture.Customize<ListLayoutPostDTO>(c => c
-            .With(p => p.Id, Fixture.Create<Guid?>())
             .With(p => p.Items, Fixture.Create<List<TagPostDTO>>())
         );
         #endregion
@@ -226,7 +224,7 @@ public class AreaFixture
         #region Customize KeyValueListLayoutPostDTO
         Fixture.Customize<KeyValueItemDTO>(c => c
             .With(p => p.Id, Guid.Empty)
-            .With(p => p.Key, Fixture.Create<Tag>())
+            .With(p => p.Key, Fixture.Create<TagDTO>())
             .With(p => p.Value, Fixture.Create<string>())
         );
         #endregion
