@@ -105,12 +105,12 @@ public class AreaController(
     }
 
     [HttpPost("type")]
-    // [Authorize(Roles = "Admin, InternalUser")]
+    [Authorize(Roles = "Admin, InternalUser")]
     [ProducesResponseType(typeof(ResponseDTO<>), StatusCodes.Status200OK)]
     public async Task<ApiResponse> PostAreaType([FromBody] AreaTypePostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.CheckAndGetUserAsync(userId);
+        await _userService.CheckAndGetUserAsync(userId);
         var tagTypeId = req.Id.GetValueOrDefault(0);
 
         if (tagTypeId == 0)
@@ -119,9 +119,6 @@ public class AreaController(
             await _areaTypeService.AddAsync(newAreaTypeDto);
             return new ApiResponse("新增成功");
         }
-
-        // Check Ownership
-        await _areaTypeService.CheckOwnerShip(tagTypeId, user.Role);
 
         var areaType = await _areaTypeService.GetByIdAsync(tagTypeId);
         if (areaType == null)
@@ -138,6 +135,7 @@ public class AreaController(
     }
 
     [HttpDelete("type")]
+    [Authorize(Roles = "Admin, InternalUser")]
     [ProducesResponseType(typeof(ResponseDTO<>), StatusCodes.Status200OK)]
     public async Task<ApiResponse> DeleteAreaTypes([FromBody] List<int> ids)
     {
