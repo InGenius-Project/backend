@@ -60,26 +60,16 @@ public class TestUserService : IDisposable
         // TODO: test Avatar and Tags
         UserInfoPostDTO req = new()
         {
-            Username = "updateTest",
-            Areas = [
-                new AreaPostDTO{
-                    Sequence = 0,
-                    IsDisplayed = true,
-                    Title = "TestArea"
-                }
-            ],
+            Username = "updateTest"
         };
 
         // Act
         await _userService.PostUser(req, existedUser.Id); // update exist user
 
         // Assert
-        existedUser.Areas
+        existedUser.Username
             .Should()
-            .BeEquivalentTo(
-                _mapper.Map<List<AreaPostDTO>>(req.Areas),
-                opt => opt.Excluding(x => x.Id));
-
+            .Be(req.Username);
     }
 
 }

@@ -30,11 +30,7 @@ public class UserService(
 
     public async Task PostUser(UserInfoPostDTO req, Guid userId)
     {
-        var user = await _repository.User.GetAll()
-            .Where(u => u.Id == userId)
-            .Include(u => u.Avatar)
-            .Include(u => u.Recruitments)
-            .FirstOrDefaultAsync() ?? throw new UserNotFoundException();
+        var user = await _repository.User.GetByIdAsync(userId) ?? throw new UserNotFoundException();
         _mapper.Map(req, user);
         await _repository.User.UpdateAsync(user);
     }
