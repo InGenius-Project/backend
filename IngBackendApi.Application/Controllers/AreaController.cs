@@ -183,7 +183,7 @@ public class AreaController(
     }
 
     [HttpPost("imagetextlayout")]
-    public async Task<IActionResult> PostImageTextLayout(Guid areaId, string textContent, string altContent, IFormFile image)
+    public async Task<IActionResult> PostImageTextLayout(Guid areaId, [FromForm] ImageTextLayoutPostDTO imageTextLayoutPostDTO)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         var user = await _userService.CheckAndGetUserAsync(userId);
@@ -192,15 +192,8 @@ public class AreaController(
         await _areaService.CheckAreaOwnership(areaId, user.Id);
 
         // Check Image
-        CheckImage(image);
-
-        var imageTextLayoutDto = new ImageTextLayoutPostDTO()
-        {
-            AltContent = altContent,
-            TextContent = textContent,
-            Image = image
-        };
-        await _areaService.UpdateLayoutAsync(areaId, imageTextLayoutDto);
+        CheckImage(imageTextLayoutPostDTO.Image);
+        await _areaService.UpdateLayoutAsync(areaId, imageTextLayoutPostDTO);
         return Ok();
     }
 
