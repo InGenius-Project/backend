@@ -136,7 +136,6 @@ public class TextLayoutPostDTO
 
 public class ImageTextLayoutPostDTO
 {
-    public Guid Id { get; set; }
     public string AltContent { get; set; } = "";
     public string TextContent { get; set; } = "";
     public required IFormFile Image { get; set; }
