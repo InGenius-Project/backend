@@ -210,4 +210,11 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+// Ensure wwwroot/images/area directory exists, if not create it
+var areaImagePath = Path.Combine(env.ContentRootPath, "wwwroot", "images", "area");
+if (!Directory.Exists(areaImagePath))
+{
+    Directory.CreateDirectory(areaImagePath);
+}
+
 app.Run();
