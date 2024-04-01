@@ -59,6 +59,7 @@ public class MappingProfile : Profile
 
         CreateMap<AreaDTO, Area>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.ImageTextLayout, opt => opt.Ignore())
             .EqualityComparison((dto, entity) => dto.Id == entity.Id);
         CreateMap<AreaType, AreaTypeDTO>();
         CreateMap<AreaTypeDTO, AreaType>()
