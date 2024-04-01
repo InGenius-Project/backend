@@ -5,6 +5,7 @@ using AutoMapper.EquivalencyExpression;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
+
 public class MappingProfile : Profile
 {
     public MappingProfile()
@@ -37,6 +38,7 @@ public class MappingProfile : Profile
         // Recruitment
         CreateMap<Recruitment, RecruitmentDTO>()
             .ReverseMap();
+        CreateMap<RecruitmentPostDTO, RecruitmentDTO>();
         CreateMap<RecruitmentPostDTO, Recruitment>().ForMember(rp => rp.Publisher, r => r.Ignore());
 
         // Area
@@ -47,23 +49,24 @@ public class MappingProfile : Profile
             )
             .ForMember(
                 dest => dest.LayoutType,
-                opt => opt.MapFrom(src => src.AreaType == null ? src.LayoutType : src.AreaType.LayoutType)
+                opt =>
+                    opt.MapFrom(src =>
+                        src.AreaType == null ? src.LayoutType : src.AreaType.LayoutType
+                    )
             );
         CreateMap<AreaPostDTO, Area>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.ListLayoutId, opt => opt.Ignore())
             .EqualityComparison((dto, entity) => dto.Id == entity.Id);
 
-        CreateMap<AreaPostDTO, AreaDTO>()
-            .ForMember(dest => dest.ListLayout, opt => opt.Ignore());
+        CreateMap<AreaPostDTO, AreaDTO>().ForMember(dest => dest.ListLayout, opt => opt.Ignore());
 
         CreateMap<AreaDTO, Area>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.ImageTextLayout, opt => opt.Ignore())
             .EqualityComparison((dto, entity) => dto.Id == entity.Id);
         CreateMap<AreaType, AreaTypeDTO>();
-        CreateMap<AreaTypeDTO, AreaType>()
-            .EqualityComparison((dto, entity) => dto.Id == entity.Id);
+        CreateMap<AreaTypeDTO, AreaType>().EqualityComparison((dto, entity) => dto.Id == entity.Id);
 
         CreateMap<AreaTypePostDTO, AreaType>()
             .EqualityComparison((dto, entity) => dto.Id == entity.Id);
@@ -75,9 +78,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ReverseMap();
 
-
-        CreateMap<TextLayoutPostDTO, TextLayoutDTO>()
-            .ReverseMap();
+        CreateMap<TextLayoutPostDTO, TextLayoutDTO>().ReverseMap();
 
         // ImageLayout
         CreateMap<ImageTextLayoutDTO, ImageTextLayout>()
@@ -121,13 +122,20 @@ public class MappingProfile : Profile
         CreateMap<TagTypePostDTO, TagTypeDTO>().ReverseMap();
     }
 
-    public MappingProfile(IConfiguration configuration) : this()
+    public MappingProfile(IConfiguration configuration)
+        : this()
     {
         CreateMap<Image, ImageDTO>()
-            .ForMember(dest => dest.Uri, opt => opt.MapFrom(src => GetImageUri(configuration, src)));
+            .ForMember(
+                dest => dest.Uri,
+                opt => opt.MapFrom(src => GetImageUri(configuration, src))
+            );
 
         CreateMap<Image, ImageInfo>()
-            .ForMember(dest => dest.Uri, opt => opt.MapFrom(src => GetImageUri(configuration, src)));
+            .ForMember(
+                dest => dest.Uri,
+                opt => opt.MapFrom(src => GetImageUri(configuration, src))
+            );
     }
 
     public MappingProfile(IPasswordHasher passwordHasher)
@@ -142,5 +150,6 @@ public class MappingProfile : Profile
         CreateMap<User, UserInfoDTO>();
     }
 
-    private static string GetImageUri(IConfiguration configuration, Image image) => string.Format("{0}api/area/image?id={1}", configuration["Domain:Url"], image.Id);
+    private static string GetImageUri(IConfiguration configuration, Image image) =>
+        string.Format("{0}api/area/image?id={1}", configuration["Domain:Url"], image.Id);
 }

@@ -19,7 +19,7 @@ public class AreaController(
     IAreaService areaService,
     IAreaTypeService areaTypeService,
     IWebHostEnvironment env
-    ) : BaseController
+) : BaseController
 {
     private readonly IUserService _userService = userService;
     private readonly IAreaService _areaService = areaService;
@@ -67,7 +67,9 @@ public class AreaController(
         await _areaService.CheckAreaOwnership(area.Id, user.Id);
         _mapper.Map(req, area);
         await _areaService.UpdateAsync(area);
-        var areaDto = await _areaService.GetAreaIncludeAllById(area.Id) ?? throw new NotFoundException("找不到area");
+        var areaDto =
+            await _areaService.GetAreaIncludeAllById(area.Id)
+            ?? throw new NotFoundException("找不到area");
         return areaDto;
     }
 
@@ -183,7 +185,10 @@ public class AreaController(
     }
 
     [HttpPost("imagetextlayout")]
-    public async Task<IActionResult> PostImageTextLayout(Guid areaId, [FromForm] ImageTextLayoutPostDTO imageTextLayoutPostDTO)
+    public async Task<IActionResult> PostImageTextLayout(
+        Guid areaId,
+        [FromForm] ImageTextLayoutPostDTO imageTextLayoutPostDTO
+    )
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         var user = await _userService.CheckAndGetUserAsync(userId);
@@ -198,7 +203,10 @@ public class AreaController(
     }
 
     [HttpPost("keyvaluelistlayout")]
-    public async Task<IActionResult> PostKeyValueListLayout(Guid areaId, KeyValueListLayoutPostDTO keyValueListLayoutPostDTO)
+    public async Task<IActionResult> PostKeyValueListLayout(
+        Guid areaId,
+        KeyValueListLayoutPostDTO keyValueListLayoutPostDTO
+    )
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         var user = await _userService.CheckAndGetUserAsync(userId);
@@ -225,7 +233,9 @@ public class AreaController(
     [HttpGet("image")]
     public async Task<IActionResult> GetImage(Guid id)
     {
-        var imageDto = await _areaService.GetImageByIdAsync(id) ?? throw new NotFoundException("Image not found");
+        var imageDto =
+            await _areaService.GetImageByIdAsync(id)
+            ?? throw new NotFoundException("Image not found");
 
         var fullpath = Path.Combine(_env.WebRootPath, imageDto.Filepath);
         Console.WriteLine(fullpath);

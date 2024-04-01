@@ -19,10 +19,5 @@ namespace IngBackendApi.Models.DTO
         public Guid? Id { get; set; }
         public string Name { get; set; }
         public bool Enable { get; set; }
-        public List<AreaDTO> Areas { get; set; }
     }
-
-
-
 }
-

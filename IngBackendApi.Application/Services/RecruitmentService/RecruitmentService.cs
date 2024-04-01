@@ -1,40 +1,58 @@
-using IngBackendApi.Interfaces.Repository;
-using IngBackendApi.Interfaces.UnitOfWork;
-using IngBackendApi.Services.AreaService;
-using IngBackendApi.Models.DBEntity;
-using Microsoft.EntityFrameworkCore;
-using IngBackendApi.Models.DTO;
-using AutoMapper;
-
 namespace IngBackendApi.Services.RecruitmentService;
 
-public class RecruitmentService : Service<Recruitment, RecruitmentDTO, Guid>
+using AutoMapper;
+using IngBackendApi.Application.Interfaces.Service;
+using IngBackendApi.Interfaces.Repository;
+using IngBackendApi.Interfaces.UnitOfWork;
+using IngBackendApi.Models.DBEntity;
+using IngBackendApi.Models.DTO;
+using Microsoft.EntityFrameworkCore;
+
+public class RecruitmentService(
+    IUnitOfWork unitOfWork,
+    IMapper mapper,
+    IRepositoryWrapper repository
+) : Service<Recruitment, RecruitmentDTO, Guid>(unitOfWork, mapper), IRecruitmentService
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-    private readonly IRepositoryWrapper _repository;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
+    private readonly IRepositoryWrapper _repository = repository;
 
-    public RecruitmentService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository) : base(unitOfWork, mapper)
+    public async Task<List<RecruitmentDTO>> GetUserRecruitementsAsync(Guid userId)
+    {
+        var recruitments = await _repository
+            .Recruitment.GetIncludeAll()
+            .Where(r => r.PublisherId == userId)
+            .ToListAsync();
 
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-        _repository = repository;
-    }
-    public List<RecruitmentDTO> GetUserRecruitements(Guid userId)
-    {
-        var recruitments = _repository.Recruitment.GetAll()
-            .Where(x => x.PublisherId.Equals(userId))
-            .ToList();
         return _mapper.Map<List<RecruitmentDTO>>(recruitments);
     }
 
     public async Task<RecruitmentDTO?> GetRecruitmentByIdIncludeAllAsync(Guid recruitmentId)
     {
-        var query = _repository.Recruitment.GetRecruitmentByIdIncludeAll(recruitmentId);
+        var query = _repository
+            .Recruitment.GetRecruitmentByIdIncludeAll(recruitmentId)
+            .AsNoTracking();
         return await _mapper.ProjectTo<RecruitmentDTO>(query).FirstOrDefaultAsync();
     }
 
-
-
+    public async Task<RecruitmentDTO> AddOrUpdateAsync(RecruitmentDTO recruitmentDTO, Guid userId)
+    {
+        var recruitment = await _repository.Recruitment.GetByIdAsync(recruitmentDTO.Id);
+        // Add new recruitment
+        if (recruitment == null)
+        {
+            recruitment = _mapper.Map<Recruitment>(recruitmentDTO);
+            recruitment.PublisherId = userId;
+            await _repository.Recruitment.AddAsync(recruitment);
+            await _unitOfWork.SaveChangesAsync();
+            return _mapper.Map<RecruitmentDTO>(recruitment);
+        }
+        // Update recruitment
+        _mapper.Map(recruitmentDTO, recruitment);
+        recruitment.PublisherId = userId;
+        await _repository.Recruitment.UpdateAsync(recruitment);
+        await _unitOfWork.SaveChangesAsync();
+        return _mapper.Map<RecruitmentDTO>(recruitment);
+    }
 }

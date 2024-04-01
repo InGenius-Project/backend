@@ -1,4 +1,5 @@
 namespace IngBackendApi.Models.DTO;
+
 using System.Text.Json.Serialization;
 using IngBackendApi.Enum;
 using IngBackendApi.Models.DBEntity;
