@@ -83,12 +83,6 @@ builder
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 
-builder
-    .Services.AddControllersWithViews()
-    .AddJsonOptions(options =>
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter())
-    );
-
 // Add Swagger
 builder.Services.AddSwaggerGen(c =>
 {
