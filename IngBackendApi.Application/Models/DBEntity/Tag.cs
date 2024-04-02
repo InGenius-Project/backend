@@ -38,5 +38,5 @@ public class TagType : BaseEntity, IEntity<int>
     public required string Color { get; set; }
 
     [JsonIgnore]
-    public List<AreaType>? AreaTypes { get; set; }
+    public List<AreaType> AreaTypes { get; set; } = [];
 }

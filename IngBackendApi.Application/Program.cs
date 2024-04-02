@@ -19,6 +19,7 @@ using IngBackendApi.Services.UnitOfWork;
 using IngBackendApi.Services.UserService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -47,7 +48,12 @@ if (env.IsDevelopment())
 {
     builder.Services.AddDbContext<IngDbContext>(options =>
     {
-        options.UseSqlite(connectionString);
+        options.UseSqlite(
+            connectionString,
+            o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
+        );
+        options.ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
+
         options.EnableSensitiveDataLogging();
     });
 }
@@ -77,7 +83,11 @@ builder.Services.AddScoped<EmailService>();
 // Json Serializer
 builder
     .Services.AddControllers()
-    .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
 
 // Add Logger
 builder.Logging.ClearProviders();
@@ -202,21 +212,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-// Apply Migration
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-
-    Console.WriteLine("READY To Applying Migrations");
-
-    var context = services.GetRequiredService<IngDbContext>();
-    if (context.Database.GetPendingMigrations().Any())
-    {
-        Console.WriteLine("Applying Migrations...");
-        context.Database.Migrate();
-    }
-}
 
 // Ensure wwwroot/images/area directory exists, if not create it
 var areaImagePath = Path.Combine(env.ContentRootPath, "wwwroot", "images", "area");

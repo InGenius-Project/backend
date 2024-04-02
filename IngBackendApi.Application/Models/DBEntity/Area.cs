@@ -67,7 +67,6 @@ public class Area : BaseEntity, IEntity<Guid>
         var memberInfo = memberExpression.Member;
         var propertyName = memberInfo.Name;
 
-
         switch (propertyName)
         {
             case nameof(TextLayout):

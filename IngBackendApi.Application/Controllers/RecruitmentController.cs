@@ -33,8 +33,7 @@ public class RecruitmentController(
     public async Task<List<RecruitmentDTO>> GetRecruitmentsByUser()
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        // TODO: Uncomment this line to check user role
-        // await _userService.CheckAndGetUserAsync(userId, UserRole.Company);
+        await _userService.CheckAndGetUserAsync(userId, UserRole.Company);
 
         var recruitments = await _recruitmentService.GetUserRecruitementsAsync(userId);
 
@@ -49,7 +48,9 @@ public class RecruitmentController(
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
 
         await _userService.CheckAndGetUserAsync(userId);
-        var recruitment = await _recruitmentService.GetByIdAsync(recruitmentId);
+        var recruitment = await _recruitmentService.GetRecruitmentByIdIncludeAllAsync(
+            recruitmentId
+        );
         return recruitment;
     }
 
