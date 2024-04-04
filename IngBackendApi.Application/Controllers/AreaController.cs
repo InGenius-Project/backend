@@ -46,31 +46,18 @@ public class AreaController(
     public async Task<AreaDTO> PostArea([FromBody] AreaPostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.CheckAndGetUserAsync(userId);
-
-        var parsedAreaId = req.Id ?? Guid.Empty;
-        var area = await _areaService.GetAreaIncludeAllById(parsedAreaId);
+        await _userService.CheckAndGetUserAsync(userId);
 
         // Add User Relationship
         req.UserId = userId;
 
-        // Add Area
-        if (area == null)
-        {
-            var newAreaDTO = _mapper.Map<AreaDTO>(req);
-            newAreaDTO = await _areaService.AddAsync(newAreaDTO);
-            var areaEntity = await _areaService.GetAreaIncludeAllById(newAreaDTO.Id);
-            return areaEntity;
-        }
+        var areaDTO = _mapper.Map<AreaDTO>(req);
+        areaDTO = await _areaService.AddOrUpdateAsync(areaDTO);
+        areaDTO =
+            await _areaService.GetAreaIncludeAllById(areaDTO.Id)
+            ?? throw new NotFoundException("This is a internalError. Contact the manager.");
 
-        // Patch Area
-        await _areaService.CheckAreaOwnership(area.Id, user.Id);
-        _mapper.Map(req, area);
-        await _areaService.UpdateAsync(area);
-        var areaDto =
-            await _areaService.GetAreaIncludeAllById(area.Id)
-            ?? throw new NotFoundException("找不到area");
-        return areaDto;
+        return areaDTO;
     }
 
     [HttpDelete("{areaId}")]

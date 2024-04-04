@@ -16,28 +16,31 @@ public class AreaRepository : Repository<Area, Guid>, IAreaRepository
         _context = context;
     }
 
-    public IQueryable<Area> GetAreaByIdIncludeAll(Guid id) => _context
+    public IQueryable<Area> GetAreaByIdIncludeAll(Guid id) =>
+        _context
             .Area.Include(a => a.TextLayout)
+            .Include(a => a.AreaType)
+            .ThenInclude(at => at.ListTagTypes)
             .Include(a => a.ImageTextLayout)
-                .ThenInclude(it => it.Image)
+            .ThenInclude(it => it.Image)
             .Include(a => a.ListLayout)
-                .ThenInclude(l => l.Items)
-                    .ThenInclude(t => t.Type)
+            .ThenInclude(l => l.Items)
+            .ThenInclude(t => t.Type)
             .Include(a => a.KeyValueListLayout)
-                .ThenInclude(kv => kv.Items)
-                .ThenInclude(k => k.Key)
-                .ThenInclude(t => t.Type)
+            .ThenInclude(kv => kv.Items)
+            .ThenInclude(k => k.Key)
+            .ThenInclude(t => t.Type)
             .Include(a => a.AreaType)
             .Where(a => a.Id == id);
 
-    public Area GetAreaByIdIncludeAllLayout(Guid id) => _context
+    public Area GetAreaByIdIncludeAllLayout(Guid id) =>
+        _context
             .Area.Include(a => a.TextLayout)
             .Include(a => a.ImageTextLayout)
-                .ThenInclude(it => it.Image)
+            .ThenInclude(it => it.Image)
             .Include(a => a.ListLayout)
-                .ThenInclude(l => l.Items)
+            .ThenInclude(l => l.Items)
             .Include(a => a.KeyValueListLayout)
-                .ThenInclude(kv => kv.Items)
+            .ThenInclude(kv => kv.Items)
             .FirstOrDefault(a => a.Id == id);
 }
-

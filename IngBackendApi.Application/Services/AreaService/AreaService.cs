@@ -1,6 +1,5 @@
 namespace IngBackendApi.Services.AreaService;
 
-using System.Drawing.Drawing2D;
 using AutoMapper;
 using IngBackendApi.Enum;
 using IngBackendApi.Exceptions;
@@ -9,13 +8,14 @@ using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Interfaces.UnitOfWork;
 using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Update.Internal;
 
-public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository, IWebHostEnvironment env)
-    : Service<Area, AreaDTO, Guid>(unitOfWork, mapper),
-        IAreaService
+public class AreaService(
+    IUnitOfWork unitOfWork,
+    IMapper mapper,
+    IRepositoryWrapper repository,
+    IWebHostEnvironment env
+) : Service<Area, AreaDTO, Guid>(unitOfWork, mapper), IAreaService
 {
     private readonly IMapper _mapper = mapper;
     private readonly IRepositoryWrapper _repository = repository;
@@ -24,7 +24,10 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
         int
     >();
 
-    private readonly IRepository<Image, Guid> _imageRepository = unitOfWork.Repository<Image, Guid>();
+    private readonly IRepository<Image, Guid> _imageRepository = unitOfWork.Repository<
+        Image,
+        Guid
+    >();
     private readonly IRepository<Tag, Guid> _tagRepository = unitOfWork.Repository<Tag, Guid>();
     private readonly IWebHostEnvironment _env = env;
 
@@ -35,14 +38,19 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
 
         var tagTypes = _repository.TagType.GetAll();
         // remove tagType Entity
-        area.ListLayout?.Items?.ForEach(i => i.Type = tagTypes.FirstOrDefault(t => t.Id == i.TagTypeId));
+        area.ListLayout?.Items?.ForEach(i =>
+            i.Type = tagTypes.FirstOrDefault(t => t.Id == i.TagTypeId)
+        );
 
         await _repository.Area.UpdateAsync(area);
     }
 
     public async Task<AreaDTO?> GetAreaIncludeAllById(Guid areaId)
     {
-        var area = await _repository.Area.GetAreaByIdIncludeAll(areaId).AsNoTracking().FirstOrDefaultAsync();
+        var area = await _repository
+            .Area.GetAreaByIdIncludeAll(areaId)
+            .AsNoTracking()
+            .FirstOrDefaultAsync();
         return _mapper.Map<AreaDTO>(area);
     }
 
@@ -86,7 +94,8 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
 
     public async Task UpdateLayoutAsync(Guid areaId, ListLayoutDTO listLayoutDTO)
     {
-        var area = _repository.Area.GetAreaByIdIncludeAllLayout(areaId)
+        var area =
+            _repository.Area.GetAreaByIdIncludeAllLayout(areaId)
             ?? throw new NotFoundException("area not found.");
 
         area.ClearLayoutsExclude(a => a.ListLayout);
@@ -106,7 +115,8 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
 
     public async Task UpdateLayoutAsync(Guid areaId, TextLayoutDTO textLayoutDTO)
     {
-        var area = _repository.Area.GetAreaByIdIncludeAllLayout(areaId)
+        var area =
+            _repository.Area.GetAreaByIdIncludeAllLayout(areaId)
             ?? throw new NotFoundException("area not found.");
 
         area.ClearLayoutsExclude(a => a.TextLayout);
@@ -126,7 +136,8 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
 
     public async Task UpdateLayoutAsync(Guid areaId, ImageTextLayoutPostDTO imageTextLayoutPostDTO)
     {
-        var area = _repository.Area.GetAreaByIdIncludeAllLayout(areaId)
+        var area =
+            _repository.Area.GetAreaByIdIncludeAllLayout(areaId)
             ?? throw new NotFoundException("area not found.");
 
         area.ClearLayoutsExclude(a => a.ImageTextLayout);
@@ -170,7 +181,8 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
 
     public async Task UpdateLayoutAsync(Guid areaId, KeyValueListLayoutDTO keyValueListLayoutDTO)
     {
-        var area = _repository.Area.GetAreaByIdIncludeAllLayout(areaId)
+        var area =
+            _repository.Area.GetAreaByIdIncludeAllLayout(areaId)
             ?? throw new NotFoundException("area not found.");
 
         area.ClearLayoutsExclude(a => a.KeyValueListLayout);
@@ -187,10 +199,16 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
         await _repository.Area.SaveAsync();
     }
 
-    public async Task UpdateAreaSequenceAsync(List<AreaSequencePostDTO> areaSequencePostDTOs, Guid userId)
+    public async Task UpdateAreaSequenceAsync(
+        List<AreaSequencePostDTO> areaSequencePostDTOs,
+        Guid userId
+    )
     {
         var areaDtoIds = areaSequencePostDTOs.Select(a => a.Id).ToList();
-        var areas = await _repository.Area.GetAll().Where(a => areaDtoIds.Contains(a.Id)).ToListAsync();
+        var areas = await _repository
+            .Area.GetAll()
+            .Where(a => areaDtoIds.Contains(a.Id))
+            .ToListAsync();
         areas.ForEach(async a =>
         {
             await CheckAreaOwnership(a.Id, userId);
@@ -210,6 +228,31 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
         return imageDto;
     }
 
+    public async Task<AreaDTO> AddOrUpdateAsync(AreaDTO areaDTO)
+    {
+        var area = await _repository.Area.GetByIdAsync(areaDTO.Id);
+        if (area == null)
+        {
+            // add new area
+            var newArea = _mapper.Map<Area>(areaDTO);
+            await _repository.Area.AddAsync(newArea);
+            await _repository.Area.SaveAsync();
+            return _mapper.Map<AreaDTO>(newArea);
+        }
+
+        // update area
+        // TODO: Add area ownership check
+        if (areaDTO.UserId == null)
+        {
+            throw new UnauthorizedException("沒有權限更改");
+        }
+        await CheckAreaOwnership(area.Id, (Guid)areaDTO.UserId);
+
+        _mapper.Map(areaDTO, area);
+        await _repository.Area.SaveAsync();
+        return _mapper.Map<AreaDTO>(area);
+    }
+
     private async Task<Image> SaveImageAsync(IFormFile file, string path)
     {
         if (file.Length == 0)
@@ -217,11 +260,7 @@ public class AreaService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrap
             throw new ArgumentException("File is empty");
         }
 
-        var newImage = new Image
-        {
-            Filepath = "",
-            ContentType = file.ContentType
-        };
+        var newImage = new Image { Filepath = "", ContentType = file.ContentType };
         await _imageRepository.AddAsync(newImage);
 
         var fileId = newImage.Id;

@@ -2,7 +2,6 @@ namespace IngBackendApi.Models.DTO;
 
 using System.Text.Json.Serialization;
 using IngBackendApi.Enum;
-using IngBackendApi.Models.DBEntity;
 
 public class AreaDTO
 {
@@ -11,7 +10,8 @@ public class AreaDTO
     public required bool IsDisplayed { get; set; }
     public required string Title { get; set; }
     public LayoutType? LayoutType { get; set; }
-    public int? AreaTypeId { get; set; }
+    public int AreaTypeId { get; set; }
+    public AreaTypeDTO AreaType { get; set; }
     public TextLayoutDTO? TextLayout { get; set; }
     public ImageTextLayoutDTO? ImageTextLayout { get; set; }
     public ListLayoutDTO? ListLayout { get; set; }
