@@ -150,6 +150,16 @@ public class MappingProfile : Profile
         CreateMap<User, UserInfoDTO>();
     }
 
-    private static string GetImageUri(IConfiguration configuration, Image image) =>
-        string.Format("{0}api/area/image?id={1}", configuration["Domain:Url"], image.Id);
+    private static string GetImageUri(IConfiguration configuration, Image image)
+    {
+        if (image.Filepath.Contains("images/avatars"))
+        {
+            return string.Format(
+                "{0}api/user/avatar?imageId={1}",
+                configuration["Domain:Url"],
+                image.Id
+            );
+        }
+        return string.Format("{0}api/area/image?id={1}", configuration["Domain:Url"], image.Id);
+    }
 }

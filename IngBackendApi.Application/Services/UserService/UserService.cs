@@ -1,4 +1,5 @@
 namespace IngBackendApi.Services.UserService;
+
 using System.Linq.Expressions;
 using AutoMapper;
 using IngBackendApi.Enum;
@@ -14,13 +15,19 @@ public class UserService(
     IUnitOfWork unitOfWork,
     IMapper mapper,
     IRepositoryWrapper repository,
-    IPasswordHasher passwordHasher
-    ) : Service<User, UserInfoDTO, Guid>(unitOfWork, mapper), IUserService
+    IPasswordHasher passwordHasher,
+    IWebHostEnvironment env
+) : Service<User, UserInfoDTO, Guid>(unitOfWork, mapper), IUserService
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IMapper _mapper = mapper;
     private readonly IRepositoryWrapper _repository = repository;
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
+    private readonly IWebHostEnvironment _env = env;
+    private readonly IRepository<Image, Guid> _imageRepository = unitOfWork.Repository<
+        Image,
+        Guid
+    >();
 
     public async Task<UserInfoDTO?> GetUserByIdIncludeAllAsync(Guid userId)
     {
@@ -141,7 +148,9 @@ public class UserService(
 
     public async Task<UserInfoDTO> VerifyHashedPasswordAsync(UserSignInDTO req)
     {
-        var query = _repository.User.GetUserByEmail(req.Email.ToLower(System.Globalization.CultureInfo.CurrentCulture));
+        var query = _repository.User.GetUserByEmail(
+            req.Email.ToLower(System.Globalization.CultureInfo.CurrentCulture)
+        );
         var user = await query.FirstOrDefaultAsync() ?? throw new BadRequestException("帳號或密碼錯誤");
         var passwordValid = _passwordHasher.VerifyHashedPassword(user.HashedPassword, req.Password);
         if (!passwordValid)
@@ -153,7 +162,8 @@ public class UserService(
 
     public async Task AddUserResumeAsync(UserInfoDTO userDTO, ResumeDTO resumeDTO)
     {
-        var user = await _repository.User.GetByIdAsync(userDTO.Id) ?? throw new UserNotFoundException();
+        var user =
+            await _repository.User.GetByIdAsync(userDTO.Id) ?? throw new UserNotFoundException();
 
         user.Resumes.Add(_mapper.Map<Resume>(resumeDTO));
         await _unitOfWork.SaveChangesAsync();
@@ -183,7 +193,9 @@ public class UserService(
 
     public async Task<string> GenerateEmailConfirmationTokenAsync(UserInfoDTO req)
     {
-        var user = _repository.User.GetUserByIdIncludeAll(req.Id).FirstOrDefault() ?? throw new UserNotFoundException();
+        var user =
+            _repository.User.GetUserByIdIncludeAll(req.Id).FirstOrDefault()
+            ?? throw new UserNotFoundException();
         Random random = new();
         var length = 6;
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -224,5 +236,58 @@ public class UserService(
         }
 
         return !user.EmailVerifications.Any(e => e.Code == token);
+    }
+
+    public async Task SaveUserAvatarAsync(Guid userId, IFormFile image)
+    {
+        var user =
+            await _repository
+                .User.GetAll()
+                .Where(u => u.Id == userId)
+                .Include(u => u.Avatar)
+                .FirstOrDefaultAsync() ?? throw new UserNotFoundException();
+
+        var filepath = "images/avatars";
+        var newImage = await SaveImageAsync(image, filepath);
+
+        if (user.Avatar != null)
+        {
+            var fullpath = Path.Combine(_env.WebRootPath, user.Avatar.Filepath);
+            if (File.Exists(fullpath))
+            {
+                File.Delete(fullpath);
+            }
+            _imageRepository.Delete(user.Avatar);
+        }
+
+        user.Avatar = newImage;
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task<ImageDTO?> GetImageByIdAsync(Guid imageId)
+    {
+        var image = await _imageRepository.GetByIdAsync(imageId);
+        return _mapper.Map<ImageDTO>(image);
+    }
+
+    private async Task<Image> SaveImageAsync(IFormFile file, string path)
+    {
+        if (file.Length == 0)
+        {
+            throw new ArgumentException("File is empty");
+        }
+
+        var newImage = new Image { Filepath = "", ContentType = file.ContentType };
+        await _imageRepository.AddAsync(newImage);
+
+        var fileId = newImage.Id;
+        var fileName = fileId.ToString();
+        var fullPath = Path.Combine(_env.WebRootPath, path, fileName);
+        using (var stream = new FileStream(fullPath, FileMode.Create))
+        {
+            file.CopyTo(stream);
+        }
+        newImage.Filepath = Path.Combine(path, fileName);
+        return newImage;
     }
 }

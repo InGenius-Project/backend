@@ -38,4 +38,6 @@ public interface IUserService : IService<User, UserInfoDTO, Guid>
     Task<bool> VerifyEmailVerificationCode(UserInfoDTO req, string token);
     Task<string> GenerateEmailConfirmationTokenAsync(UserInfoDTO req);
     bool VerifyEducationEmail(string email);
+    Task SaveUserAvatarAsync(Guid userId, IFormFile image);
+    Task<ImageDTO?> GetImageByIdAsync(Guid imageId);
 }

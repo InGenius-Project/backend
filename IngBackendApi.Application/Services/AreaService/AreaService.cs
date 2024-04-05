@@ -165,6 +165,7 @@ public class AreaService(
             // delete old image if exist
             if (area.ImageTextLayout.Image != null)
             {
+                _imageRepository.Delete(area.ImageTextLayout.Image);
                 var fullpath = Path.Combine(_env.WebRootPath, area.ImageTextLayout.Image.Filepath);
                 if (File.Exists(fullpath))
                 {

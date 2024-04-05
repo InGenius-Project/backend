@@ -6,6 +6,7 @@ using AutoWrapper.Wrappers;
 using IngBackendApi.Application.Interfaces.Service;
 using IngBackendApi.Enum;
 using IngBackendApi.Exceptions;
+using IngBackendApi.Helpers;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Models.DTO;
 using Microsoft.AspNetCore.Authorization;
@@ -219,7 +220,7 @@ public class AreaController(
         await _areaService.CheckAreaOwnership(areaId, user.Id);
 
         // Check Image
-        CheckImage(imageTextLayoutPostDTO.Image);
+        Helper.CheckImage(imageTextLayoutPostDTO.Image);
         await _areaService.UpdateLayoutAsync(areaId, imageTextLayoutPostDTO);
         return Ok();
     }
@@ -260,24 +261,10 @@ public class AreaController(
             ?? throw new NotFoundException("Image not found");
 
         var fullpath = Path.Combine(_env.WebRootPath, imageDto.Filepath);
-        Console.WriteLine(fullpath);
         if (!System.IO.File.Exists(fullpath))
         {
             throw new NotFoundException("Image not found");
         }
         return PhysicalFile(fullpath, imageDto.ContentType);
-    }
-
-    private static void CheckImage(IFormFile image)
-    {
-        if (image.ContentType is not "image/jpeg" and not "image/png")
-        {
-            throw new BadRequestException("Image format must be JPEG or PNG");
-        }
-
-        if (image.Length > 10 * 1024 * 1024)
-        {
-            throw new BadRequestException("Image file size cannot exceed 10MB");
-        }
     }
 }
