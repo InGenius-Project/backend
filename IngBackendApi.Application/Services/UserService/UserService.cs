@@ -270,6 +270,51 @@ public class UserService(
         return _mapper.Map<ImageDTO>(image);
     }
 
+    public async Task<List<RecruitmentDTO>> GetFavoriteRecruitmentsAsync(Guid userId)
+    {
+        var recruitmentIds = await _repository
+            .User.GetAll()
+            .Where(u => u.Id == userId)
+            .Include(a => a.FavoriteRecruitments)
+            .SelectMany(u => u.FavoriteRecruitments)
+            .Select(r => r.Id)
+            .ToListAsync();
+
+        var recruitments = _repository
+            .Recruitment.GetIncludeAll()
+            .Where(r => recruitmentIds.Contains(r.Id));
+
+        return _mapper.Map<List<RecruitmentDTO>>(recruitments);
+    }
+
+    public async Task AddFavoriteRecruitmentAsync(Guid userId, Guid recruitmentId)
+    {
+        var user =
+            await _repository
+                .User.GetAll()
+                .Include(a => a.FavoriteRecruitments)
+                .FirstOrDefaultAsync(u => u.Id == userId) ?? throw new UserNotFoundException();
+        var recruitment =
+            await _repository.Recruitment.GetByIdAsync(recruitmentId)
+            ?? throw new NotFoundException("Recruitment not found");
+        user.FavoriteRecruitments.Add(recruitment);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task RemoveFavoriteRecruitmentAsync(Guid userId, Guid recruitmentId)
+    {
+        var user =
+            await _repository
+                .User.GetAll()
+                .Include(a => a.FavoriteRecruitments)
+                .FirstOrDefaultAsync(u => u.Id == userId) ?? throw new UserNotFoundException();
+        var recruitment =
+            await _repository.Recruitment.GetByIdAsync(recruitmentId)
+            ?? throw new NotFoundException("Recruitment not found");
+        user.FavoriteRecruitments.Remove(recruitment);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
     private async Task<Image> SaveImageAsync(IFormFile file, string path)
     {
         if (file.Length == 0)

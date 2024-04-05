@@ -34,6 +34,13 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
         modelBuilder.Entity<TagType>().Property(t => t.Id).ValueGeneratedOnAdd();
         modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
 
+        modelBuilder.Entity<User>().HasMany(u => u.Recruitments).WithOne(t => t.Publisher);
+
+        modelBuilder
+            .Entity<User>()
+            .HasMany(a => a.FavoriteRecruitments)
+            .WithMany(r => r.FavoriteUsers);
+
         // TODO: Default data
         modelBuilder
             .Entity<TagType>()

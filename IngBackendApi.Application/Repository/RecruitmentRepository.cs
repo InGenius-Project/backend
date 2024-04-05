@@ -14,7 +14,8 @@ public class RecruitmentRepository(IngDbContext context)
     public IQueryable<Recruitment> GetIncludeAll()
     {
         return _context
-            .Recruitment.Include(r => r.Areas)
+            .Recruitment.Include(r => r.Publisher.Avatar)
+            .Include(r => r.Areas)
             .ThenInclude(a => a.TextLayout)
             .Include(r => r.Areas)
             .ThenInclude(a => a.ImageTextLayout.Image)

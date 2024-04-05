@@ -12,7 +12,8 @@ public class MappingProfile : Profile
     {
         CreateMap<UserInfoDTO, UserDTO>()
             .ForMember(dest => dest.User, opt => opt.MapFrom(src => src));
-        CreateMap<User, UserInfoDTO>();
+        CreateMap<User, UserInfoDTO>().EqualityComparison((dto, entity) => dto.Id == entity.Id);
+        CreateMap<User, OwnerUserDTO>().EqualityComparison((dto, entity) => dto.Id == entity.Id);
         CreateMap<UserInfoDTO, User>()
             .ForAllMembers(opts =>
             {
@@ -37,9 +38,14 @@ public class MappingProfile : Profile
 
         // Recruitment
         CreateMap<Recruitment, RecruitmentDTO>()
-            .ReverseMap();
-        CreateMap<RecruitmentPostDTO, RecruitmentDTO>();
-        CreateMap<RecruitmentPostDTO, Recruitment>().ForMember(rp => rp.Publisher, r => r.Ignore());
+            .EqualityComparison((dto, entity) => dto.Id == entity.Id);
+        CreateMap<RecruitmentDTO, Recruitment>()
+            .EqualityComparison((dto, entity) => dto.Id == entity.Id);
+        CreateMap<RecruitmentPostDTO, RecruitmentDTO>()
+            .EqualityComparison((dto, entity) => dto.Id == entity.Id);
+        CreateMap<RecruitmentPostDTO, Recruitment>()
+            .ForMember(rp => rp.Publisher, r => r.Ignore())
+            .EqualityComparison((dto, entity) => dto.Id == entity.Id);
 
         // Area
         CreateMap<Area, AreaDTO>()
@@ -147,7 +153,7 @@ public class MappingProfile : Profile
                 dest => dest.HashedPassword,
                 opt => opt.MapFrom(src => passwordHasher.HashPassword(src.Password))
             );
-        CreateMap<User, UserInfoDTO>();
+        CreateMap<User, UserInfoDTO>().EqualityComparison((dto, entity) => dto.Id == entity.Id);
     }
 
     private static string GetImageUri(IConfiguration configuration, Image image)

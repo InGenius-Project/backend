@@ -1,6 +1,6 @@
 namespace IngBackendApi.Models.DTO;
 
-using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using IngBackendApi.Enum;
 
 public class AreaDTO
@@ -76,8 +76,10 @@ public class ImageDTO
     public Guid Id { get; set; }
     public string? Uri { get; set; }
     public string? AltContent { get; set; }
-    public required string Filepath { get; set; }
-    public required string ContentType { get; set; }
+
+    [JsonIgnore]
+    public string Filepath { get; set; }
+    public string ContentType { get; set; }
 }
 
 public class ImageInfo

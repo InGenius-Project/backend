@@ -1,4 +1,4 @@
-﻿namespace IngBackendApi.Models.DBEntity;
+namespace IngBackendApi.Models.DBEntity;
 
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -40,6 +40,8 @@ public class User : BaseEntity, IEntity<Guid>
     [JsonIgnore]
     public List<Recruitment>? Recruitments { get; set; } = [];
 
+    [JsonIgnore]
+    public List<Recruitment> FavoriteRecruitments { get; set; } = [];
     public List<VerificationCode>? EmailVerifications { get; set; }
 }
 
@@ -59,9 +61,13 @@ public class Recruitment : BaseEntity, IEntity<Guid>
     [JsonIgnore]
     public IEnumerable<Resume> Resumes { get; set; } = new List<Resume>() { };
 
+    [JsonIgnore]
     [Required]
     public required User Publisher { get; set; }
     public required Guid PublisherId { get; set; }
+
+    [JsonIgnore]
+    public List<User> FavoriteUsers { get; set; } = [];
 }
 
 public class VerificationCode : BaseEntity, IEntity<int>

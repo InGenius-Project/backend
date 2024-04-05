@@ -188,4 +188,29 @@ public class UserController(
         }
         throw new BadRequestException("userId and imageId cannot be null at the same time");
     }
+
+    [HttpGet("fav/recruitment")]
+    public async Task<List<RecruitmentDTO>> GetFavRecruitments()
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        await _userService.CheckAndGetUserAsync(userId);
+        var recruitments = await _userService.GetFavoriteRecruitmentsAsync(userId);
+        return recruitments;
+    }
+
+    [HttpPost("fav/recruitment")]
+    public async Task<ApiResponse> AddFavRecruitment(Guid recruitmentId)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        await _userService.AddFavoriteRecruitmentAsync(userId, recruitmentId);
+        return new ApiResponse("Add fav recruitment success");
+    }
+
+    [HttpDelete("fav/recruitment")]
+    public async Task<ApiResponse> RemoveFavRecruitment(Guid recruitmentId)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        await _userService.RemoveFavoriteRecruitmentAsync(userId, recruitmentId);
+        return new ApiResponse("Remove fav recruitment success");
+    }
 }
