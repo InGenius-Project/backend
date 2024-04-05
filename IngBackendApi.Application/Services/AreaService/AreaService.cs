@@ -14,7 +14,8 @@ public class AreaService(
     IUnitOfWork unitOfWork,
     IMapper mapper,
     IRepositoryWrapper repository,
-    IWebHostEnvironment env
+    IWebHostEnvironment env,
+    IConfiguration config
 ) : Service<Area, AreaDTO, Guid>(unitOfWork, mapper), IAreaService
 {
     private readonly IMapper _mapper = mapper;
@@ -23,7 +24,7 @@ public class AreaService(
         AreaType,
         int
     >();
-
+    private readonly IConfiguration _config = config;
     private readonly IRepository<Image, Guid> _imageRepository = unitOfWork.Repository<
         Image,
         Guid
@@ -144,9 +145,9 @@ public class AreaService(
 
         // TODO: 保存圖片
         var image = imageTextLayoutPostDTO.Image;
-        var directory = "images/area";
+        var filepath = _config["ImageSavePath:Area"] ?? "images/area";
         // 保存圖片
-        var newImage = await SaveImageAsync(image, directory);
+        var newImage = await SaveImageAsync(image, filepath);
         newImage.AltContent = imageTextLayoutPostDTO.AltContent;
 
         if (area.ImageTextLayout == null)

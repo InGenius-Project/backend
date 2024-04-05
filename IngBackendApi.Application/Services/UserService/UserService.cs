@@ -16,7 +16,8 @@ public class UserService(
     IMapper mapper,
     IRepositoryWrapper repository,
     IPasswordHasher passwordHasher,
-    IWebHostEnvironment env
+    IWebHostEnvironment env,
+    IConfiguration config
 ) : Service<User, UserInfoDTO, Guid>(unitOfWork, mapper), IUserService
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
@@ -24,6 +25,7 @@ public class UserService(
     private readonly IRepositoryWrapper _repository = repository;
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
     private readonly IWebHostEnvironment _env = env;
+    private readonly IConfiguration _config = config;
     private readonly IRepository<Image, Guid> _imageRepository = unitOfWork.Repository<
         Image,
         Guid
@@ -247,7 +249,7 @@ public class UserService(
                 .Include(u => u.Avatar)
                 .FirstOrDefaultAsync() ?? throw new UserNotFoundException();
 
-        var filepath = "images/avatars";
+        var filepath = _config["ImageSavePath:Avatar"] ?? "images/avatars";
         var newImage = await SaveImageAsync(image, filepath);
 
         if (user.Avatar != null)
