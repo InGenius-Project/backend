@@ -28,6 +28,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.Secrets.json");
 
 var env = builder.Environment;
+var config = builder.Configuration;
 
 // Development
 if (env.IsDevelopment())
@@ -213,11 +214,15 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Ensure wwwroot/images/area directory exists, if not create it
-var areaImagePath = Path.Combine(env.ContentRootPath, "wwwroot", "images", "area");
-if (!Directory.Exists(areaImagePath))
+// Ensure wwwroot/images/* directory exists, if not create it
+var paths = config.GetSection("ImageSavePath").Get<Dictionary<string, string>>() ?? [];
+foreach (var path in paths)
 {
-    Directory.CreateDirectory(areaImagePath);
+    var imagePath = Path.Combine(env.WebRootPath, path.Value);
+    if (!Directory.Exists(imagePath))
+    {
+        Directory.CreateDirectory(imagePath);
+    }
 }
 
 app.Run();
