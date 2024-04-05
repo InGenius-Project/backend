@@ -21,7 +21,7 @@ public class RecruitmentService(
     public async Task<List<RecruitmentDTO>> GetUserRecruitementsAsync(Guid userId)
     {
         var recruitments = await _repository
-            .Recruitment.GetAll()
+            .Recruitment.GetIncludeAll()
             .Where(r => r.PublisherId == userId)
             .ToListAsync();
 
@@ -40,8 +40,6 @@ public class RecruitmentService(
             return null;
         }
 
-        var publisher = await _repository.User.GetByIdAsync(recruitment.PublisherId);
-        recruitment.Publisher = publisher;
         return _mapper.Map<RecruitmentDTO>(recruitment);
     }
 

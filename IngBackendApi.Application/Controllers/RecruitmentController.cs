@@ -7,9 +7,6 @@ using IngBackendApi.Controllers;
 using IngBackendApi.Enum;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Models.DTO;
-using IngBackendApi.Services.AreaService;
-using IngBackendApi.Services.RecruitmentService;
-using IngBackendApi.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

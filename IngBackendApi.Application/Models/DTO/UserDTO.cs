@@ -8,6 +8,14 @@ public class UserDTO
     public TokenDTO Token { get; set; }
 }
 
+public class OwnerUserDTO
+{
+    public Guid Id { get; set; }
+    public string Email { get; set; }
+    public string Username { get; set; }
+    public ImageDTO Avatar { get; set; }
+}
+
 public class UserInfoDTO
 {
     public Guid Id { get; set; }

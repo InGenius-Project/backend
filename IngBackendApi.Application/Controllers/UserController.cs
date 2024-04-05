@@ -1,6 +1,7 @@
-﻿namespace IngBackendApi.Controllers;
+namespace IngBackendApi.Controllers;
 
 using AutoMapper;
+using AutoWrapper.Filters;
 using AutoWrapper.Wrappers;
 using Hangfire;
 using IngBackendApi.Enum;
@@ -21,7 +22,8 @@ public class UserController(
     IMapper mapper,
     IPasswordHasher passwordHasher,
     IBackgroundJobClient backgroundJobClient,
-    EmailService emailService
+    EmailService emailService,
+    IWebHostEnvironment env
 ) : BaseController
 {
     private readonly TokenService _tokenService = tokenService;
@@ -29,6 +31,7 @@ public class UserController(
     private readonly IMapper _mapper = mapper;
     private readonly IBackgroundJobClient _backgroundJobClient = backgroundJobClient;
     public readonly IPasswordHasher _passwordHasher = passwordHasher;
+    public readonly IWebHostEnvironment _env = env;
     private readonly EmailService _emailService = emailService;
 
     /// <summary>
@@ -135,5 +138,79 @@ public class UserController(
         // 轉換為 UserDTO 回傳
         var tokenDTO = _tokenService.GenerateToken(user);
         return tokenDTO;
+    }
+
+    [HttpPost("avatar")]
+    public async Task<ApiResponse> UploadAvatar([FromForm] IFormFile image)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        await _userService.CheckAndGetUserAsync(userId);
+        await _userService.SaveUserAvatarAsync(userId, image);
+        return new ApiResponse("Upload success");
+    }
+
+    [AutoWrapIgnore]
+    [AllowAnonymous]
+    [HttpGet("avatar")]
+    public async Task<IActionResult> GetAvatar(Guid? userId, Guid? imageId)
+    {
+        if (userId != null)
+        {
+            var parsedUserId = userId ?? Guid.Empty;
+            var userDTO =
+                await _userService.GetByIdAsync(parsedUserId, u => u.Avatar)
+                ?? throw new UserNotFoundException();
+
+            if (userDTO.Avatar == null)
+            {
+                throw new NotFoundException("Avatar not found");
+            }
+
+            var fullpath = Path.Combine(_env.WebRootPath, userDTO.Avatar.Filepath);
+            if (!System.IO.File.Exists(fullpath))
+            {
+                throw new NotFoundException("Avatar not found");
+            }
+            return PhysicalFile(fullpath, userDTO.Avatar.ContentType);
+        }
+        else if (imageId != null)
+        {
+            var parsedImageId = imageId ?? Guid.Empty;
+            var imageDto =
+                await _userService.GetImageByIdAsync(parsedImageId)
+                ?? throw new NotFoundException("Image not found");
+            var fullpath = Path.Combine(_env.WebRootPath, imageDto.Filepath);
+            if (!System.IO.File.Exists(fullpath))
+            {
+                throw new NotFoundException("Image not found");
+            }
+            return PhysicalFile(fullpath, imageDto.ContentType);
+        }
+        throw new BadRequestException("userId and imageId cannot be null at the same time");
+    }
+
+    [HttpGet("fav/recruitment")]
+    public async Task<List<RecruitmentDTO>> GetFavRecruitments()
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        await _userService.CheckAndGetUserAsync(userId);
+        var recruitments = await _userService.GetFavoriteRecruitmentsAsync(userId);
+        return recruitments;
+    }
+
+    [HttpPost("fav/recruitment")]
+    public async Task<ApiResponse> AddFavRecruitment([FromBody] List<Guid> recruitmentIds)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        await _userService.AddFavoriteRecruitmentAsync(userId, recruitmentIds);
+        return new ApiResponse("Add fav recruitment success");
+    }
+
+    [HttpDelete("fav/recruitment")]
+    public async Task<ApiResponse> RemoveFavRecruitment([FromBody] List<Guid> recruitmentIds)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        await _userService.RemoveFavoriteRecruitmentAsync(userId, recruitmentIds);
+        return new ApiResponse("Remove fav recruitment success");
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace IngBackendApi.Helpers;
+namespace IngBackendApi.Helpers;
+
+using IngBackendApi.Exceptions;
 
 public static class Helper
 {
@@ -15,7 +17,7 @@ public static class Helper
             // 容器中不存在 DOCKER_HOST 環境變數
             return false;
         }
-    } 
+    }
 
     public static string GetSAPassword()
     {
@@ -26,5 +28,18 @@ public static class Helper
         }
 
         return pw;
+    }
+
+    public static void CheckImage(IFormFile image)
+    {
+        if (image.ContentType is not "image/jpeg" and not "image/png")
+        {
+            throw new BadRequestException("Image format must be JPEG or PNG");
+        }
+
+        if (image.Length > 10 * 1024 * 1024)
+        {
+            throw new BadRequestException("Image file size cannot exceed 10MB");
+        }
     }
 }
