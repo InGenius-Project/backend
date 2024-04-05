@@ -1,4 +1,5 @@
 ﻿namespace IngBackendApi.Controllers;
+
 using AutoMapper;
 using AutoWrapper.Wrappers;
 using Hangfire;
@@ -21,7 +22,7 @@ public class UserController(
     IPasswordHasher passwordHasher,
     IBackgroundJobClient backgroundJobClient,
     EmailService emailService
-    ) : BaseController
+) : BaseController
 {
     private readonly TokenService _tokenService = tokenService;
     private readonly IUserService _userService = userService;
@@ -39,7 +40,9 @@ public class UserController(
     public async Task<UserInfoDTO> GetUser()
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.GetUserByIdIncludeAllAsync(userId) ?? throw new UserNotFoundException();
+        var user =
+            await _userService.GetUserByIdIncludeAllAsync(userId)
+            ?? throw new UserNotFoundException();
 
         return user;
     }
@@ -62,7 +65,9 @@ public class UserController(
             throw new BadRequestException("驗證碼不得為空");
         }
 
-        var user = await _userService.GetByIdAsync(userId, user => user.EmailVerifications) ?? throw new UserNotFoundException();
+        var user =
+            await _userService.GetByIdAsync(userId, user => user.EmailVerifications)
+            ?? throw new UserNotFoundException();
 
         var result = await _userService.VerifyEmailVerificationCode(user, verifyCode);
         if (!result)
@@ -81,7 +86,11 @@ public class UserController(
     [ProducesResponseType(typeof(ResponseDTO<TokenDTO>), StatusCodes.Status200OK)]
     public async Task<TokenDTO> SignUp([FromBody] UserSignUpDTO req)
     {
-        if (await _userService.GetUserByEmailAsync(req.Email.ToLower()) != null)
+        if (
+            await _userService.GetUserByEmailAsync(
+                req.Email.ToLower(System.Globalization.CultureInfo.CurrentCulture)
+            ) != null
+        )
         {
             throw new BadRequestException("帳號已經存在");
         }

@@ -26,6 +26,10 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
                 r => r.HasOne<Resume>().WithMany().OnDelete(DeleteBehavior.NoAction)
             );
 
+        // User Area Relationship
+        modelBuilder.Entity<Area>().HasOne(a => a.Owner);
+        modelBuilder.Entity<Area>().HasOne(a => a.User).WithMany(u => u.Areas);
+
         modelBuilder.Entity<TagType>().HasIndex(t => t.Value).IsUnique();
         modelBuilder.Entity<TagType>().Property(t => t.Id).ValueGeneratedOnAdd();
         modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();

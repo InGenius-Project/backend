@@ -3,6 +3,7 @@ namespace IngBackendApi.Controllers;
 using AutoMapper;
 using AutoWrapper.Filters;
 using AutoWrapper.Wrappers;
+using IngBackendApi.Application.Interfaces.Service;
 using IngBackendApi.Enum;
 using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Service;
@@ -18,11 +19,15 @@ public class AreaController(
     IUserService userService,
     IAreaService areaService,
     IAreaTypeService areaTypeService,
+    IRecruitmentService recruitmentService,
+    IResumeService resumeService,
     IWebHostEnvironment env
 ) : BaseController
 {
     private readonly IUserService _userService = userService;
     private readonly IAreaService _areaService = areaService;
+    private readonly IRecruitmentService _recruitmentService = recruitmentService;
+    private readonly IResumeService _resumeService = resumeService;
     private readonly IMapper _mapper = mapper;
     private readonly IAreaTypeService _areaTypeService = areaTypeService;
     private readonly IWebHostEnvironment _env = env;
@@ -48,11 +53,41 @@ public class AreaController(
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
 
-        // Add User Relationship
-        req.UserId = userId;
+        // check all id exist
+        var parsedUserId = req.UserId ?? Guid.Empty;
+        var parsedRecruimentId = req.RecruitmentId ?? Guid.Empty;
+        var parsedResumeId = req.ResumeId ?? Guid.Empty;
+        var parsedAreaTypeId = req.AreaTypeId.GetValueOrDefault();
 
+        if (parsedUserId != Guid.Empty)
+        {
+            await _userService.CheckAndGetUserAsync(parsedUserId);
+        }
+
+        if (parsedRecruimentId != Guid.Empty)
+        {
+            var _ =
+                await _recruitmentService.GetByIdAsync(parsedRecruimentId)
+                ?? throw new NotFoundException($"Recruitment {parsedRecruimentId} not found");
+        }
+
+        if (parsedResumeId != Guid.Empty)
+        {
+            var _ =
+                await _resumeService.GetByIdAsync(parsedResumeId)
+                ?? throw new NotFoundException($"Resume {parsedResumeId} not found");
+        }
+
+        if (parsedAreaTypeId != 0)
+        {
+            var _ =
+                await _areaTypeService.GetByIdAsync(parsedAreaTypeId)
+                ?? throw new NotFoundException($"AreaType {req.AreaTypeId} not found");
+        }
+
+        // Add User Relationship
         var areaDTO = _mapper.Map<AreaDTO>(req);
-        areaDTO = await _areaService.AddOrUpdateAsync(areaDTO);
+        areaDTO = await _areaService.AddOrUpdateAsync(areaDTO, userId);
         areaDTO =
             await _areaService.GetAreaIncludeAllById(areaDTO.Id)
             ?? throw new NotFoundException("This is a internalError. Contact the manager.");

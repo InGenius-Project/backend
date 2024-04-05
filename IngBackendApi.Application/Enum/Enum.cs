@@ -15,3 +15,10 @@ public enum LayoutType
     List,
     KeyValueList
 }
+
+public enum AreaPostType
+{
+    User,
+    Resume,
+    Recruitment
+}

@@ -62,7 +62,7 @@ public class AreaService(
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id.Equals(areaId));
 
-        if (area == null || area.UserId != userId)
+        if (area == null || area.OwnerId != userId)
         {
             throw new ForbiddenException();
         }
@@ -228,25 +228,24 @@ public class AreaService(
         return imageDto;
     }
 
-    public async Task<AreaDTO> AddOrUpdateAsync(AreaDTO areaDTO)
+    public async Task<AreaDTO> AddOrUpdateAsync(AreaDTO areaDTO, Guid userId)
     {
         var area = await _repository.Area.GetByIdAsync(areaDTO.Id);
+        if (area == null && areaDTO.Id != Guid.Empty)
+        {
+            throw new NotFoundException("Area not found");
+        }
         if (area == null)
         {
             // add new area
             var newArea = _mapper.Map<Area>(areaDTO);
+            newArea.OwnerId = userId;
             await _repository.Area.AddAsync(newArea);
             await _repository.Area.SaveAsync();
             return _mapper.Map<AreaDTO>(newArea);
         }
 
-        // update area
-        // TODO: Add area ownership check
-        if (areaDTO.UserId == null)
-        {
-            throw new UnauthorizedException("沒有權限更改");
-        }
-        await CheckAreaOwnership(area.Id, (Guid)areaDTO.UserId);
+        await CheckAreaOwnership(area.Id, userId);
 
         _mapper.Map(areaDTO, area);
         await _repository.Area.SaveAsync();

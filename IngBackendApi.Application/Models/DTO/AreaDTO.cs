@@ -1,6 +1,6 @@
 namespace IngBackendApi.Models.DTO;
 
-using System.Text.Json.Serialization;
+using System.ComponentModel.DataAnnotations;
 using IngBackendApi.Enum;
 
 public class AreaDTO
@@ -11,7 +11,6 @@ public class AreaDTO
     public required string Title { get; set; }
     public LayoutType? LayoutType { get; set; }
     public int AreaTypeId { get; set; }
-    public AreaTypeDTO AreaType { get; set; }
     public TextLayoutDTO? TextLayout { get; set; }
     public ImageTextLayoutDTO? ImageTextLayout { get; set; }
     public ListLayoutDTO? ListLayout { get; set; }
@@ -32,8 +31,6 @@ public class AreaPostDTO
     public LayoutType? LayoutType { get; set; }
     public int? AreaTypeId { get; set; }
 
-    // relation
-    [JsonIgnore]
     public Guid? UserId { get; set; }
     public Guid? ResumeId { get; set; }
     public Guid? RecruitmentId { get; set; }

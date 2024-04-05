@@ -1,7 +1,6 @@
-﻿using IngBackendApi.Enum;
-using IngBackendApi.Models.DBEntity;
-
 namespace IngBackendApi.Models.DTO;
+
+using IngBackendApi.Enum;
 
 public class UserDTO
 {
@@ -40,9 +39,9 @@ public class UserSignUpDTO
     public string Password { get; set; }
     public UserRole Role { get; set; }
 }
+
 public class UserSignInDTO
 {
     public string Email { get; set; }
     public string Password { get; set; }
 }
-

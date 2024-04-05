@@ -1,4 +1,7 @@
-﻿using AutoMapper;
+﻿namespace IngBackendApi.Services.UserService;
+
+using AutoMapper;
+using IngBackendApi.Application.Interfaces.Service;
 using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Interfaces.UnitOfWork;
@@ -6,27 +9,21 @@ using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 
-namespace IngBackendApi.Services.UserService;
-
-public class ResumeService : Service<Resume, ResumeDTO, Guid>
+public class ResumeService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository)
+    : Service<Resume, ResumeDTO, Guid>(unitOfWork, mapper),
+        IResumeService
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-    private readonly IRepositoryWrapper _repository;
-    private readonly IRepository<Resume, Guid> _resumeRepository;
-
-    public ResumeService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository) : base(unitOfWork, mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _repository = repository;
-        _mapper = mapper;
-        _resumeRepository = unitOfWork.Repository<Resume, Guid>();
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
+    private readonly IRepositoryWrapper _repository = repository;
+    private readonly IRepository<Resume, Guid> _resumeRepository = unitOfWork.Repository<
+        Resume,
+        Guid
+    >();
 
     public IQueryable<Resume> GetResumeByUser(Guid userId)
     {
-        var resumes = _resumeRepository.GetAll()
-            .Where(x => x.UserId.Equals(userId));
+        var resumes = _resumeRepository.GetAll().Where(x => x.UserId.Equals(userId));
         return resumes;
     }
 
@@ -38,7 +35,8 @@ public class ResumeService : Service<Resume, ResumeDTO, Guid>
     /// <exception cref="NotFoundException">Throws a `NotFoundException` if no resume exists with the specified ID.</exception>
     public async Task<ResumeDTO?> CheckAndGetResumeAsync(Guid id)
     {
-        var resume = _repository.Resume.GetResumeByIdIncludeAll(id) ?? throw new NotFoundException("履歷不存在");
+        var resume =
+            _repository.Resume.GetResumeByIdIncludeAll(id) ?? throw new NotFoundException("履歷不存在");
         return await _mapper.ProjectTo<ResumeDTO>(resume).FirstOrDefaultAsync();
     }
 
@@ -52,7 +50,8 @@ public class ResumeService : Service<Resume, ResumeDTO, Guid>
     /// <exception cref="ForbiddenException">Throws a `ForbiddenException` if the user requesting access does not have permission to view the resume.</exception>
     public async Task<ResumeDTO> CheckAndGetResumeAsync(Guid id, UserInfoDTO user)
     {
-        var query = _repository.Resume.GetResumeByIdIncludeAll(id) ?? throw new NotFoundException("履歷不存在");
+        var query =
+            _repository.Resume.GetResumeByIdIncludeAll(id) ?? throw new NotFoundException("履歷不存在");
         var resume = await query.FirstOrDefaultAsync();
 
         // Is Owner
@@ -87,7 +86,6 @@ public class ResumeService : Service<Resume, ResumeDTO, Guid>
     /// <returns>True if the user is from a related company, false otherwise.</returns>
     private static bool IsRelatedCompany(Resume resume, Guid userId)
     {
-
         var relatedCompanyIdList = resume.Recruitments?.Select(x => x.PublisherId);
 
         if (relatedCompanyIdList == null)
