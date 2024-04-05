@@ -287,31 +287,28 @@ public class UserService(
         return _mapper.Map<List<RecruitmentDTO>>(recruitments);
     }
 
-    public async Task AddFavoriteRecruitmentAsync(Guid userId, Guid recruitmentId)
+    public async Task AddFavoriteRecruitmentAsync(Guid userId, List<Guid> recruitmentIds)
     {
         var user =
             await _repository
                 .User.GetAll()
                 .Include(a => a.FavoriteRecruitments)
                 .FirstOrDefaultAsync(u => u.Id == userId) ?? throw new UserNotFoundException();
-        var recruitment =
-            await _repository.Recruitment.GetByIdAsync(recruitmentId)
-            ?? throw new NotFoundException("Recruitment not found");
-        user.FavoriteRecruitments.Add(recruitment);
+        var recruitments =
+            _repository.Recruitment.GetAll(a => recruitmentIds.Contains(a.Id))
+            ?? throw new NotFoundException($"No Recruitment was found");
+        user.FavoriteRecruitments.AddRange(recruitments);
         await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task RemoveFavoriteRecruitmentAsync(Guid userId, Guid recruitmentId)
+    public async Task RemoveFavoriteRecruitmentAsync(Guid userId, List<Guid> recruitmentIds)
     {
         var user =
             await _repository
                 .User.GetAll()
                 .Include(a => a.FavoriteRecruitments)
                 .FirstOrDefaultAsync(u => u.Id == userId) ?? throw new UserNotFoundException();
-        var recruitment =
-            await _repository.Recruitment.GetByIdAsync(recruitmentId)
-            ?? throw new NotFoundException("Recruitment not found");
-        user.FavoriteRecruitments.Remove(recruitment);
+        user.FavoriteRecruitments.RemoveAll(a => recruitmentIds.Contains(a.Id));
         await _unitOfWork.SaveChangesAsync();
     }
 

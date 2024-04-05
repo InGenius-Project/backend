@@ -199,18 +199,18 @@ public class UserController(
     }
 
     [HttpPost("fav/recruitment")]
-    public async Task<ApiResponse> AddFavRecruitment(Guid recruitmentId)
+    public async Task<ApiResponse> AddFavRecruitment([FromBody] List<Guid> recruitmentIds)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        await _userService.AddFavoriteRecruitmentAsync(userId, recruitmentId);
+        await _userService.AddFavoriteRecruitmentAsync(userId, recruitmentIds);
         return new ApiResponse("Add fav recruitment success");
     }
 
     [HttpDelete("fav/recruitment")]
-    public async Task<ApiResponse> RemoveFavRecruitment(Guid recruitmentId)
+    public async Task<ApiResponse> RemoveFavRecruitment([FromBody] List<Guid> recruitmentIds)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        await _userService.RemoveFavoriteRecruitmentAsync(userId, recruitmentId);
+        await _userService.RemoveFavoriteRecruitmentAsync(userId, recruitmentIds);
         return new ApiResponse("Remove fav recruitment success");
     }
 }
