@@ -71,6 +71,7 @@ public class RecruitmentController(
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
 
+        // TODO: recruiment owner check  is missing
         await _userService.CheckAndGetUserAsync(userId);
         await _recruitmentService.DeleteByIdAsync(recruitmentId);
         return new ApiResponse("刪除成功");

@@ -1,9 +1,9 @@
-﻿using IngBackendApi.Interfaces.Repository;
+﻿namespace IngBackendApi.Models.DBEntity;
+
+using IngBackendApi.Interfaces.Repository;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
-namespace IngBackendApi.Models.DBEntity;
 public class Resume : BaseEntity, IEntity<Guid>
 {
     [Key]
@@ -12,9 +12,10 @@ public class Resume : BaseEntity, IEntity<Guid>
     [MaxLength(50)]
     public required string Title { get; set; }
 
-    public List<Area>? Areas { get; set; }
+    public bool Visibility { get; set; }
 
-    public bool Visibility { get; set; } = false;
+    [JsonIgnore]
+    public List<Area> Areas { get; set; } = [];
 
     [JsonIgnore]
     [Required]
@@ -24,7 +25,7 @@ public class Resume : BaseEntity, IEntity<Guid>
 
     // Related Recruitment
     [JsonIgnore]
-    public IEnumerable<Recruitment> Recruitments { get; set; } = new List<Recruitment>() { };
+    public IEnumerable<Recruitment> Recruitments { get; set; } = [];
 }
 
 

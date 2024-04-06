@@ -69,11 +69,11 @@ builder.Services.AddScoped(typeof(IService<,,>), typeof(Service<,,>)); // Reposi
 builder.Services.AddScoped<IRepositoryWrapper, RepositoryWrapper>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddScoped<TokenService>();
-builder.Services.AddScoped<IResumeService, ResumeService>();
 builder.Services.AddScoped<IAreaService, AreaService>();
 builder.Services.AddScoped<IAreaTypeService, AreaTypeService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITagService, TagService>();
+builder.Services.AddScoped<IResumeService, ResumeService>();
 builder.Services.AddScoped<IRecruitmentService, RecruitmentService>();
 
 // builder.Services.AddScoped<ApiResponseMiddleware>();

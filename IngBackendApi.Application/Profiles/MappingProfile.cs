@@ -10,6 +10,7 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
+        #region User Mapping
         CreateMap<UserInfoDTO, UserDTO>()
             .ForMember(dest => dest.User, opt => opt.MapFrom(src => src));
         CreateMap<User, UserInfoDTO>().EqualityComparison((dto, entity) => dto.Id == entity.Id);
@@ -28,15 +29,23 @@ public class MappingProfile : Profile
                 opts.Condition((src, dest, srcMember) => srcMember != null);
             });
         CreateMap<UserSignUpDTO, UserInfoDTO>();
-
         CreateMap<TokenDTO, UserDTO>()
             .ForMember(dest => dest.Token, opt => opt.MapFrom(src => src));
+        #endregion
 
-        // Resume
-        CreateMap<Resume, ResumeDTO>();
-        CreateMap<ResumePostDTO, Resume>();
+        #region Resume Mapping
+        CreateMap<Resume, ResumeDTO>()
+            .EqualityComparison((dto, entity) => dto.Id == entity.Id);
+        CreateMap<ResumeDTO, Resume>()
+            .EqualityComparison((dto, entity) => dto.Id == entity.Id);
+        CreateMap<ResumePostDTO, ResumeDTO>()
+            .EqualityComparison((dto, entity) => dto.Id == entity.Id);
+        CreateMap<ResumePostDTO, Resume>()
+            .ForMember(rp => rp.User, r => r.Ignore())
+            .EqualityComparison((dto, entity) => dto.Id == entity.Id);
+        #endregion
 
-        // Recruitment
+        #region Recruitment Mapping
         CreateMap<Recruitment, RecruitmentDTO>()
             .EqualityComparison((dto, entity) => dto.Id == entity.Id);
         CreateMap<RecruitmentDTO, Recruitment>()
@@ -46,8 +55,9 @@ public class MappingProfile : Profile
         CreateMap<RecruitmentPostDTO, Recruitment>()
             .ForMember(rp => rp.Publisher, r => r.Ignore())
             .EqualityComparison((dto, entity) => dto.Id == entity.Id);
+        #endregion
 
-        // Area
+        #region Area Mapping
         CreateMap<Area, AreaDTO>()
             .ForMember(
                 dest => dest.Title,
@@ -64,45 +74,41 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.ListLayoutId, opt => opt.Ignore())
             .EqualityComparison((dto, entity) => dto.Id == entity.Id);
-
         CreateMap<AreaPostDTO, AreaDTO>().ForMember(dest => dest.ListLayout, opt => opt.Ignore());
-
         CreateMap<AreaDTO, Area>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.ImageTextLayout, opt => opt.Ignore())
             .EqualityComparison((dto, entity) => dto.Id == entity.Id);
         CreateMap<AreaType, AreaTypeDTO>();
         CreateMap<AreaTypeDTO, AreaType>().EqualityComparison((dto, entity) => dto.Id == entity.Id);
-
         CreateMap<AreaTypePostDTO, AreaType>()
             .EqualityComparison((dto, entity) => dto.Id == entity.Id);
-
         CreateMap<AreaTypePostDTO, AreaTypeDTO>();
+        #endregion
 
-        // TextLayout
+        #region TextLayout Mapping
         CreateMap<TextLayoutDTO, TextLayout>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ReverseMap();
-
         CreateMap<TextLayoutPostDTO, TextLayoutDTO>().ReverseMap();
+        #endregion
 
-        // ImageLayout
+        #region ImageLayout Mapping
         CreateMap<ImageTextLayoutDTO, ImageTextLayout>()
             .ReverseMap();
-
         CreateMap<ImageDTO, Image>();
+        #endregion
 
-        // ListLayout
+        #region ListLayout Mapping
         CreateMap<ListLayoutDTO, ListLayout>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ReverseMap();
-
         CreateMap<ListLayoutPostDTO, ListLayoutDTO>();
+        #endregion
 
-        // KeyValueListLayout
+        #region KeyValueListLayout Mapping
         CreateMap<KeyValueListLayoutPostDTO, KeyValueListLayoutDTO>()
             .ReverseMap();
-
         CreateMap<KeyValueListLayoutDTO, KeyValueListLayout>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .EqualityComparison((dto, entity) => dto.Id == entity.Id)
@@ -113,19 +119,18 @@ public class MappingProfile : Profile
             .EqualityComparison((dto, entity) => dto.Id == entity.Id);
         CreateMap<KeyValueItem, KeyValueItemDTO>()
             .EqualityComparison((dto, entity) => dto.Id == entity.Id);
+        #endregion
 
-        // Tag
+        #region Tag Mapping
         CreateMap<TagDTO, Tag>()
             .EqualityComparison((dto, entity) => dto.Id.Equals(entity.Id));
-
         CreateMap<Tag, TagDTO>();
-
         CreateMap<TagPostDTO, TagDTO>().ReverseMap();
         CreateMap<TagType, TagTypeDTO>()
             .EqualityComparison((dto, entity) => dto.Id.Equals(entity.Id))
             .ReverseMap();
-
         CreateMap<TagTypePostDTO, TagTypeDTO>().ReverseMap();
+        #endregion
     }
 
     public MappingProfile(IConfiguration configuration)

@@ -1,40 +1,26 @@
-using IngBackend.Repository;
+namespace IngBackendApi.Repository;
+
 using IngBackendApi.Context;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Models.DBEntity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 
-namespace IngBackendApi.Repository;
-
-public class ResumeRepository : Repository<Resume, Guid>, IResumeRepository
+public class ResumeRepository(IngDbContext context) : Repository<Resume, Guid>(context), IResumeRepository
 {
-    private readonly IngDbContext _context;
+    private readonly IngDbContext _context = context;
 
-    public ResumeRepository(IngDbContext context) : base(context)
-    {
-        _context = context;
-    }
-
-    public IQueryable<Resume> GetResumeByIdIncludeAll(Guid id)
-    {
-        var query = _context.Resume
-            .Where(r => r.Id == id)
-            .Include(r => r.Areas)
-                .ThenInclude(a => a.LayoutType)
-            .Include(r => r.Areas)
-                .ThenInclude(a => a.AreaType)
-            .Include(r => r.Areas)
-                .ThenInclude(a => a.TextLayout)
-            .Include(r => r.Areas)
-                .ThenInclude(a => a.ImageTextLayout)
-            .Include(r => r.Areas)
-                .ThenInclude(a => a.ListLayout)
-            .Include(r => r.Areas)
-                .ThenInclude(a => a.KeyValueListLayout)
-            .Include(r => r.User)
-            .Include(r => r.Recruitments);
-        return query;
-
-    }
+    public IQueryable<Resume> GetIncludeAll() => _context.Resume
+        .Include(r => r.Areas)
+        .Include(r => r.Areas)
+            .ThenInclude(a => a.AreaType)
+        .Include(r => r.Areas)
+            .ThenInclude(a => a.TextLayout)
+        .Include(r => r.Areas)
+            .ThenInclude(a => a.ImageTextLayout)
+        .Include(r => r.Areas)
+            .ThenInclude(a => a.ListLayout)
+        .Include(r => r.Areas)
+            .ThenInclude(a => a.KeyValueListLayout)
+        .Include(r => r.User)
+        .Include(r => r.Recruitments);
 }
