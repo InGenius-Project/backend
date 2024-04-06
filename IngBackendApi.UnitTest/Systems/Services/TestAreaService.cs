@@ -11,6 +11,7 @@ using IngBackendApi.Services.AreaService;
 using IngBackendApi.UnitTest.Fixtures;
 using IngBackendApi.UnitTest.Mocks;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 
 public class TestAreaService : IDisposable
 {
@@ -18,15 +19,17 @@ public class TestAreaService : IDisposable
     private readonly IMapper _mapper;
     private readonly AreaService _areaService;
     private readonly Mock<IRepositoryWrapper> _repository;
+    private readonly Mock<IWebHostEnvironment> _env;
+    private readonly Mock<IConfiguration> _mockConfiguration;
 
     private readonly IRepository<AreaType, int> _areaTypeRepository;
 
     public TestAreaService()
     {
-
         var context = MemoryContextFixture.Generate();
         _mockUnitofWork = new Mock<IUnitOfWork>();
         _repository = MockRepositoryWrapper.GetMock(context);
+        var _config = _mockConfiguration.Object;
 
         MappingProfile mappingProfile = new();
         MapperConfiguration configuration = new(cfg => cfg.AddProfile(mappingProfile));
@@ -35,11 +38,17 @@ public class TestAreaService : IDisposable
         // TODO: fix mock
         Mock<IWebHostEnvironment> env = new();
 
-        _areaService = new AreaService(_mockUnitofWork.Object, _mapper, _repository.Object, env.Object);
+        _areaService = new AreaService(
+            _mockUnitofWork.Object,
+            _mapper,
+            _repository.Object,
+            env.Object,
+            _config
+        );
 
         _areaTypeRepository = _mockUnitofWork.Object.Repository<AreaType, int>();
-
     }
+
     [Fact]
     public void CheckAreaOwnership_InvalidOwnerId_ShouldThrowForbiddenException()
     {
@@ -55,6 +64,3 @@ public class TestAreaService : IDisposable
 
     public void Dispose() => GC.SuppressFinalize(this);
 }
-
-
-

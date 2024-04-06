@@ -62,4 +62,57 @@ public class RecruitmentService(
         await _unitOfWork.SaveChangesAsync();
         return _mapper.Map<RecruitmentDTO>(recruitment);
     }
+
+    public async Task<RecruitmentSearchResultDTO> SearchRecruitmentsAsync(
+        RecruitmentSearchPostDTO searchDTO
+    )
+    {
+        // count total page size
+        var sortBy = searchDTO.SortBy ?? "CreatedTime";
+        var orderBy = searchDTO.OrderBy == "asc" ? "asc" : "desc";
+        var keywords = searchDTO.Query?.Split(" ").ToArray() ?? [];
+        var query = _repository
+            .Recruitment.GetAll()
+            .Where(r => r.Enable)
+            .Include(r => r.Publisher)
+            .Include(r => r.Areas)
+            .ThenInclude(a => a.TextLayout)
+            .AsQueryable();
+
+        if (keywords != null && keywords.Length > 0)
+        {
+            query = query.Where(r =>
+                keywords.All(keyword =>
+                    r.Areas.Select(a => a.TextLayout == null ? "" : a.TextLayout.Content)
+                        .Any(content => content.Contains(keyword))
+                )
+            );
+        }
+        if (orderBy == "asc")
+        {
+            query = query.OrderBy(r => r.CreatedAt);
+        }
+        else
+        {
+            query = query.OrderByDescending(r => r.CreatedAt);
+        }
+
+        var total = await query.Select(r => r.Id).CountAsync();
+        var maxPage = (int)Math.Ceiling((double)total / searchDTO.PageSize);
+        var skip = searchDTO.PageSize * (searchDTO.Page - 1);
+        query = query.Skip(skip).Take(searchDTO.PageSize);
+
+        return _mapper.Map<RecruitmentSearchResultDTO>(
+            new RecruitmentSearchResultDTO
+            {
+                Query = searchDTO.Query,
+                TagIds = searchDTO.TagIds,
+                Page = searchDTO.Page,
+                PageSize = searchDTO.PageSize,
+                MaxPage = maxPage,
+                Total = total,
+                result = await _mapper.ProjectTo<RecruitmentDTO>(query).ToListAsync()
+            }
+        );
+    }
 }
