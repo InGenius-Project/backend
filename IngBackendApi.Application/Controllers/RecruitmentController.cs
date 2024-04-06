@@ -75,4 +75,13 @@ public class RecruitmentController(
         await _recruitmentService.DeleteByIdAsync(recruitmentId);
         return new ApiResponse("刪除成功");
     }
+
+    [HttpPost("search")]
+    public async Task<RecruitmentSearchResultDTO> SearchRecruitment(RecruitmentSearchPostDTO req)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        await _userService.CheckAndGetUserAsync(userId);
+        var result = await _recruitmentService.SearchRecruitmentsAsync(req);
+        return result;
+    }
 }

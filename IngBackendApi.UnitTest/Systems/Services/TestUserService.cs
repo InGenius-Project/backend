@@ -10,6 +10,8 @@ using IngBackendApi.Profiles;
 using IngBackendApi.Services.UserService;
 using IngBackendApi.UnitTest.Fixtures;
 using IngBackendApi.UnitTest.Mocks;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 
 public class TestUserService : IDisposable
 {
@@ -20,6 +22,8 @@ public class TestUserService : IDisposable
     private readonly UserService _userService;
     private readonly Fixture _fixture;
     private readonly IngDbContext _context;
+    private readonly Mock<IConfiguration> _mockConfiguration;
+    private readonly Mock<IWebHostEnvironment> _env;
 
     [Fact]
     public void Dispose() => GC.SuppressFinalize(this);
@@ -31,6 +35,7 @@ public class TestUserService : IDisposable
         MappingProfile mappingProfile = new();
         MapperConfiguration configuration = new(cfg => cfg.AddProfile(mappingProfile));
         _mapper = new Mapper(configuration);
+        var _config = _mockConfiguration.Object;
 
         _context = MemoryContextFixture.Generate();
 
@@ -42,14 +47,13 @@ public class TestUserService : IDisposable
             _mockUnitofWork.Object,
             _mapper,
             _repository.Object,
-            _passwordHasher.Object
+            _passwordHasher.Object,
+            _env.Object,
+            _config
         );
 
         _fixture = new Fixture();
-
     }
-
-
 
     [Fact]
     public async Task PostUser_UpdateExistedUser_PostSuccess()
@@ -58,18 +62,12 @@ public class TestUserService : IDisposable
         var existedUser = await _repository.Object.User.GetByIdAsync(Guid.Empty);
 
         // TODO: test Avatar and Tags
-        UserInfoPostDTO req = new()
-        {
-            Username = "updateTest"
-        };
+        UserInfoPostDTO req = new() { Username = "updateTest" };
 
         // Act
         await _userService.PostUser(req, existedUser.Id); // update exist user
 
         // Assert
-        existedUser.Username
-            .Should()
-            .Be(req.Username);
+        existedUser.Username.Should().Be(req.Username);
     }
-
 }

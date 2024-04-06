@@ -1,4 +1,4 @@
-﻿namespace IngBackendApi.UnitTest.Systems.Controllers;
+namespace IngBackendApi.UnitTest.Systems.Controllers;
 
 using AutoMapper;
 using AutoWrapper.Wrappers;
@@ -9,6 +9,7 @@ using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
 using IngBackendApi.Profiles;
 using IngBackendApi.Services;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 
@@ -20,6 +21,8 @@ public class TestUserController : IDisposable
     private readonly Mock<IPasswordHasher> _mockPasswordHasher;
     private readonly Mock<IBackgroundJobClient> _mockBackgroundJobClient;
     private readonly Mock<EmailService> _mockEmailService;
+    private readonly Mock<IConfiguration> _mockConfiguration;
+    private readonly Mock<IWebHostEnvironment> _mockWebHostEnvironment;
     private readonly Fixture _fixture;
 
     public TestUserController()
@@ -37,14 +40,14 @@ public class TestUserController : IDisposable
 
         _mockEmailService = new Mock<EmailService>(mockConfiguration.Object);
 
-
         _controller = new UserController(
             null, // Pass null for TokenService as it's not used in GetUser action
             _mockUserService.Object,
             _mapper,
             _mockPasswordHasher.Object,
             _mockBackgroundJobClient.Object,
-            _mockEmailService.Object
+            _mockEmailService.Object,
+            _mockWebHostEnvironment.Object
         );
 
         _fixture = new Fixture();
@@ -56,7 +59,9 @@ public class TestUserController : IDisposable
         // Arrange
         var userId = Guid.NewGuid();
         UserInfoDTO userInfoDto = new(); // Fill with test data as needed
-        _mockUserService.Setup(x => x.GetUserByIdIncludeAllAsync(Guid.Empty)).ReturnsAsync(userInfoDto);
+        _mockUserService
+            .Setup(x => x.GetUserByIdIncludeAllAsync(Guid.Empty))
+            .ReturnsAsync(userInfoDto);
 
         // Act
         var result = await _controller.GetUser();
@@ -71,7 +76,8 @@ public class TestUserController : IDisposable
     {
         // Arrange
         UserInfoDTO? nullValue = null;
-        _mockUserService.Setup(x => x.GetUserByIdIncludeAllAsync(Guid.Empty))
+        _mockUserService
+            .Setup(x => x.GetUserByIdIncludeAllAsync(Guid.Empty))
             .ReturnsAsync(nullValue);
 
         // Act
@@ -117,4 +123,3 @@ public class TestUserController : IDisposable
 
     public void Dispose() => GC.SuppressFinalize(this);
 }
-
