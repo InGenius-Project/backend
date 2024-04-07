@@ -82,7 +82,7 @@ public class RecruitmentController(
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
-        var result = await _recruitmentService.SearchRecruitmentsAsync(req);
+        var result = await _recruitmentService.SearchRecruitmentsAsync(req, userId);
         return result;
     }
 }

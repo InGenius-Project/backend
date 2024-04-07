@@ -10,5 +10,8 @@ public interface IRecruitmentService : IService<Recruitment, RecruitmentDTO, Gui
     Task<List<RecruitmentDTO>> GetUserRecruitementsAsync(Guid userId);
     Task<RecruitmentDTO?> GetRecruitmentByIdIncludeAllAsync(Guid recruitmentId);
     Task<RecruitmentDTO> AddOrUpdateAsync(RecruitmentDTO recruitmentDTO, Guid userId);
-    Task<RecruitmentSearchResultDTO> SearchRecruitmentsAsync(RecruitmentSearchPostDTO searchDTO);
+    Task<RecruitmentSearchResultDTO> SearchRecruitmentsAsync(
+        RecruitmentSearchPostDTO searchDTO,
+        Guid? userId
+    );
 }
