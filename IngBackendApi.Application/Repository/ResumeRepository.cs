@@ -19,6 +19,7 @@ public class ResumeRepository(IngDbContext context) : Repository<Resume, Guid>(c
             .ThenInclude(a => a.ImageTextLayout)
         .Include(r => r.Areas)
             .ThenInclude(a => a.ListLayout)
+                .ThenInclude(l => l.Items)
         .Include(r => r.Areas)
             .ThenInclude(a => a.KeyValueListLayout)
         .Include(r => r.User)
