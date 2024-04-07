@@ -11,6 +11,7 @@ public class RecruitmentDTO
     public IEnumerable<ResumeDTO> Resumes { get; set; }
     public OwnerUserDTO Publisher { get; set; }
     public Guid PublisherId { get; set; }
+    public bool IsUserFav { get; set; }
 }
 
 public class RecruitmentPostDTO

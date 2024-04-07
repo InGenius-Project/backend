@@ -64,7 +64,8 @@ public class RecruitmentService(
     }
 
     public async Task<RecruitmentSearchResultDTO> SearchRecruitmentsAsync(
-        RecruitmentSearchPostDTO searchDTO
+        RecruitmentSearchPostDTO searchDTO,
+        Guid? userId
     )
     {
         // count total page size
@@ -99,8 +100,19 @@ public class RecruitmentService(
 
         var total = await query.Select(r => r.Id).CountAsync();
         var maxPage = (int)Math.Ceiling((double)total / searchDTO.PageSize);
+        searchDTO.Page = int.Max(maxPage, searchDTO.Page);
         var skip = searchDTO.PageSize * (searchDTO.Page - 1);
         query = query.Skip(skip).Take(searchDTO.PageSize);
+
+        var result = await _mapper.ProjectTo<RecruitmentDTO>(query).ToListAsync();
+        if (userId != null)
+        {
+            var favRecruitmentIds = _repository
+                .User.GetAll(u => u.Id == userId)
+                .Include(u => u.FavoriteRecruitments)
+                .SelectMany(u => u.FavoriteRecruitments.Select(fr => fr.Id));
+            result.ForEach(r => r.IsUserFav = favRecruitmentIds.Any(id => id == r.Id));
+        }
 
         return _mapper.Map<RecruitmentSearchResultDTO>(
             new RecruitmentSearchResultDTO
@@ -111,7 +123,7 @@ public class RecruitmentService(
                 PageSize = searchDTO.PageSize,
                 MaxPage = maxPage,
                 Total = total,
-                result = await _mapper.ProjectTo<RecruitmentDTO>(query).ToListAsync()
+                result = result
             }
         );
     }
