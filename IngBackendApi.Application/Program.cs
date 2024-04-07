@@ -6,6 +6,7 @@ using Hangfire;
 using IngBackend.Repository;
 using IngBackendApi.Application.Interfaces.Service;
 using IngBackendApi.Context;
+using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Interfaces.UnitOfWork;
@@ -25,7 +26,14 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration.AddJsonFile("appsettings.Secrets.json");
+try
+{
+    builder.Configuration.AddJsonFile("appsettings.Secrets.json");
+}
+catch (Exception _)
+{
+    throw new SystemInitException("Secret File Not Found.");
+}
 
 var env = builder.Environment;
 var config = builder.Configuration;
@@ -75,6 +83,7 @@ builder.Services.AddScoped<IAreaTypeService, AreaTypeService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IRecruitmentService, RecruitmentService>();
+builder.Services.AddScoped<IAIService, AIService>();
 
 // builder.Services.AddScoped<ApiResponseMiddleware>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
@@ -206,6 +215,7 @@ app.UseApiResponseAndExceptionWrapper(
     }
 );
 
+app.UseHangfireDashboard("/hangfire");
 app.UseCors(devCorsPolicy);
 app.UseHttpsRedirection();
 

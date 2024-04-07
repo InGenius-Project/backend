@@ -68,6 +68,9 @@ public class Recruitment : BaseEntity, IEntity<Guid>
 
     [JsonIgnore]
     public List<User> FavoriteUsers { get; set; } = [];
+
+    [JsonIgnore]
+    public ICollection<KeywordRecord> Keywords { get; set; } = [];
 }
 
 public class VerificationCode : BaseEntity, IEntity<int>

@@ -2,6 +2,7 @@ namespace IngBackendApi.UnitTest.Systems.Controllers;
 
 using AutoMapper;
 using AutoWrapper.Wrappers;
+using Hangfire;
 using IngBackendApi.Application.Interfaces.Service;
 using IngBackendApi.Controllers;
 using IngBackendApi.Enum;
@@ -19,6 +20,8 @@ public class TestAreaController : IDisposable
     private readonly Mock<IAreaTypeService> _mockAreaTypeService;
     private readonly Mock<IRecruitmentService> _mockRecruitmentService;
     private readonly Mock<IResumeService> _mockResumeService;
+    private readonly Mock<IAIService> _mockAIService;
+    private readonly Mock<IBackgroundJobClient> _mockBackgroundJobClient;
     private readonly IMapper _mapper;
 
     public TestAreaController()
@@ -42,7 +45,9 @@ public class TestAreaController : IDisposable
             _mockAreaTypeService.Object,
             _mockRecruitmentService.Object,
             _mockResumeService.Object,
-            env.Object
+            env.Object,
+            _mockAIService.Object,
+            _mockBackgroundJobClient.Object
         );
     }
 

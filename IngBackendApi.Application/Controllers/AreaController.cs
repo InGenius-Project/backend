@@ -3,6 +3,7 @@ namespace IngBackendApi.Controllers;
 using AutoMapper;
 using AutoWrapper.Filters;
 using AutoWrapper.Wrappers;
+using Hangfire;
 using IngBackendApi.Application.Interfaces.Service;
 using IngBackendApi.Enum;
 using IngBackendApi.Exceptions;
@@ -22,16 +23,20 @@ public class AreaController(
     IAreaTypeService areaTypeService,
     IRecruitmentService recruitmentService,
     IResumeService resumeService,
-    IWebHostEnvironment env
+    IWebHostEnvironment env,
+    IAIService aiService,
+    IBackgroundJobClient backgroundJobClient
 ) : BaseController
 {
     private readonly IUserService _userService = userService;
     private readonly IAreaService _areaService = areaService;
+    private readonly IBackgroundJobClient _backgroundJobClient = backgroundJobClient;
     private readonly IRecruitmentService _recruitmentService = recruitmentService;
     private readonly IResumeService _resumeService = resumeService;
     private readonly IMapper _mapper = mapper;
     private readonly IAreaTypeService _areaTypeService = areaTypeService;
     private readonly IWebHostEnvironment _env = env;
+    private readonly IAIService _aiService = aiService;
 
     [HttpGet("{areaId}")]
     [ProducesResponseType(typeof(ResponseDTO<AreaDTO>), StatusCodes.Status200OK)]
@@ -204,6 +209,13 @@ public class AreaController(
 
         var textLayoutDTO = _mapper.Map<TextLayoutDTO>(req);
         await _areaService.UpdateLayoutAsync(areaId, textLayoutDTO);
+
+        // Analyze Keywords
+        _backgroundJobClient.Schedule(
+            () => AnalyzeRecruitmentKeywordAsync(areaId),
+            TimeSpan.FromMinutes(1)
+        );
+
         return Ok();
     }
 
@@ -222,6 +234,13 @@ public class AreaController(
         // Check Image
         Helper.CheckImage(imageTextLayoutPostDTO.Image);
         await _areaService.UpdateLayoutAsync(areaId, imageTextLayoutPostDTO);
+
+        // Analyze Keywords
+        _backgroundJobClient.Schedule(
+            () => AnalyzeRecruitmentKeywordAsync(areaId),
+            TimeSpan.FromMinutes(1)
+        );
+
         return Ok();
     }
 
@@ -266,5 +285,20 @@ public class AreaController(
             throw new NotFoundException("Image not found");
         }
         return PhysicalFile(fullpath, imageDto.ContentType);
+    }
+
+    private async Task AnalyzeRecruitmentKeywordAsync(Guid areaId)
+    {
+        // TODO: Remove the return when works done
+        return;
+        var area = await _areaService.GetByIdAsync(areaId);
+        if (area == null || area.RecruitmentId == null)
+        {
+            return;
+        }
+        var parsedRecruitmentId = area.RecruitmentId ?? Guid.Empty;
+
+        var result = await _aiService.GetKeywordsByAIAsync(parsedRecruitmentId);
+        await _aiService.SetKeywordsAsync(result, parsedRecruitmentId);
     }
 }

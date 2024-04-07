@@ -1,8 +1,30 @@
-﻿using AutoWrapper.Wrappers;
+using AutoWrapper.Wrappers;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using static Microsoft.AspNetCore.Http.StatusCodes;
 
 namespace IngBackendApi.Exceptions;
+
+public class JsonParseException : Exception
+{
+    public JsonParseException()
+        : base("Json Parse Error") =>
+        throw new ApiException("Json Parse Error", Status500InternalServerError);
+
+    public JsonParseException(string message)
+        : base(message) => throw new ApiException(message, Status500InternalServerError);
+}
+
+public class SystemInitException : Exception
+{
+    public SystemInitException()
+        : base("系統初始化錯誤") => throw new ApiException("系統初始化錯誤", Status500InternalServerError);
+
+    public SystemInitException(string message)
+        : base(message) => throw new ApiException(message, Status500InternalServerError);
+
+    public SystemInitException(Exception ex) =>
+        throw new ApiException(ex, Status500InternalServerError);
+}
 
 // 400
 public class BadRequestException : ApplicationException
