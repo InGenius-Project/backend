@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 using IngBackendApi.Models.DBEntity;
 using Microsoft.EntityFrameworkCore;
 

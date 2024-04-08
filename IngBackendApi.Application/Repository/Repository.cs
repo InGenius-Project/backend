@@ -1,4 +1,4 @@
-﻿namespace IngBackendApi.Repository;
+namespace IngBackendApi.Repository;
 
 using System.Linq.Expressions;
 using IngBackendApi.Interfaces.Repository;

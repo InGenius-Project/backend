@@ -17,13 +17,15 @@ public class RecruitmentController(
     IMapper mapper,
     IAreaService areaService,
     IUserService userService,
-    IRecruitmentService recruitmentService
+    IRecruitmentService recruitmentService,
+    IAIService aiService
 ) : BaseController
 {
     private readonly IMapper _mapper = mapper;
     private readonly IUserService _userService = userService;
     private readonly IRecruitmentService _recruitmentService = recruitmentService;
     private readonly IAreaService _areaService = areaService;
+    private readonly IAIService _aiService = aiService;
 
     [HttpGet]
     [ProducesResponseType(typeof(List<RecruitmentDTO>), 200)]
@@ -83,6 +85,13 @@ public class RecruitmentController(
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
         var result = await _recruitmentService.SearchRecruitmentsAsync(req, userId);
+        return result;
+    }
+
+    private async Task<string[]> AnalyzeRecruitmentKeywordAsync(Guid recruitmentId)
+    {
+        var result = await _aiService.GetKeywordsByAIAsync(recruitmentId);
+        await _aiService.SetKeywordsAsync(result, recruitmentId);
         return result;
     }
 }

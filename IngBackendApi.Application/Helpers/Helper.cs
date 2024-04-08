@@ -1,6 +1,9 @@
 namespace IngBackendApi.Helpers;
 
+using System.Net.Http;
+using System.Text;
 using IngBackendApi.Exceptions;
+using Newtonsoft.Json;
 
 public static class Helper
 {
@@ -40,6 +43,20 @@ public static class Helper
         if (image.Length > 10 * 1024 * 1024)
         {
             throw new BadRequestException("Image file size cannot exceed 10MB");
+        }
+    }
+
+    public static async Task<HttpResponseMessage> SendRequestAsync(
+        string url,
+        object requestBody,
+        string applicationType = "application/json"
+    )
+    {
+        var jsonBody = JsonConvert.SerializeObject(requestBody);
+        using (var httpClient = new HttpClient())
+        {
+            var requestContent = new StringContent(jsonBody, Encoding.UTF8, applicationType);
+            return await httpClient.PostAsync(url, requestContent);
         }
     }
 }

@@ -35,8 +35,6 @@ public class TestUserService : IDisposable
         MappingProfile mappingProfile = new();
         MapperConfiguration configuration = new(cfg => cfg.AddProfile(mappingProfile));
         _mapper = new Mapper(configuration);
-        var _config = _mockConfiguration.Object;
-
         _context = MemoryContextFixture.Generate();
 
         _repository = MockRepositoryWrapper.GetMock(_context);
@@ -49,7 +47,7 @@ public class TestUserService : IDisposable
             _repository.Object,
             _passwordHasher.Object,
             _env.Object,
-            _config
+            _mockConfiguration.Object
         );
 
         _fixture = new Fixture();
