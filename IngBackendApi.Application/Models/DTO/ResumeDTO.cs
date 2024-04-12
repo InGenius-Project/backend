@@ -10,9 +10,7 @@ public class ResumeDTO
 }
 public class ResumePostDTO
 {
-    public Guid? Id { get; set; } // Optional id provide
+    public Guid? Id { get; set; }
     public string? Title { get; set; }
-
-    public List<AreaDTO>? Areas { get; set; }
     public bool Visibility { get; set; }
 }

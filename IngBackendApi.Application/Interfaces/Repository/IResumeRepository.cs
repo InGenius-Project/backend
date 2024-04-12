@@ -4,7 +4,6 @@ namespace IngBackendApi.Interfaces.Repository;
 
 public interface IResumeRepository : IRepository<Resume, Guid>
 {
-    IQueryable<Resume> GetResumeByIdIncludeAll(Guid id);
-
+    IQueryable<Resume> GetIncludeAll();
 
 }

@@ -142,11 +142,6 @@ public class UserService(
         return user;
     }
 
-    public async Task<ResumeDTO?> GetResumesByUserId(Guid userId)
-    {
-        var query = _repository.User.GetResumesByUserId(userId);
-        return await _mapper.ProjectTo<ResumeDTO>(query).FirstOrDefaultAsync();
-    }
 
     public async Task<UserInfoDTO> VerifyHashedPasswordAsync(UserSignInDTO req)
     {
