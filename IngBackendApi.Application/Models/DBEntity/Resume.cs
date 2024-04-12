@@ -25,7 +25,7 @@ public class Resume : BaseEntity, IEntity<Guid>
 
     // Related Recruitment
     [JsonIgnore]
-    public IEnumerable<Recruitment> Recruitments { get; set; } = [];
+    public List<Recruitment> Recruitments { get; set; } = [];
 }
 
 

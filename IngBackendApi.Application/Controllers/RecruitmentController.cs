@@ -18,6 +18,7 @@ public class RecruitmentController(
     IAreaService areaService,
     IUserService userService,
     IRecruitmentService recruitmentService,
+    IResumeService resumeService,
     IAIService aiService
 ) : BaseController
 {
@@ -26,6 +27,7 @@ public class RecruitmentController(
     private readonly IRecruitmentService _recruitmentService = recruitmentService;
     private readonly IAreaService _areaService = areaService;
     private readonly IAIService _aiService = aiService;
+    private readonly IResumeService _resumeService = resumeService;
 
     [HttpGet]
     [ProducesResponseType(typeof(List<RecruitmentDTO>), 200)]
@@ -93,5 +95,16 @@ public class RecruitmentController(
         var result = await _aiService.GetKeywordsByAIAsync(recruitmentId);
         await _aiService.SetKeywordsAsync(result, recruitmentId);
         return result;
+    }
+
+    [HttpPost("{recruitmentId}/apply")]
+    public async Task<ApiResponse> SendRecruitmentApply(Guid recruitmentId, [FromBody] Guid resumeId)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        var user = await _userService.CheckAndGetUserAsync(userId);
+        var resume = await _resumeService.CheckAndGetResumeAsync(resumeId, user);
+
+        await _recruitmentService.ApplyRecruitmentAsync(recruitmentId, resume);
+        return new ApiResponse("申請成功");
     }
 }

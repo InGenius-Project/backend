@@ -59,7 +59,7 @@ public class Recruitment : BaseEntity, IEntity<Guid>
     public List<Area> Areas { get; set; }
 
     [JsonIgnore]
-    public IEnumerable<Resume> Resumes { get; set; } = [];
+    public List<Resume> Resumes { get; set; } = [];
 
     [JsonIgnore]
     [Required]
