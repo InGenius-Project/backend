@@ -282,11 +282,19 @@ public class UserService(
             .Select(r => r.Id)
             .ToListAsync();
 
-        var recruitments = _repository
+        var query = _repository
             .Recruitment.GetIncludeAll()
             .Where(r => recruitmentIds.Contains(r.Id));
 
-        return _mapper.Map<List<RecruitmentDTO>>(recruitments);
+        var result = await _mapper.ProjectTo<RecruitmentDTO>(query).ToListAsync();
+
+        var favRecruitmentIds = _repository
+          .User.GetAll(u => u.Id == userId)
+          .Include(u => u.FavoriteRecruitments)
+          .SelectMany(u => u.FavoriteRecruitments.Select(fr => fr.Id));
+        result.ForEach(r => r.IsUserFav = favRecruitmentIds.Any(id => id == r.Id));
+
+        return result;
     }
 
     public async Task AddFavoriteRecruitmentAsync(Guid userId, List<Guid> recruitmentIds)
