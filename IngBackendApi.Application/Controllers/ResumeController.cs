@@ -3,7 +3,6 @@
 using AutoMapper;
 using AutoWrapper.Wrappers;
 using IngBackendApi.Application.Interfaces.Service;
-using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Models.DTO;
 using Microsoft.AspNetCore.Authorization;
@@ -20,12 +19,12 @@ public class ResumeController(IMapper mapper, IUserService userService, IResumeS
 
     [HttpGet]
     [ProducesResponseType(typeof(ResponseDTO<ResumeDTO>), StatusCodes.Status200OK)]
-    public async Task<List<ResumeDTO>> GetResumes()
+    public async Task<List<ResumeDTO>> GetResumesByUser()
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
 
-        var resume = await _userService.GetResumesByUserId(userId);
+        var resume = await _resumeService.GetUserResumesAsync(userId);
         var resumeDTO = _mapper.Map<List<ResumeDTO>>(resume);
         return resumeDTO;
     }
@@ -35,8 +34,8 @@ public class ResumeController(IMapper mapper, IUserService userService, IResumeS
     public async Task<ActionResult<ResumeDTO>> GetResume(Guid resumeId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-
         var user = await _userService.CheckAndGetUserAsync(userId);
+
         var resumes = await _resumeService.CheckAndGetResumeAsync(resumeId, user);
 
         var resumeDTO = _mapper.Map<ResumeDTO>(resumes);
@@ -45,35 +44,25 @@ public class ResumeController(IMapper mapper, IUserService userService, IResumeS
 
     [HttpPost]
     [ProducesResponseType(typeof(ResponseDTO<ResumeDTO>), StatusCodes.Status200OK)]
-    public async Task<ApiResponse> PostResume([FromBody] ResumePostDTO req)
+    public async Task<ResumeDTO> PostResume([FromBody] ResumePostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         var user = await _userService.CheckAndGetUserAsync(userId, u => u.Resumes);
 
-        var resume = await _resumeService.GetByIdAsync(req.Id ?? Guid.Empty);
-        // Add new resume
-        if (resume == null)
-        {
-            await _userService.AddUserResumeAsync(user, _mapper.Map<ResumeDTO>(req));
-        }
-
-        // Patch
-        _mapper.Map(req, resume);
-        await _resumeService.UpdateAsync(resume);
-        return new ApiResponse("更新成功");
+        var resume = await _resumeService.AddOrUpdateAsync(
+            _mapper.Map<ResumeDTO>(req),
+            userId
+        );
+        return resume;
     }
 
     [HttpDelete("{resumeId}")]
+    [ProducesResponseType(typeof(ResponseDTO<>), StatusCodes.Status200OK)]
     public async Task<ApiResponse> DeleteResume(Guid resumeId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var resume = await _resumeService.GetByIdAsync(resumeId);
-
-        if (resume == null)
-        {
-            throw new NotFoundException("履歷");
-        }
-
+        var user = await _userService.CheckAndGetUserAsync(userId);
+        await _resumeService.CheckAndGetResumeAsync(resumeId, user);
         await _resumeService.DeleteByIdAsync(resumeId);
         return new ApiResponse("刪除成功");
     }
