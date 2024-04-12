@@ -1,30 +1,22 @@
-﻿using AutoMapper;
+﻿namespace IngBackendApi.Controllers;
+
+using AutoMapper;
 using AutoWrapper.Wrappers;
+using IngBackendApi.Application.Interfaces.Service;
 using IngBackendApi.Exceptions;
-using IngBackendApi.Models.DBEntity;
+using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Models.DTO;
-using IngBackendApi.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
-namespace IngBackendApi.Controllers;
 
 [Route("api/[controller]")]
 [Authorize]
 [ApiController]
-public class ResumeController : BaseController
+public class ResumeController(IMapper mapper, IUserService userService, IResumeService resumeService) : BaseController
 {
-    private readonly ResumeService _resumeService;
-    private readonly UserService _userService;
-    private readonly IMapper _mapper;
-
-
-    public ResumeController(IMapper mapper, UserService userService, ResumeService resumeService)
-    {
-        _resumeService = resumeService;
-        _userService = userService;
-        _mapper = mapper;
-    }
+    private readonly IResumeService _resumeService = resumeService;
+    private readonly IUserService _userService = userService;
+    private readonly IMapper _mapper = mapper;
 
     [HttpGet]
     [ProducesResponseType(typeof(ResponseDTO<ResumeDTO>), StatusCodes.Status200OK)]

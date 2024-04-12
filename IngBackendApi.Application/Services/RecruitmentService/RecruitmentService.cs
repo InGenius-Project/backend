@@ -2,6 +2,7 @@ namespace IngBackendApi.Services.RecruitmentService;
 
 using AutoMapper;
 using IngBackendApi.Application.Interfaces.Service;
+using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Interfaces.UnitOfWork;
 using IngBackendApi.Models.DBEntity;
@@ -126,5 +127,15 @@ public class RecruitmentService(
                 result = result
             }
         );
+    }
+
+
+    public async Task ApplyRecruitmentAsync(Guid recruitmentId, ResumeDTO resumeDTO)
+    {
+        var recruitment = await _repository.Recruitment.GetByIdAsync(recruitmentId) ?? throw new NotFoundException("職缺");
+
+        recruitment.Resumes.Add(_mapper.Map<Resume>(resumeDTO));
+
+        await _unitOfWork.SaveChangesAsync();
     }
 }
