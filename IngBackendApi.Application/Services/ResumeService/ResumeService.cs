@@ -47,6 +47,20 @@ public class ResumeService(
         return _mapper.Map<ResumeDTO>(resume);
     }
 
+    public async Task<List<ResumeDTO>> GetRecruitmentResumesAsync(Guid recruitmentId)
+    {
+        var resumes = await _repository
+            .Resume
+            .GetIncludeAll()
+            .Where(r => r.Recruitments.Any(x => x.Id == recruitmentId))
+            .AsNoTracking()
+            .ToListAsync();
+
+        resumes.ForEach(HideResumeArea);
+
+        return _mapper.Map<List<ResumeDTO>>(resumes);
+    }
+
     public async Task<ResumeDTO> AddOrUpdateAsync(ResumeDTO resumeDTO, Guid userId)
     {
         var resume = await _repository.Resume.GetByIdAsync(resumeDTO.Id);

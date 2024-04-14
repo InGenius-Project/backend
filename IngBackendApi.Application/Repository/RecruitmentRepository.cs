@@ -11,19 +11,18 @@ public class RecruitmentRepository(IngDbContext context)
 {
     private readonly IngDbContext _context = context;
 
-    public IQueryable<Recruitment> GetIncludeAll()
-    {
-        return _context
+    public IQueryable<Recruitment> GetIncludeAll() => _context
             .Recruitment.Include(r => r.Publisher.Avatar)
             .Include(r => r.Areas)
-            .ThenInclude(a => a.TextLayout)
+                .ThenInclude(a => a.TextLayout)
             .Include(r => r.Areas)
-            .ThenInclude(a => a.ImageTextLayout.Image)
+                .ThenInclude(a => a.ImageTextLayout.Image)
             .Include(r => r.Areas)
-            .ThenInclude(a => a.ListLayout.Items)
-            .ThenInclude(t => t.Type)
+                .ThenInclude(a => a.ListLayout.Items)
+                .ThenInclude(t => t.Type)
             .Include(r => r.Areas)
-            .ThenInclude(a => a.KeyValueListLayout.Items)
-            .ThenInclude(kvi => kvi.Key);
-    }
+                .ThenInclude(a => a.KeyValueListLayout.Items)
+                .ThenInclude(kvi => kvi.Key);
+
+
 }

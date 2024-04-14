@@ -1,8 +1,7 @@
-using AutoWrapper.Wrappers;
-using Swashbuckle.AspNetCore.SwaggerGen;
-using static Microsoft.AspNetCore.Http.StatusCodes;
-
 namespace IngBackendApi.Exceptions;
+
+using AutoWrapper.Wrappers;
+using static Microsoft.AspNetCore.Http.StatusCodes;
 
 public class JsonParseException : Exception
 {
@@ -26,7 +25,24 @@ public class SystemInitException : Exception
         throw new ApiException(ex, Status500InternalServerError);
 }
 
-// 400
+public class EntityNotFoundException : Exception
+{
+    public EntityNotFoundException()
+        : base() { }
+
+    public EntityNotFoundException(Exception ex)
+        : base(ex.Message) { }
+
+    public EntityNotFoundException(string message)
+        : base(message) { }
+
+    public EntityNotFoundException(string message, Exception exception)
+        : base(message, exception) { }
+}
+
+
+#region 400 Errors
+
 public class BadRequestException : ApplicationException
 {
     public BadRequestException()
@@ -38,7 +54,10 @@ public class BadRequestException : ApplicationException
     public BadRequestException(Exception ex) => throw new ApiException(ex, Status400BadRequest);
 }
 
-// 401
+#endregion
+
+#region 401 Errors
+
 public class UnauthorizedException : ApplicationException
 {
     public UnauthorizedException()
@@ -50,7 +69,10 @@ public class UnauthorizedException : ApplicationException
     public UnauthorizedException(Exception ex) => throw new ApiException(ex, Status401Unauthorized);
 }
 
-// 403
+#endregion
+
+#region 403 Errors
+
 public class ForbiddenException : Exception
 {
     public ForbiddenException()
@@ -62,7 +84,10 @@ public class ForbiddenException : Exception
     public ForbiddenException(Exception ex) => throw new ApiException(ex, Status403Forbidden);
 }
 
-// 404
+#endregion
+
+#region 404 Errors
+
 public class NotFoundException : ApplicationException
 {
     public NotFoundException()
@@ -78,10 +103,8 @@ public class UserNotFoundException : NotFoundException
         : base("使用者") { }
 }
 
-public class TagNotFoundException : NotFoundException
+public class TagNotFoundException(string tagId) : NotFoundException($"標籤: {tagId}")
 {
-    public TagNotFoundException(string tagId)
-        : base($"標籤: {tagId}") { }
 }
 
 public class AreaNotFoundException : NotFoundException
@@ -93,17 +116,23 @@ public class AreaNotFoundException : NotFoundException
         : base($"區域: {areaId}") { }
 }
 
-public class EntityNotFoundException : Exception
+public class ResumeNotFoundException : NotFoundException
 {
-    public EntityNotFoundException()
-        : base() { }
+    public ResumeNotFoundException()
+        : base("履歷") { }
 
-    public EntityNotFoundException(Exception ex)
-        : base(ex.Message) { }
-
-    public EntityNotFoundException(string message)
-        : base(message) { }
-
-    public EntityNotFoundException(string message, Exception exception)
-        : base(message, exception) { }
+    public ResumeNotFoundException(string resumeId)
+        : base($"履歷: {resumeId}") { }
 }
+
+public class RecruitmentNotFoundException : NotFoundException
+{
+    public RecruitmentNotFoundException()
+        : base("職缺") { }
+
+    public RecruitmentNotFoundException(string recruitmentId)
+        : base($"職缺: {recruitmentId}") { }
+}
+
+
+#endregion

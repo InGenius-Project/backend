@@ -49,16 +49,14 @@ public class UserFixture
                    .With(dto => dto.Role, Fixture.Create<UserRole>())
                    .With(dto => dto.Areas, [])
                    .Without(dto => dto.Tags)
-                   .Without(dto => dto.Resumes)
-                   .Without(dto => dto.Recruitments)
         );
 
-        Fixture.Customize<UserInfoPostDTO>(composer =>
-            composer.Without(dto => dto.Avatar)
-                   .With(dto => dto.Username, Fixture.Create<string>())
-                   //    .With(dto => dto.Areas, Fixture.CreateMany<AreaPostDTO>())
-                   .Without(dto => dto.Tags)
-        );
+        // Fixture.Customize<UserInfoPostDTO>(composer =>
+        //     composer.Without(dto => dto.Avatar)
+        //            .With(dto => dto.Username, Fixture.Create<string>())
+        //            //    .With(dto => dto.Areas, Fixture.CreateMany<AreaPostDTO>())
+        //            .Without(dto => dto.Tags)
+        // );
 
         Fixture.Customize<UserSignUpDTO>(composer =>
             composer.With(dto => dto.Email, Fixture.Create<string>())
