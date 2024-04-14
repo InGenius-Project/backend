@@ -31,6 +31,8 @@ public class TestAreaController : IDisposable
         _mockResumeService = new Mock<IResumeService>();
         _mockRecruitmentService = new Mock<IRecruitmentService>();
         _mockAreaTypeService = new Mock<IAreaTypeService>();
+        _mockBackgroundJobClient = new Mock<IBackgroundJobClient>();
+        _mockAIService = new Mock<IAIService>();
 
         MappingProfile mappingProfile = new();
         MapperConfiguration configuration = new(cfg => cfg.AddProfile(mappingProfile));

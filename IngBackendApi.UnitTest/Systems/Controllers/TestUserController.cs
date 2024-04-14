@@ -3,7 +3,6 @@ namespace IngBackendApi.UnitTest.Systems.Controllers;
 using AutoMapper;
 using AutoWrapper.Wrappers;
 using Hangfire;
-using Hangfire;
 using IngBackendApi.Controllers;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Models.DBEntity;
@@ -24,11 +23,16 @@ public class TestUserController : IDisposable
     private readonly Mock<EmailService> _mockEmailService;
     private readonly Mock<IConfiguration> _mockConfiguration;
     private readonly Mock<IWebHostEnvironment> _mockWebHostEnvironment;
+    private readonly Mock<ITokenService> _mockTokenService;
     private readonly Fixture _fixture;
 
     public TestUserController()
     {
         _mockUserService = new Mock<IUserService>();
+        _mockBackgroundJobClient = new Mock<IBackgroundJobClient>();
+        _mockTokenService = new Mock<ITokenService>();
+        _mockWebHostEnvironment = new Mock<IWebHostEnvironment>();
+
 
         MappingProfile mappingProfile = new();
         MapperConfiguration configuration = new(cfg => cfg.AddProfile(mappingProfile));
@@ -73,7 +77,7 @@ public class TestUserController : IDisposable
     }
 
     [Fact]
-    public async Task GetUserInvalidUserIdThrowsApiException()
+    public async Task GetUser_InvalidUserId_ThrowsApiException()
     {
         // Arrange
         UserInfoDTO? nullValue = null;
@@ -82,7 +86,7 @@ public class TestUserController : IDisposable
             .ReturnsAsync(nullValue);
 
         // Act
-        var exception = await Assert.ThrowsAsync<ApiException>(() => _controller.GetUser());
+        var exception = await Assert.ThrowsAsync<ApiException>(_controller.GetUser);
 
         // Assert
         Assert.Equal("使用者不存在", exception.Message);
@@ -90,7 +94,7 @@ public class TestUserController : IDisposable
     }
 
     [Fact]
-    public async Task PostUserValidUserInfoPostDTOReturnsSuccessfulResult()
+    public async Task PostUse_rValidUserInfoPostDTO_ReturnsSuccessfulResult()
     {
         // Arrange
         var userInfoPostDTO = _fixture.Create<UserInfoPostDTO>();
@@ -107,7 +111,7 @@ public class TestUserController : IDisposable
     }
 
     [Fact]
-    public async Task PostUserInValidUserInfoPostDTOReturnsSuccessfulResult()
+    public async Task PostUser_InValidUserInfoPostDTO_ReturnsSuccessfulResult()
     {
         // Arrange
         var userInfoPostDTO = _fixture.Create<UserInfoPostDTO>();

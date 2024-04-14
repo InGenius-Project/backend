@@ -1,5 +1,6 @@
 namespace IngBackendApi.UnitTest.Systems.Services;
 
+using System.Data.Entity;
 using AutoMapper;
 using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Repository;
@@ -53,7 +54,7 @@ public class TestAreaService : IDisposable
     public void CheckAreaOwnership_InvalidOwnerId_ShouldThrowForbiddenException()
     {
         // Arrange
-        var existArea = _repository.Object.Area.GetByIdAsync(Guid.Empty).Result;
+        var existArea = _repository.Object.Area.GetAll().AsNoTracking().First();
 
         // Act
         Task act() => _areaService.CheckAreaOwnership(existArea.Id, Guid.NewGuid());

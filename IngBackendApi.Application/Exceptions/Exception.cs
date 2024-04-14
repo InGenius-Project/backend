@@ -94,7 +94,7 @@ public class NotFoundException : ApplicationException
         : base() => throw new ApiException("資料不存在", Status404NotFound);
 
     public NotFoundException(string message)
-        : base(message) => throw new ApiException($"{message}", Status404NotFound);
+        : base(message) => throw new ApiException($"{message}不存在", Status404NotFound);
 }
 
 public class UserNotFoundException : NotFoundException

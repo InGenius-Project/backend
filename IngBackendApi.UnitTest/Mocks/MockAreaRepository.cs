@@ -10,6 +10,8 @@ using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Repository;
 using IngBackendApi.UnitTest.Fixtures;
 using IngBackendApi.Context;
+using System.Data.Entity;
+using SQLitePCL;
 
 internal class MockAreaRepository
 {
@@ -32,12 +34,15 @@ internal class MockAreaRepository
         mockAreaRepository.Setup(m => m.GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(context.Area.First());
 
+
         return mockAreaRepository;
     }
 
     // Private method to seed data
     private static void SeedData(IngDbContext context, AreaFixture areaFixture)
     {
+        var a = context.Set<Area>().Local.AsEnumerable();
+
         var area1 = areaFixture.Fixture.Create<Area>();
         var area2 = areaFixture.Fixture.Create<Area>();
         var areaType1 = areaFixture.Fixture.Create<AreaType>();
@@ -46,7 +51,7 @@ internal class MockAreaRepository
         List<Area> areas = [area1, area2];
         List<AreaType> areaTypes = [areaType1, areaType2];
 
-        context.AddRange(areas);
+        context.Area.AddRange(areas);
         context.AddRange(areaTypes);
 
         context.SaveChangesAsync(); // Make sure to await this
