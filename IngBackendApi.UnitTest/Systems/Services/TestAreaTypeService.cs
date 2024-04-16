@@ -1,6 +1,7 @@
 namespace IngBackendApi.UnitTest.Systems.Services;
 
 using AutoMapper;
+using IngBackend.Repository;
 using IngBackendApi.Context;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Interfaces.UnitOfWork;
@@ -18,21 +19,26 @@ public class TestAreaTypeService : IDisposable
     private readonly IUnitOfWork _unitofWork;
     private readonly IMapper _mapper;
     private readonly AreaTypeService _areaTypeService;
-    private readonly Mock<IRepositoryWrapper> _repository;
+    private readonly RepositoryWrapper _repository;
     private readonly IRepository<AreaType, int> _areaTypeRepository;
 
+    private readonly AreaFixture _areaFixture;
+    private readonly TagFixture _tagFixture;
     private readonly IngDbContext context;
     public TestAreaTypeService()
     {
+        _areaFixture = new AreaFixture();
+        _tagFixture = new TagFixture();
+
         context = MemoryContextFixture.Generate();
         _unitofWork = new UnitOfWork(context);
-        _repository = MockRepositoryWrapper.GetMock(context);
+        _repository = new RepositoryWrapper(context);
 
         MappingProfile mappingProfile = new();
         MapperConfiguration configuration = new(cfg => cfg.AddProfile(mappingProfile));
         _mapper = new Mapper(configuration);
 
-        _areaTypeService = new AreaTypeService(_unitofWork, _mapper, _repository.Object);
+        _areaTypeService = new AreaTypeService(_unitofWork, _mapper, _repository);
 
         _areaTypeRepository = _unitofWork.Repository<AreaType, int>();
 
@@ -41,8 +47,7 @@ public class TestAreaTypeService : IDisposable
     public async Task AddAsync_WhenCalled_ShouldAddArea()
     {
         // Arrange
-        var areaFixture = new AreaFixture();
-        var areaTypeDto = areaFixture.Fixture.Create<AreaTypeDTO>();
+        var areaTypeDto = _areaFixture.Fixture.Create<AreaTypeDTO>();
 
         // Act
         await _areaTypeService.AddAsync(areaTypeDto);
@@ -56,35 +61,37 @@ public class TestAreaTypeService : IDisposable
     [Fact]
     public async Task UpdateAsync_WhenCalled_ShouldUpdateArea()
     {
-        // Arrange
-        var areaType = _repository.Object.AreaType.GetAll().First();
+        // Arrange  
+        var areaType = _areaFixture.Fixture.Create<AreaType>();
+        var tagType = _tagFixture.Fixture.Create<TagType>();
 
-        context.Set<TagType>().Add(new TagType()
-        {
-            Name = "Test",
-            Value = "Test",
-            Color = "#123"
-        });
-
+        context.Set<AreaType>().Add(areaType);
         await context.SaveChangesAsync();
-        var tagType = _repository.Object.TagType.GetAll().First();
 
-        var areaFixture = new AreaFixture();
-        var updateAreaTypeDto = areaFixture.Fixture.Create<AreaTypeDTO>();
+        tagType.AreaTypes = new List<AreaType> { areaType };
+        context.Set<TagType>().Add(tagType);
+        await context.SaveChangesAsync();
+
+        var updateAreaTypeDto = _areaFixture.Fixture.Create<AreaTypeDTO>();
         updateAreaTypeDto.Id = areaType.Id;
         updateAreaTypeDto.ListTagTypes = [
            _mapper.Map<TagTypeDTO>(tagType)
         ];
 
-        _areaTypeRepository.SetEntityState(areaType, EntityState.Detached);
-        _repository.Object.TagType.SetEntityState(tagType, EntityState.Detached);
+        var undetachedEntriesCopy = context.ChangeTracker.Entries()
+        .Where(e => e.State != EntityState.Detached)
+        .ToList();
 
-        await context.SaveChangesAsync();
+        foreach (var entry in undetachedEntriesCopy)
+        {
+            entry.State = EntityState.Detached;
+        }
+
         // Act
         await _areaTypeService.UpdateAsync(updateAreaTypeDto);
 
         // Assert
-        var updatedAreaType = _repository.Object.AreaType.GetAll().First();
+        var updatedAreaType = _repository.AreaType.GetAll().First();
         updatedAreaType.Name.Should().Be(updateAreaTypeDto.Name);
         updatedAreaType.Value.Should().Be(updateAreaTypeDto.Value);
         updatedAreaType.Description.Should().Be(updateAreaTypeDto.Description);

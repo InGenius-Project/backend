@@ -43,17 +43,17 @@ internal class MockAreaRepository
     {
         var a = context.Set<Area>().Local.AsEnumerable();
 
-        var area1 = areaFixture.Fixture.Create<Area>();
-        var area2 = areaFixture.Fixture.Create<Area>();
-        var areaType1 = areaFixture.Fixture.Create<AreaType>();
-        var areaType2 = areaFixture.Fixture.Create<AreaType>();
+        // var area1 = areaFixture.Fixture.Create<Area>();
+        // var area2 = areaFixture.Fixture.Create<Area>();
+        // var areaType1 = areaFixture.Fixture.Create<AreaType>();
+        // var areaType2 = areaFixture.Fixture.Create<AreaType>();
 
-        List<Area> areas = [area1, area2];
-        List<AreaType> areaTypes = [areaType1, areaType2];
+        // List<Area> areas = [area1, area2];
+        // List<AreaType> areaTypes = [areaType1, areaType2];
 
-        context.Area.AddRange(areas);
-        context.AddRange(areaTypes);
+        // context.Area.AddRange(areas);
+        // context.AddRange(areaTypes);
 
-        context.SaveChangesAsync(); // Make sure to await this
+        // context.SaveChangesAsync(); // Make sure to await this
     }
 }
