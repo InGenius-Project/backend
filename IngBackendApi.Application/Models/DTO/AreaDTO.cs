@@ -112,15 +112,17 @@ public class KeyValueListLayoutDTO
 public class KeyValueItemDTO
 {
     public Guid? Id { get; set; }
-    public Guid? TagId { get; set; }
-    public TagDTO? Key { get; set; }
+
+    [JsonIgnore]
+    public List<Guid> TagIds { get; set; }
+    public List<TagDTO>? Key { get; set; }
     public string Value { get; set; } = "";
 }
 
 public class KeyValueItemPostDTO
 {
     public Guid? Id { get; set; }
-    public Guid? TagId { get; set; }
+    public List<Guid> TagIds { get; set; }
     public string Value { get; set; } = "";
 }
 
@@ -151,4 +153,10 @@ public class AreaSequencePostDTO
 {
     public Guid Id { get; set; }
     public int Sequence { get; set; }
+}
+
+public class AiGeneratedAreaDTO
+{
+    public required string AreaTitle { get; set; }
+    public required string Content { get; set; }
 }

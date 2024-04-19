@@ -15,7 +15,8 @@ public class AreaService(
     IMapper mapper,
     IRepositoryWrapper repository,
     IWebHostEnvironment env,
-    IConfiguration config
+    IConfiguration config,
+    IAIService aiService
 ) : Service<Area, AreaDTO, Guid>(unitOfWork, mapper), IAreaService
 {
     private readonly IMapper _mapper = mapper;
@@ -31,6 +32,7 @@ public class AreaService(
     >();
     private readonly IRepository<Tag, Guid> _tagRepository = unitOfWork.Repository<Tag, Guid>();
     private readonly IWebHostEnvironment _env = env;
+    private readonly IAIService _aiService = aiService;
 
     public new async Task UpdateAsync(AreaDTO areaDto)
     {
@@ -187,11 +189,19 @@ public class AreaService(
             _repository.Area.GetAreaByIdIncludeAllLayout(areaId)
             ?? throw new NotFoundException("area not found.");
 
+        var tagIds = keyValueListLayoutDTO?.Items?.SelectMany(i => i.TagIds).ToList() ?? [];
+        var allTags = _tagRepository.GetAll(t => tagIds.Contains(t.Id)).AsNoTracking().ToArray();
+        var allTagDTOs = _mapper.Map<List<TagDTO>>(allTags);
+        keyValueListLayoutDTO?.Items?.ForEach(i =>
+            i.Key = allTagDTOs.Where(t => i.TagIds.Contains(t.Id)).ToList()
+        );
+
         area.ClearLayoutsExclude(a => a.KeyValueListLayout);
+        var keyValueListLayout = _mapper.Map<KeyValueListLayout>(keyValueListLayoutDTO);
 
         if (area.KeyValueListLayout == null)
         {
-            area.KeyValueListLayout = _mapper.Map<KeyValueListLayout>(keyValueListLayoutDTO);
+            area.KeyValueListLayout = keyValueListLayout;
         }
         else
         {

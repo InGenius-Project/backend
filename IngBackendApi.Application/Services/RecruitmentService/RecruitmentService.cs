@@ -130,10 +130,12 @@ public class RecruitmentService(
         );
     }
 
-
     public async Task ApplyRecruitmentAsync(Guid recruitmentId, Guid resumeId, Guid userId)
     {
-        var recruitment = await _repository.Recruitment.GetAll(r => r.Resumes).FirstOrDefaultAsync(r => r.Id == recruitmentId)
+        var recruitment =
+            await _repository
+                .Recruitment.GetAll(r => r.Resumes)
+                .FirstOrDefaultAsync(r => r.Id == recruitmentId)
             ?? throw new RecruitmentNotFoundException(recruitmentId.ToString());
 
         if (recruitment.Resumes.Any(r => r.Id == resumeId))
@@ -141,7 +143,8 @@ public class RecruitmentService(
             throw new BadRequestException("已經申請過此職缺");
         }
 
-        var resume = await _repository.Resume.GetAll().FirstOrDefaultAsync(r => r.Id == resumeId)
+        var resume =
+            await _repository.Resume.GetAll().FirstOrDefaultAsync(r => r.Id == resumeId)
             ?? throw new ResumeNotFoundException(resumeId.ToString());
 
         // Owner Check

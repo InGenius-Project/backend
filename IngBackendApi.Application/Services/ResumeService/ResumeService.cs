@@ -9,11 +9,8 @@ using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 
-public class ResumeService(
-    IUnitOfWork unitOfWork,
-    IMapper mapper,
-    IRepositoryWrapper repository)
-        : Service<Resume, ResumeDTO, Guid>(unitOfWork, mapper),
+public class ResumeService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository)
+    : Service<Resume, ResumeDTO, Guid>(unitOfWork, mapper),
         IResumeService
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
@@ -23,8 +20,7 @@ public class ResumeService(
     public async Task<List<ResumeDTO>> GetUserResumesAsync(Guid userId)
     {
         var resumes = await _repository
-            .Resume
-            .GetIncludeAll()
+            .Resume.GetIncludeAll()
             .Where(r => r.UserId == userId)
             .AsNoTracking()
             .ToListAsync();
@@ -34,8 +30,7 @@ public class ResumeService(
     public async Task<ResumeDTO?> GetResumeByIdIncludeAllAsync(Guid resumeId)
     {
         var resume = await _repository
-            .Resume
-            .GetIncludeAll()
+            .Resume.GetIncludeAll()
             .Where(r => r.Id == resumeId)
             .AsNoTracking()
             .FirstOrDefaultAsync();
@@ -50,8 +45,7 @@ public class ResumeService(
     public async Task<List<ResumeDTO>> GetRecruitmentResumesAsync(Guid recruitmentId)
     {
         var resumes = await _repository
-            .Resume
-            .GetIncludeAll()
+            .Resume.GetIncludeAll()
             .Where(r => r.Recruitments.Any(x => x.Id == recruitmentId))
             .AsNoTracking()
             .ToListAsync();
@@ -91,12 +85,12 @@ public class ResumeService(
     /// <exception cref="ForbiddenException">Throws a `ForbiddenException` if the user requesting access does not have permission to view the resume.</exception>
     public async Task<ResumeDTO> CheckAndGetResumeAsync(Guid id, UserInfoDTO user)
     {
-        var resume = await _repository
-            .Resume
-            .GetIncludeAll()
-            .AsNoTracking()
-            .Where(r => r.Id == id)
-            .FirstOrDefaultAsync() ?? throw new NotFoundException("Resume");
+        var resume =
+            await _repository
+                .Resume.GetIncludeAll()
+                .AsNoTracking()
+                .Where(r => r.Id == id)
+                .FirstOrDefaultAsync() ?? throw new NotFoundException("Resume");
 
         // Is Owner
         if (resume.UserId == user.Id)
@@ -153,5 +147,6 @@ public class ResumeService(
     /// This function modifies the resume object in-place by directly changing its "Areas" property.
     /// It filters the list of areas, keeping only those marked with the "IsDisplayed" flag set to true.
     /// </remarks>
-    private static void HideResumeArea(Resume resume) => resume.Areas = resume?.Areas?.Where(x => x.IsDisplayed).ToList();
+    private static void HideResumeArea(Resume resume) =>
+        resume.Areas = resume?.Areas?.Where(x => x.IsDisplayed).ToList();
 }

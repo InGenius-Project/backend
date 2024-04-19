@@ -192,9 +192,23 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             OwnerId = adminUser.Id,
         };
 
+        var educationAreaType = new AreaType()
+        {
+            Id = 5,
+            Name = "教育背景",
+            Value = "education",
+            Description = "教育背景的描述",
+            UserRole = [Enum.UserRole.Intern, Enum.UserRole.Admin, Enum.UserRole.Company],
+            LayoutType = Enum.LayoutType.KeyValueList,
+        };
+
         modelBuilder.Entity<Tag>().HasData(collegeTag, departmentTag);
+        modelBuilder.Entity<AreaType>().HasData(educationAreaType);
         educationalKeyValueListLayout.AreaId = educationArea.Id;
         educationalKeyValueItem.keyValueListLayoutId = educationalKeyValueListLayout.Id;
+        educationArea.AreaTypeId = educationAreaType.Id;
+        educationArea.UserId = internalUser.Id;
+        educationArea.OwnerId = internalUser.Id;
         modelBuilder.Entity<Area>().HasData(educationArea);
         modelBuilder.Entity<KeyValueListLayout>().HasData(educationalKeyValueListLayout);
         modelBuilder.Entity<KeyValueItem>().HasData(educationalKeyValueItem);
