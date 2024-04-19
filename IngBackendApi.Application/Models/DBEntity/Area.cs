@@ -192,7 +192,7 @@ public class KeyValueListLayout : BaseEntity, IEntity<Guid>
 
     [JsonIgnore]
     [Required]
-    public required Area Area { get; set; }
+    public Area Area { get; set; }
 
     [ForeignKey("Area")]
     [Required]
@@ -203,9 +203,9 @@ public class KeyValueItem : BaseEntity, IEntity<Guid>
 {
     [Key]
     public Guid Id { get; set; }
-
-    [ForeignKey("Tag")]
-    public Guid? TagId { get; set; }
-    public Tag? Key { get; set; }
+    public List<Tag>? Key { get; set; }
     public string Value { get; set; } = "";
+
+    public Guid? keyValueListLayoutId { get; set; }
+    public KeyValueListLayout KeyValueListLayout { get; set; }
 }

@@ -58,13 +58,26 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
                     Name = "fake",
                     Value = "fake",
                     Color = "#ffffff"
+                },
+                new TagType
+                {
+                    Id = 3,
+                    Name = "university",
+                    Value = "university",
+                    Color = "#ffffff"
+                },
+                new TagType
+                {
+                    Id = 4,
+                    Name = "department",
+                    Value = "department",
+                    Color = "#ffffff"
                 }
             );
 
         modelBuilder.Entity<AreaType>().HasIndex(t => t.Value).IsUnique();
         modelBuilder.Entity<AreaType>().Property(t => t.Id).ValueGeneratedOnAdd();
 
-        // TODO: Default Data
         modelBuilder
             .Entity<AreaType>()
             .HasData(
@@ -117,5 +130,42 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             Role = Enum.UserRole.Admin
         };
         modelBuilder.Entity<User>().HasData(user, internalUser, companyUser, adminUser);
+
+        // Resume
+        var collegeTag = new Tag()
+        {
+            Id = Guid.NewGuid(),
+            Name = "中正大學",
+            TagTypeId = 3,
+            Count = 0
+        };
+
+        var departmentTag = new Tag()
+        {
+            Id = Guid.NewGuid(),
+            Name = "資訊管理系",
+            TagTypeId = 4,
+            Count = 0
+        };
+
+        var educationalKeyValueItem = new KeyValueItem() { Id = Guid.NewGuid(), Value = "大學", };
+
+        var educationalKeyValueListLayout = new KeyValueListLayout() { Id = Guid.NewGuid() };
+
+        var educationArea = new Area()
+        {
+            Id = Guid.NewGuid(),
+            Sequence = 1,
+            IsDisplayed = true,
+            Title = "教育背景",
+            OwnerId = adminUser.Id,
+        };
+
+        modelBuilder.Entity<Tag>().HasData(collegeTag, departmentTag);
+        educationalKeyValueListLayout.AreaId = educationArea.Id;
+        educationalKeyValueItem.keyValueListLayoutId = educationalKeyValueListLayout.Id;
+        modelBuilder.Entity<Area>().HasData(educationArea);
+        modelBuilder.Entity<KeyValueListLayout>().HasData(educationalKeyValueListLayout);
+        modelBuilder.Entity<KeyValueItem>().HasData(educationalKeyValueItem);
     }
 }

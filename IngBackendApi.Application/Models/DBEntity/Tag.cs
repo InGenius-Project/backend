@@ -11,7 +11,9 @@ public class Tag : BaseEntity, IEntity<Guid>
     public required string Name { get; set; }
 
     public int TagTypeId { get; set; }
-    public required TagType Type { get; set; }
+
+    [Required]
+    public TagType Type { get; set; }
 
     public int Count { get; set; }
 
