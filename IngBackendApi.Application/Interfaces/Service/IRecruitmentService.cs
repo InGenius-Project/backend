@@ -14,5 +14,5 @@ public interface IRecruitmentService : IService<Recruitment, RecruitmentDTO, Gui
         RecruitmentSearchPostDTO searchDTO,
         Guid? userId
     );
-    Task ApplyRecruitmentAsync(Guid recruitmentId, Guid resumeId);
+    Task ApplyRecruitmentAsync(Guid recruitmentId, Guid resumeId, Guid userId);
 }

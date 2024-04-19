@@ -131,7 +131,7 @@ public class RecruitmentService(
     }
 
 
-    public async Task ApplyRecruitmentAsync(Guid recruitmentId, Guid resumeId)
+    public async Task ApplyRecruitmentAsync(Guid recruitmentId, Guid resumeId, Guid userId)
     {
         var recruitment = await _repository.Recruitment.GetAll(r => r.Resumes).FirstOrDefaultAsync(r => r.Id == recruitmentId)
             ?? throw new RecruitmentNotFoundException(recruitmentId.ToString());
@@ -143,6 +143,12 @@ public class RecruitmentService(
 
         var resume = await _repository.Resume.GetAll().FirstOrDefaultAsync(r => r.Id == resumeId)
             ?? throw new ResumeNotFoundException(resumeId.ToString());
+
+        // Owner Check
+        if (resume.UserId != userId)
+        {
+            throw new ForbiddenException();
+        }
 
         recruitment.Resumes.Add(resume);
 
