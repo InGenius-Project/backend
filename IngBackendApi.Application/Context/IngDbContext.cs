@@ -42,15 +42,23 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             .WithMany(r => r.FavoriteUsers);
 
         // TODO: Default data
+        var skillTagType = new TagType
+        {
+            Id = 2,
+            Name = "技能",
+            Value = "skill",
+            Color = "#123"
+        };
+
         modelBuilder
             .Entity<TagType>()
             .HasData(
                 new TagType
                 {
                     Id = 1,
-                    Name = "custom",
+                    Name = "自定義",
                     Value = "custom",
-                    Color = "#ffffff"
+                    Color = "#ffffff",
                 },
                 new TagType
                 {
@@ -84,12 +92,35 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
                 new AreaType
                 {
                     Id = 1,
-                    Name = "custom",
-                    Value = "unique",
-                    Description = "whatever",
-                    UserRole = [Enum.UserRole.InternalUser, Enum.UserRole.Admin],
+                    Name = "技能",
+                    Value = "skill",
+                    Description = "編輯技能",
+                    UserRole = [Enum.UserRole.Intern],
                     LayoutType = Enum.LayoutType.List,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                }
+            );
+
+        modelBuilder
+            .Entity<AreaType>()
+            .HasMany(a => a.ListTagTypes)
+            .WithMany(t => t.AreaTypes)
+            .UsingEntity<Dictionary<string, object>>(
+                "AreaTypeTagType",
+                l =>
+                    l.HasOne<TagType>()
+                        .WithMany()
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .HasForeignKey("TagTypeId"),
+                r =>
+                    r.HasOne<AreaType>()
+                        .WithMany()
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .HasForeignKey("AreaTypeId"),
+                at =>
+                {
+                    at.HasKey("AreaTypeId", "TagTypeId");
+                    at.HasData(new { AreaTypeId = 1, TagTypeId = skillTagType.Id });
                 }
             );
 

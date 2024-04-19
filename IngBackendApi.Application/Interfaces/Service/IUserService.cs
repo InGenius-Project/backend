@@ -32,7 +32,6 @@ public interface IUserService : IService<User, UserInfoDTO, Guid>
         IEnumerable<UserRole> allowedRoles,
         params Expression<Func<User, object>>[] includes
     );
-    Task<ResumeDTO?> GetResumesByUserId(Guid userId);
     Task<UserInfoDTO> VerifyHashedPasswordAsync(UserSignInDTO req);
     Task AddUserResumeAsync(UserInfoDTO userDTO, ResumeDTO resumeDTO);
     Task<bool> VerifyEmailVerificationCode(UserInfoDTO req, string token);

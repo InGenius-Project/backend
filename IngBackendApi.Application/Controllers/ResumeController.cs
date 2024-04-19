@@ -1,39 +1,30 @@
-﻿using AutoMapper;
+﻿namespace IngBackendApi.Controllers;
+
+using AutoMapper;
 using AutoWrapper.Wrappers;
-using IngBackendApi.Exceptions;
-using IngBackendApi.Models.DBEntity;
+using IngBackendApi.Application.Interfaces.Service;
+using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Models.DTO;
-using IngBackendApi.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
-namespace IngBackendApi.Controllers;
 
 [Route("api/[controller]")]
 [Authorize]
 [ApiController]
-public class ResumeController : BaseController
+public class ResumeController(IMapper mapper, IUserService userService, IResumeService resumeService) : BaseController
 {
-    private readonly ResumeService _resumeService;
-    private readonly UserService _userService;
-    private readonly IMapper _mapper;
-
-
-    public ResumeController(IMapper mapper, UserService userService, ResumeService resumeService)
-    {
-        _resumeService = resumeService;
-        _userService = userService;
-        _mapper = mapper;
-    }
+    private readonly IResumeService _resumeService = resumeService;
+    private readonly IUserService _userService = userService;
+    private readonly IMapper _mapper = mapper;
 
     [HttpGet]
     [ProducesResponseType(typeof(ResponseDTO<ResumeDTO>), StatusCodes.Status200OK)]
-    public async Task<List<ResumeDTO>> GetResumes()
+    public async Task<List<ResumeDTO>> GetResumesByUser()
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
 
-        var resume = await _userService.GetResumesByUserId(userId);
+        var resume = await _resumeService.GetUserResumesAsync(userId);
         var resumeDTO = _mapper.Map<List<ResumeDTO>>(resume);
         return resumeDTO;
     }
@@ -43,8 +34,8 @@ public class ResumeController : BaseController
     public async Task<ActionResult<ResumeDTO>> GetResume(Guid resumeId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-
         var user = await _userService.CheckAndGetUserAsync(userId);
+
         var resumes = await _resumeService.CheckAndGetResumeAsync(resumeId, user);
 
         var resumeDTO = _mapper.Map<ResumeDTO>(resumes);
@@ -53,35 +44,25 @@ public class ResumeController : BaseController
 
     [HttpPost]
     [ProducesResponseType(typeof(ResponseDTO<ResumeDTO>), StatusCodes.Status200OK)]
-    public async Task<ApiResponse> PostResume([FromBody] ResumePostDTO req)
+    public async Task<ResumeDTO> PostResume([FromBody] ResumePostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         var user = await _userService.CheckAndGetUserAsync(userId, u => u.Resumes);
 
-        var resume = await _resumeService.GetByIdAsync(req.Id ?? Guid.Empty);
-        // Add new resume
-        if (resume == null)
-        {
-            await _userService.AddUserResumeAsync(user, _mapper.Map<ResumeDTO>(req));
-        }
-
-        // Patch
-        _mapper.Map(req, resume);
-        await _resumeService.UpdateAsync(resume);
-        return new ApiResponse("更新成功");
+        var resume = await _resumeService.AddOrUpdateAsync(
+            _mapper.Map<ResumeDTO>(req),
+            userId
+        );
+        return resume;
     }
 
     [HttpDelete("{resumeId}")]
+    [ProducesResponseType(typeof(ResponseDTO<>), StatusCodes.Status200OK)]
     public async Task<ApiResponse> DeleteResume(Guid resumeId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var resume = await _resumeService.GetByIdAsync(resumeId);
-
-        if (resume == null)
-        {
-            throw new NotFoundException("履歷");
-        }
-
+        var user = await _userService.CheckAndGetUserAsync(userId);
+        await _resumeService.CheckAndGetResumeAsync(resumeId, user);
         await _resumeService.DeleteByIdAsync(resumeId);
         return new ApiResponse("刪除成功");
     }
