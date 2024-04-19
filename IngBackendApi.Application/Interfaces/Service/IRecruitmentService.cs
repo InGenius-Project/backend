@@ -7,12 +7,12 @@ using IngBackendApi.Models.DTO;
 
 public interface IRecruitmentService : IService<Recruitment, RecruitmentDTO, Guid>
 {
-    Task<List<RecruitmentDTO>> GetUserRecruitementsAsync(Guid userId);
+    Task<List<RecruitmentDTO>> GetPublisherRecruitmentsAsync(Guid userId);
     Task<RecruitmentDTO?> GetRecruitmentByIdIncludeAllAsync(Guid recruitmentId);
     Task<RecruitmentDTO> AddOrUpdateAsync(RecruitmentDTO recruitmentDTO, Guid userId);
     Task<RecruitmentSearchResultDTO> SearchRecruitmentsAsync(
         RecruitmentSearchPostDTO searchDTO,
         Guid? userId
     );
-    Task ApplyRecruitmentAsync(Guid recruitmentId, ResumeDTO resumeDTO);
+    Task ApplyRecruitmentAsync(Guid recruitmentId, Guid resumeId, Guid userId);
 }

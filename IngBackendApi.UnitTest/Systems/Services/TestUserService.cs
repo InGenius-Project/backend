@@ -25,7 +25,6 @@ public class TestUserService : IDisposable
     private readonly Mock<IConfiguration> _mockConfiguration;
     private readonly Mock<IWebHostEnvironment> _env;
 
-    [Fact]
     public void Dispose() => GC.SuppressFinalize(this);
 
     public TestUserService()
@@ -38,6 +37,8 @@ public class TestUserService : IDisposable
         _context = MemoryContextFixture.Generate();
 
         _repository = MockRepositoryWrapper.GetMock(_context);
+        _env = new Mock<IWebHostEnvironment>();
+        _mockConfiguration = new Mock<IConfiguration>();
 
         _passwordHasher = new Mock<IPasswordHasher>();
 

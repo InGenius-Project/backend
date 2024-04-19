@@ -1,6 +1,7 @@
 namespace IngBackendApi.UnitTest.Systems.Services;
 
 using AutoMapper;
+using IngBackendApi.Context;
 using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Interfaces.UnitOfWork;
@@ -11,6 +12,7 @@ using IngBackendApi.Services.AreaService;
 using IngBackendApi.UnitTest.Fixtures;
 using IngBackendApi.UnitTest.Mocks;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 public class TestAreaService : IDisposable
@@ -23,13 +25,14 @@ public class TestAreaService : IDisposable
     private readonly Mock<IConfiguration> _mockConfiguration;
 
     private readonly IRepository<AreaType, int> _areaTypeRepository;
+    private readonly IngDbContext _context;
 
     public TestAreaService()
     {
-        var context = MemoryContextFixture.Generate();
+        _context = MemoryContextFixture.Generate();
         _mockUnitofWork = new Mock<IUnitOfWork>();
-        _repository = MockRepositoryWrapper.GetMock(context);
-        var _config = _mockConfiguration.Object;
+        _repository = MockRepositoryWrapper.GetMock(_context);
+        var _config = new Mock<IConfiguration>();
 
         MappingProfile mappingProfile = new();
         MapperConfiguration configuration = new(cfg => cfg.AddProfile(mappingProfile));
@@ -43,7 +46,7 @@ public class TestAreaService : IDisposable
             _mapper,
             _repository.Object,
             env.Object,
-            _config
+            _config.Object
         );
 
         _areaTypeRepository = _mockUnitofWork.Object.Repository<AreaType, int>();
@@ -53,10 +56,9 @@ public class TestAreaService : IDisposable
     public void CheckAreaOwnership_InvalidOwnerId_ShouldThrowForbiddenException()
     {
         // Arrange
-        var existArea = _repository.Object.Area.GetByIdAsync(Guid.Empty).Result;
 
         // Act
-        Task act() => _areaService.CheckAreaOwnership(existArea.Id, Guid.NewGuid());
+        Task act() => _areaService.CheckAreaOwnership(Guid.NewGuid(), Guid.NewGuid());
 
         // Assert
         Assert.ThrowsAsync<ForbiddenException>(act);

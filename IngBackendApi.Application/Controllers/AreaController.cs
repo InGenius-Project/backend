@@ -287,10 +287,9 @@ public class AreaController(
         return PhysicalFile(fullpath, imageDto.ContentType);
     }
 
-    private async Task AnalyzeRecruitmentKeywordAsync(Guid areaId)
+    public async Task AnalyzeRecruitmentKeywordAsync(Guid areaId)
     {
         // TODO: Remove the return when works done
-        return;
         var area = await _areaService.GetByIdAsync(areaId);
         if (area == null || area.RecruitmentId == null)
         {

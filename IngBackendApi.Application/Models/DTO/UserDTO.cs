@@ -29,8 +29,8 @@ public class UserInfoDTO
     public List<AreaDTO> Areas { get; set; }
     public List<TagDTO>? Tags { get; set; }
 
-    public List<ResumeDTO>? Resumes { get; set; }
-    public List<RecruitmentDTO>? Recruitments { get; set; }
+    // public List<ResumeDTO>? Resumes { get; set; }
+    // public List<RecruitmentDTO>? Recruitments { get; set; }
 }
 
 public class UserInfoPostDTO

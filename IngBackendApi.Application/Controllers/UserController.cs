@@ -50,6 +50,22 @@ public class UserController(
         return user;
     }
 
+    [HttpGet("Profile/{userId}")]
+    [ProducesResponseType(typeof(ResponseDTO<UserInfoDTO>), StatusCodes.Status200OK)]
+    public async Task<UserInfoDTO> GetUserProfile(Guid userId)
+    {
+        var user =
+            await _userService.GetUserByIdIncludeAllAsync(userId)
+            ?? throw new UserNotFoundException();
+
+        if (user.Role != UserRole.Company)
+        {
+            throw new ForbiddenException();
+        }
+
+        return user;
+    }
+
     [HttpPost]
     [ProducesResponseType(typeof(ResponseDTO<UserInfoDTO>), StatusCodes.Status200OK)]
     public async Task<ApiResponse> PostUser(UserInfoPostDTO req)

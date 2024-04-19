@@ -19,10 +19,11 @@ public class RecruitmentService(
     private readonly IMapper _mapper = mapper;
     private readonly IRepositoryWrapper _repository = repository;
 
-    public async Task<List<RecruitmentDTO>> GetUserRecruitementsAsync(Guid userId)
+    public async Task<List<RecruitmentDTO>> GetPublisherRecruitmentsAsync(Guid userId)
     {
         var recruitments = await _repository
             .Recruitment.GetIncludeAll()
+            .Include(r => r.Resumes)
             .Where(r => r.PublisherId == userId)
             .ToListAsync();
 
@@ -130,11 +131,26 @@ public class RecruitmentService(
     }
 
 
-    public async Task ApplyRecruitmentAsync(Guid recruitmentId, ResumeDTO resumeDTO)
+    public async Task ApplyRecruitmentAsync(Guid recruitmentId, Guid resumeId, Guid userId)
     {
-        var recruitment = await _repository.Recruitment.GetByIdAsync(recruitmentId) ?? throw new NotFoundException("職缺");
+        var recruitment = await _repository.Recruitment.GetAll(r => r.Resumes).FirstOrDefaultAsync(r => r.Id == recruitmentId)
+            ?? throw new RecruitmentNotFoundException(recruitmentId.ToString());
 
-        recruitment.Resumes.Add(_mapper.Map<Resume>(resumeDTO));
+        if (recruitment.Resumes.Any(r => r.Id == resumeId))
+        {
+            throw new BadRequestException("已經申請過此職缺");
+        }
+
+        var resume = await _repository.Resume.GetAll().FirstOrDefaultAsync(r => r.Id == resumeId)
+            ?? throw new ResumeNotFoundException(resumeId.ToString());
+
+        // Owner Check
+        if (resume.UserId != userId)
+        {
+            throw new ForbiddenException();
+        }
+
+        recruitment.Resumes.Add(resume);
 
         await _unitOfWork.SaveChangesAsync();
     }

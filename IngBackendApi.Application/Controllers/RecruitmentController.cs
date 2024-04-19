@@ -31,12 +31,13 @@ public class RecruitmentController(
 
     [HttpGet]
     [ProducesResponseType(typeof(List<RecruitmentDTO>), 200)]
+    [Authorize(Roles = "Company")]
     public async Task<List<RecruitmentDTO>> GetRecruitmentsByUser()
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId, UserRole.Company);
 
-        var recruitments = await _recruitmentService.GetUserRecruitementsAsync(userId);
+        var recruitments = await _recruitmentService.GetPublisherRecruitmentsAsync(userId);
 
         var recruitmentsDTO = _mapper.Map<List<RecruitmentDTO>>(recruitments);
         return recruitmentsDTO;
@@ -47,15 +48,23 @@ public class RecruitmentController(
     public async Task<RecruitmentDTO?> GetRecruitmentById(Guid recruitmentId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        var user = await _userService.CheckAndGetUserAsync(userId);
 
-        await _userService.CheckAndGetUserAsync(userId);
         var recruitment = await _recruitmentService.GetRecruitmentByIdIncludeAllAsync(
             recruitmentId
         );
+
+        // Attach resumes to recruitment if user is the publisher
+        if (recruitment.PublisherId == userId && user.Role == UserRole.Company)
+        {
+            recruitment.Resumes = await _resumeService.GetRecruitmentResumesAsync(recruitmentId);
+        }
+
         return recruitment;
     }
 
     [HttpPost]
+    [Authorize(Roles = "Company")]
     [ProducesResponseType(typeof(ResponseDTO<RecruitmentDTO>), StatusCodes.Status200OK)]
     public async Task<RecruitmentDTO> PostRecruitment([FromBody] RecruitmentPostDTO req)
     {
@@ -70,6 +79,7 @@ public class RecruitmentController(
     }
 
     [HttpDelete("{recruitmentId}")]
+    [Authorize(Roles = "Company")]
     [ProducesResponseType(typeof(ResponseDTO<>), StatusCodes.Status200OK)]
     public async Task<ApiResponse> DeleteRecruitment(Guid recruitmentId)
     {
@@ -82,10 +92,10 @@ public class RecruitmentController(
     }
 
     [HttpPost("search")]
+    [AllowAnonymous]
     public async Task<RecruitmentSearchResultDTO> SearchRecruitment(RecruitmentSearchPostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        await _userService.CheckAndGetUserAsync(userId);
         var result = await _recruitmentService.SearchRecruitmentsAsync(req, userId);
         return result;
     }
@@ -97,14 +107,14 @@ public class RecruitmentController(
         return result;
     }
 
-    [HttpPost("{recruitmentId}/apply")]
-    public async Task<ApiResponse> SendRecruitmentApply(Guid recruitmentId, [FromBody] Guid resumeId)
+    [HttpPost("{recruitmentId}/apply/{resumeId}")]
+    [Authorize(Roles = "Intern")]
+    public async Task<ApiResponse> SendRecruitmentApply(Guid recruitmentId, Guid resumeId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.CheckAndGetUserAsync(userId);
-        var resume = await _resumeService.CheckAndGetResumeAsync(resumeId, user);
+        await _userService.CheckAndGetUserAsync(userId);
 
-        await _recruitmentService.ApplyRecruitmentAsync(recruitmentId, resume);
+        await _recruitmentService.ApplyRecruitmentAsync(recruitmentId, resumeId, userId);
         return new ApiResponse("申請成功");
     }
 }
