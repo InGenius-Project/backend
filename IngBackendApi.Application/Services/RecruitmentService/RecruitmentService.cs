@@ -18,6 +18,8 @@ public class RecruitmentService(
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IMapper _mapper = mapper;
     private readonly IRepositoryWrapper _repository = repository;
+    private readonly IRepository<KeywordRecord, string> _keywordRecordRepository =
+        unitOfWork.Repository<KeywordRecord, string>();
 
     public async Task<List<RecruitmentDTO>> GetPublisherRecruitmentsAsync(Guid userId)
     {
@@ -70,27 +72,31 @@ public class RecruitmentService(
         Guid? userId
     )
     {
-        // count total page size
+        if (searchDTO.PageSize <= 0)
+        {
+            throw new BadRequestException("PageSize 必須大於 0");
+        }
+        else if (searchDTO.PageSize > 20)
+        {
+            throw new BadRequestException("PageSize 必須小於 20");
+        }
+
         var sortBy = searchDTO.SortBy ?? "CreatedTime";
         var orderBy = searchDTO.OrderBy == "asc" ? "asc" : "desc";
         var keywords = searchDTO.Query?.Split(" ").ToArray() ?? [];
-        var query = _repository
-            .Recruitment.GetAll()
-            .Where(r => r.Enable)
-            .Include(r => r.Publisher)
-            .Include(r => r.Areas)
-            .ThenInclude(a => a.TextLayout)
-            .AsQueryable();
 
-        if (keywords != null && keywords.Length > 0)
-        {
-            query = query.Where(r =>
-                keywords.All(keyword =>
-                    r.Areas.Select(a => a.TextLayout == null ? "" : a.TextLayout.Content)
-                        .Any(content => content.Contains(keyword))
-                )
-            );
-        }
+        var query = _keywordRecordRepository
+            .GetAll(k => keywords.Contains(k.Id))
+            .Include(k => k.Recruitments)
+            .SelectMany(k => k.Recruitments)
+            .Where(r => r.Enable)
+            .Distinct();
+
+        // count total page size
+        var total = await query.Select(r => r.Id).CountAsync();
+        var maxPage = (int)Math.Ceiling((double)total / searchDTO.PageSize);
+        searchDTO.Page = int.Max(maxPage, searchDTO.Page);
+
         if (orderBy == "asc")
         {
             query = query.OrderBy(r => r.CreatedAt);
@@ -99,11 +105,10 @@ public class RecruitmentService(
         {
             query = query.OrderByDescending(r => r.CreatedAt);
         }
-
-        var total = await query.Select(r => r.Id).CountAsync();
-        var maxPage = (int)Math.Ceiling((double)total / searchDTO.PageSize);
-        searchDTO.Page = int.Max(maxPage, searchDTO.Page);
         var skip = searchDTO.PageSize * (searchDTO.Page - 1);
+
+        // get recruitment with publisher and areas
+        query = query.Include(r => r.Publisher).Include(r => r.Areas);
         query = query.Skip(skip).Take(searchDTO.PageSize);
 
         var result = await _mapper.ProjectTo<RecruitmentDTO>(query).ToListAsync();

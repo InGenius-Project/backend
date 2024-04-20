@@ -210,6 +210,7 @@ app.UseApiResponseAndExceptionWrapper(
     new AutoWrapperOptions
     {
         // UseApiProblemDetailsException = true,
+        ExcludePaths = [new AutoWrapperExcludePath("/hangfire", ExcludeMode.StartWith)],
         ShowIsErrorFlagForSuccessfulResponse = true,
         ShowStatusCode = true,
     }
