@@ -5,6 +5,7 @@ using AutoMapper.EquivalencyExpression;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
+using Microsoft.CodeAnalysis;
 
 public class MappingProfile : Profile
 {
@@ -34,10 +35,8 @@ public class MappingProfile : Profile
         #endregion
 
         #region Resume Mapping
-        CreateMap<Resume, ResumeDTO>()
-            .EqualityComparison((dto, entity) => dto.Id == entity.Id);
-        CreateMap<ResumeDTO, Resume>()
-            .EqualityComparison((dto, entity) => dto.Id == entity.Id);
+        CreateMap<Resume, ResumeDTO>().EqualityComparison((dto, entity) => dto.Id == entity.Id);
+        CreateMap<ResumeDTO, Resume>().EqualityComparison((dto, entity) => dto.Id == entity.Id);
         CreateMap<ResumePostDTO, ResumeDTO>()
             .EqualityComparison((dto, entity) => dto.Id == entity.Id);
         CreateMap<ResumePostDTO, Resume>()
@@ -94,8 +93,7 @@ public class MappingProfile : Profile
         #endregion
 
         #region ImageLayout Mapping
-        CreateMap<ImageTextLayoutDTO, ImageTextLayout>()
-            .ReverseMap();
+        CreateMap<ImageTextLayoutDTO, ImageTextLayout>().ReverseMap();
         CreateMap<ImageDTO, Image>();
         #endregion
 
@@ -107,8 +105,7 @@ public class MappingProfile : Profile
         #endregion
 
         #region KeyValueListLayout Mapping
-        CreateMap<KeyValueListLayoutPostDTO, KeyValueListLayoutDTO>()
-            .ReverseMap();
+        CreateMap<KeyValueListLayoutPostDTO, KeyValueListLayoutDTO>().ReverseMap();
         CreateMap<KeyValueListLayoutDTO, KeyValueListLayout>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .EqualityComparison((dto, entity) => dto.Id == entity.Id)
@@ -122,14 +119,31 @@ public class MappingProfile : Profile
         #endregion
 
         #region Tag Mapping
-        CreateMap<TagDTO, Tag>()
-            .EqualityComparison((dto, entity) => dto.Id.Equals(entity.Id));
+        CreateMap<TagDTO, Tag>().EqualityComparison((dto, entity) => dto.Id.Equals(entity.Id));
         CreateMap<Tag, TagDTO>();
         CreateMap<TagPostDTO, TagDTO>().ReverseMap();
         CreateMap<TagType, TagTypeDTO>()
             .EqualityComparison((dto, entity) => dto.Id.Equals(entity.Id))
             .ReverseMap();
         CreateMap<TagTypePostDTO, TagTypeDTO>().ReverseMap();
+        #endregion
+
+        #region User Info Area Mapping
+        CreateMap<Area, UserInfoAreaDTO>()
+            .ForMember(
+                dest => dest.Title,
+                opt => opt.MapFrom(src => src.AreaType != null ? src.AreaType.Name : "")
+            )
+            .ForMember(dest => dest.Content, opt => opt.MapFrom(src => GetLayoutContent(src)));
+        #endregion
+
+        #region AI Generated Area Mapping
+        CreateMap<AiGeneratedAreaDTO, AreaDTO>()
+            .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.AreaTitle))
+            .ForMember(
+                dest => dest.TextLayout,
+                opt => opt.MapFrom(src => new TextLayoutDTO { Content = src.Content })
+            );
         #endregion
     }
 
@@ -172,5 +186,41 @@ public class MappingProfile : Profile
             );
         }
         return string.Format("{0}api/area/image?id={1}", configuration["Domain:Url"], image.Id);
+    }
+
+    private static string GetLayoutContent(Area area)
+    {
+        if (area.TextLayout != null)
+        {
+            return area.TextLayout.Content;
+        }
+
+        if (area.ListLayout != null)
+        {
+            if (area.ListLayout.Items == null || area.ListLayout.Items.Count == 0)
+            {
+                return "";
+            }
+            return string.Join(", ", area.ListLayout.Items.Select(i => i.Name));
+        }
+
+        if (area.ImageTextLayout != null)
+        {
+            return area.ImageTextLayout.TextContent ?? "";
+        }
+
+        if (area.KeyValueListLayout != null)
+        {
+            if (area.KeyValueListLayout.Items == null || area.KeyValueListLayout.Items.Count == 0)
+            {
+                return "";
+            }
+            return string.Join(
+                ", ",
+                area.KeyValueListLayout.Items.SelectMany(i => i.Key.Select(k => k.Name))
+                    .Where(i => i != null)
+            );
+        }
+        return "";
     }
 }

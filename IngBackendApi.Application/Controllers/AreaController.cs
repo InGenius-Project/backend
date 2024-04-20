@@ -287,6 +287,18 @@ public class AreaController(
         return PhysicalFile(fullpath, imageDto.ContentType);
     }
 
+    [HttpPost("generation")]
+    public async Task<IEnumerable<AreaDTO>> GenerateArea([FromBody] GenerateAreaPostDTO req)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        await _userService.CheckAndGetUserAsync(userId);
+        if (req.Type == "resume")
+        {
+            return await _aiService.GenerateResumeAreaAsync(userId, req.Title);
+        }
+        return await _aiService.GenerateResumeAreaAsync(userId, req.Title);
+    }
+
     private async Task AnalyzeRecruitmentKeywordAsync(Guid areaId)
     {
         // TODO: Remove the return when works done

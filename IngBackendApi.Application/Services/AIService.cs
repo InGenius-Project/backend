@@ -2,6 +2,7 @@ namespace IngBackendApi.Services;
 
 using System.Collections.Generic;
 using System.Text;
+using AutoMapper;
 using IngBackendApi.Exceptions;
 using IngBackendApi.Helpers;
 using IngBackendApi.Interfaces.Repository;
@@ -9,12 +10,13 @@ using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Interfaces.UnitOfWork;
 using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using MimeKit.Encodings;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork) : IAIService
+public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMapper mapper)
+    : IAIService
 {
     private readonly string _aiKeywordExctractionApi =
         configuration.GetSection("AI").GetSection("KeywordExtractionApi").Get<string>()
@@ -34,7 +36,11 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork) : I
         Guid
     >();
 
+    private readonly IEnumerable<string> _generatedAreaFilterList = ["作品", "教育", "作品"];
+
     private readonly IRepository<User, Guid> _userRepository = unitOfWork.Repository<User, Guid>();
+
+    private readonly IMapper _mapper = mapper;
 
     public async Task<string[]> GetKeywordsByAIAsync(string content)
     {
@@ -109,7 +115,7 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork) : I
         await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task<string> GenerateResumeArea(Guid userId)
+    public async Task<IEnumerable<AreaDTO>> GenerateResumeAreaAsync(Guid userId, string resumeTitle)
     {
         var user =
             await _userRepository
@@ -118,6 +124,8 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork) : I
                 .ThenInclude(a => a.AreaType)
                 .Include(u => u.Areas)
                 .ThenInclude(u => u.ListLayout)
+                .ThenInclude(l => l.Items)
+                .ThenInclude(i => i.Type)
                 .Include(u => u.Areas)
                 .ThenInclude(u => u.TextLayout)
                 .Include(u => u.Areas)
@@ -126,49 +134,96 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork) : I
                 .ThenInclude(u => u.KeyValueListLayout)
                 .ThenInclude(k => k.Items)
                 .ThenInclude(i => i.Key)
+                .ThenInclude(k => k.Type)
                 .AsNoTracking()
                 .FirstOrDefaultAsync() ?? throw new NotFoundException("User not found");
 
-        // Extract user info from areas
-        var selfIntro = user.Areas.FirstOrDefault(a => a.AreaType.Name.Contains("簡介"));
-        var userSkills = user.Areas.FirstOrDefault(a => a.AreaType.Name.Contains("技能"));
-        var userExperience = user.Areas.FirstOrDefault(a => a.AreaType.Name.Contains("經驗"));
-        var userEducation = user.Areas.FirstOrDefault(a => a.AreaType.Name.Contains("教育"));
+        // Map selected area
+        var areaMap = new Dictionary<IEnumerable<string>, IEnumerable<Area>?>
+        {
+            { ["簡介", "自我介紹"], null },
+            { ["技能"], null },
+            { ["經驗"], null },
+            { ["教育"], null },
+            { ["作品"], null }
+        };
 
-        // intro
-        var userIntroString = selfIntro?.TextLayout?.Content ?? "";
+        // Get Area By Key Name
+        foreach (var key in areaMap.Keys)
+        {
+            var areas = user.Areas.Where(a => key.Any(k => a.AreaType.Name.Contains(k))).ToList();
+            areas.ForEach(a =>
+            {
+                if (a.ListLayout != null)
+                {
+                    a.ListLayout.Id = Guid.Empty;
+                }
+                if (a.TextLayout != null)
+                {
+                    a.TextLayout.Id = Guid.Empty;
+                }
+                if (a.ImageTextLayout != null)
+                {
+                    a.ImageTextLayout.Id = Guid.Empty;
+                }
+                if (a.KeyValueListLayout != null)
+                {
+                    a.KeyValueListLayout.Id = Guid.Empty;
+                }
+            });
+            areaMap[key] = areas;
+        }
 
-        // skill
-        var skillArray = userSkills?.ListLayout?.Items?.Select(x => x.Name);
-        var skillString = skillArray != null ? string.Join(", ", skillArray) : "";
+        // Generate Post DTO
+        var userResumeGenerationDto = new UserResumeGenerationDTO()
+        {
+            ResumeTitle = resumeTitle,
+            Areas = _mapper
+                .Map<List<UserInfoAreaDTO>>(areaMap.Values.SelectMany(a => a.Select(aa => aa)))
+                .Where(i => i != null)
+                .ToList()
+        };
 
-        // experiences
-        var experienceString = userExperience?.TextLayout?.Content ?? "";
+        // Post And Get Response
+        var generatedArea = await GenerateAreaAsync(userResumeGenerationDto);
 
-        // education
-        var educationArray = userEducation
-            ?.KeyValueListLayout?.Items?.SelectMany(i => i.Key?.Select(k => k.Name))
-            .Where(i => i != null);
-        var educationString = educationArray != null ? string.Join(", ", educationArray) : "";
+        // Classify Generated Data
+        var areaDTOs = _mapper.Map<List<AreaDTO>>(generatedArea);
+        areaDTOs.RemoveAll(a => _generatedAreaFilterList.Any(f => a.Title.Contains(f)));
+        var defaultArea = _generatedAreaFilterList
+            .Select(a =>
+            {
+                var findAreas = areaMap.First(pair => pair.Key.SequenceEqual([a]));
+                if (findAreas.Value?.Count() == 0)
+                {
+                    return null;
+                }
+                return findAreas.Value?.First();
+            })
+            .Where(i => i != null)
+            .ToList();
+        areaDTOs.AddRange(_mapper.Map<List<AreaDTO>>(defaultArea));
 
-        var content = new StringBuilder();
-        content.Append("簡介: ").Append(userIntroString).AppendLine();
-        content.Append("技能: ").Append(skillString).AppendLine();
-        content.Append("經驗: ").Append(experienceString).AppendLine();
-        content.Append("教育背景: ").Append(educationString).AppendLine();
+        // Set Sequence
+        var sequence = 0;
+        areaDTOs.ForEach(a => a.Sequence = sequence++);
 
-        return content.ToString();
+        return areaDTOs;
     }
 
-    public async Task<List<AiGeneratedAreaDTO>> GenerateArea(string content)
+    public async Task<IEnumerable<AiGeneratedAreaDTO>> GenerateAreaAsync(object requestBody)
     {
-        var response = await Helper.SendRequestAsync(
-            _generateAreaApi,
-            new Dictionary<string, object> { ["content"] = content }
-        );
+        var response = await Helper.SendRequestAsync(_generateAreaApi, requestBody);
         var responseContent = await response.Content.ReadAsStringAsync();
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new BadRequestException("AI response failed");
+        }
+        var jsonString = new StringBuilder(responseContent.Trim("\\\"".ToCharArray()));
+        jsonString.Replace("\\", "");
+
         var generatedArea =
-            JsonConvert.DeserializeObject<List<AiGeneratedAreaDTO>>(responseContent)
+            JsonConvert.DeserializeObject<IEnumerable<AiGeneratedAreaDTO>>(jsonString.ToString())
             ?? throw new JsonParseException("AI response parse failed");
         return generatedArea;
     }

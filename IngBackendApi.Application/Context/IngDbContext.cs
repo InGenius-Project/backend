@@ -33,7 +33,6 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
         modelBuilder.Entity<TagType>().HasIndex(t => t.Value).IsUnique();
         modelBuilder.Entity<TagType>().Property(t => t.Id).ValueGeneratedOnAdd();
         modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
-
         modelBuilder.Entity<User>().HasMany(u => u.Recruitments).WithOne(t => t.Publisher);
 
         modelBuilder
@@ -62,13 +61,6 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
                 },
                 new TagType
                 {
-                    Id = 2,
-                    Name = "fake",
-                    Value = "fake",
-                    Color = "#ffffff"
-                },
-                new TagType
-                {
                     Id = 3,
                     Name = "university",
                     Value = "university",
@@ -80,7 +72,8 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
                     Name = "department",
                     Value = "department",
                     Color = "#ffffff"
-                }
+                },
+                skillTagType
             );
 
         modelBuilder.Entity<AreaType>().HasIndex(t => t.Value).IsUnique();
@@ -97,7 +90,15 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
                     Description = "編輯技能",
                     UserRole = [Enum.UserRole.Intern],
                     LayoutType = Enum.LayoutType.List,
-                    CreatedAt = DateTime.UtcNow,
+                },
+                new AreaType
+                {
+                    Id = 2,
+                    Name = "自我介紹",
+                    Value = "self-introduction",
+                    Description = "自我介紹",
+                    UserRole = [Enum.UserRole.Intern],
+                    LayoutType = Enum.LayoutType.Text,
                 }
             );
 
@@ -162,7 +163,7 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
         };
         modelBuilder.Entity<User>().HasData(user, internalUser, companyUser, adminUser);
 
-        // Resume
+        # region Ai generation test data
         var collegeTag = new Tag()
         {
             Id = Guid.NewGuid(),
@@ -170,7 +171,6 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             TagTypeId = 3,
             Count = 0
         };
-
         var departmentTag = new Tag()
         {
             Id = Guid.NewGuid(),
@@ -180,7 +180,6 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
         };
 
         var educationalKeyValueItem = new KeyValueItem() { Id = Guid.NewGuid(), Value = "大學", };
-
         var educationalKeyValueListLayout = new KeyValueListLayout() { Id = Guid.NewGuid() };
 
         var educationArea = new Area()
@@ -191,7 +190,6 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             Title = "教育背景",
             OwnerId = adminUser.Id,
         };
-
         var educationAreaType = new AreaType()
         {
             Id = 5,
@@ -222,5 +220,71 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
                     new { KeyValueItemsId = educationalKeyValueItem.Id, KeyId = departmentTag.Id }
                 )
             );
+
+        var skillTag = new Tag()
+        {
+            Id = Guid.NewGuid(),
+            Name = "C#",
+            TagTypeId = skillTagType.Id,
+            Count = 0
+        };
+
+        var skillTag2 = new Tag()
+        {
+            Id = Guid.NewGuid(),
+            Name = "Python",
+            TagTypeId = skillTagType.Id,
+            Count = 0
+        };
+
+        var skillArea = new Area()
+        {
+            Id = Guid.NewGuid(),
+            Sequence = 2,
+            IsDisplayed = true,
+            Title = "我的技能",
+            AreaTypeId = 1,
+            UserId = internalUser.Id,
+            OwnerId = internalUser.Id
+        };
+
+        var skillAreaListLayout = new ListLayout() { Id = Guid.NewGuid() };
+        skillArea.ListLayoutId = skillAreaListLayout.Id;
+
+        modelBuilder.Entity<Tag>().HasData(skillTag, skillTag2);
+        modelBuilder.Entity<ListLayout>().HasData(skillAreaListLayout);
+        modelBuilder.Entity<Area>().HasData(skillArea);
+        modelBuilder
+            .Entity<ListLayout>()
+            .HasMany(l => l.Items)
+            .WithMany(t => t.ListLayouts)
+            .UsingEntity(i =>
+                i.HasData(
+                    new { ListLayoutsId = skillAreaListLayout.Id, ItemsId = skillTag.Id },
+                    new { ListLayoutsId = skillAreaListLayout.Id, ItemsId = skillTag2.Id }
+                )
+            );
+
+        var selfIntroArea = new Area()
+        {
+            Id = Guid.NewGuid(),
+            Sequence = 3,
+            IsDisplayed = true,
+            Title = "自我介紹",
+            AreaTypeId = 2,
+            UserId = internalUser.Id,
+            OwnerId = internalUser.Id
+        };
+
+        var selfIntroTextLayout = new TextLayout()
+        {
+            Id = Guid.NewGuid(),
+            Content = "我是一個熱愛程式設計的學生，對於新技術有很大的興趣，希望能夠在這裡學到更多的東西。",
+            AreaId = selfIntroArea.Id
+        };
+
+        modelBuilder.Entity<Area>().HasData(selfIntroArea);
+        modelBuilder.Entity<TextLayout>().HasData(selfIntroTextLayout);
+        #endregion
     }
 }

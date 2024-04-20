@@ -53,10 +53,8 @@ public static class Helper
     )
     {
         var jsonBody = JsonConvert.SerializeObject(requestBody);
-        using (var httpClient = new HttpClient())
-        {
-            var requestContent = new StringContent(jsonBody, Encoding.UTF8, applicationType);
-            return await httpClient.PostAsync(url, requestContent);
-        }
+        using var httpClient = new HttpClient();
+        var requestContent = new StringContent(jsonBody, Encoding.UTF8, applicationType);
+        return await httpClient.PostAsync(url, requestContent);
     }
 }

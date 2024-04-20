@@ -13,7 +13,7 @@ public class Area : BaseEntity, IEntity<Guid>
     public Guid Id { get; set; }
 
     public required int Sequence { get; set; }
-    public required bool IsDisplayed { get; set; }
+    public required bool IsDisplayed { get; set; } = true;
     public required string Title { get; set; }
     public LayoutType? LayoutType { get; set; } // custom area
 
@@ -137,7 +137,7 @@ public class TextLayout : BaseEntity, IEntity<Guid>
 
     [JsonIgnore]
     [Required]
-    public required Area Area { get; set; }
+    public Area Area { get; set; }
 
     [ForeignKey("Area")]
     [Required]
@@ -181,7 +181,7 @@ public class ListLayout : BaseEntity, IEntity<Guid>
 
     [JsonIgnore]
     [Required]
-    public virtual required Area Area { get; set; }
+    public Area Area { get; set; }
 }
 
 public class KeyValueListLayout : BaseEntity, IEntity<Guid>

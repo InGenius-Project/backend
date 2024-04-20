@@ -30,7 +30,7 @@ try
 {
     builder.Configuration.AddJsonFile("appsettings.Secrets.json");
 }
-catch (Exception _)
+catch
 {
     throw new SystemInitException("Secret File Not Found.");
 }

@@ -154,9 +154,3 @@ public class AreaSequencePostDTO
     public Guid Id { get; set; }
     public int Sequence { get; set; }
 }
-
-public class AiGeneratedAreaDTO
-{
-    public required string AreaTitle { get; set; }
-    public required string Content { get; set; }
-}
