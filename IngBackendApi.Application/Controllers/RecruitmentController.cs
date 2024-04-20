@@ -100,13 +100,6 @@ public class RecruitmentController(
         return result;
     }
 
-    private async Task<string[]> AnalyzeRecruitmentKeywordAsync(Guid recruitmentId)
-    {
-        var result = await _aiService.GetKeywordsByAIAsync(recruitmentId);
-        await _aiService.SetKeywordsAsync(result, recruitmentId);
-        return result;
-    }
-
     [HttpPost("{recruitmentId}/apply/{resumeId}")]
     [Authorize(Roles = "Intern")]
     public async Task<ApiResponse> SendRecruitmentApply(Guid recruitmentId, Guid resumeId)
