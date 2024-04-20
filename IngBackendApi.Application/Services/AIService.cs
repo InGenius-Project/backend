@@ -62,7 +62,7 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
     public async Task<string[]> GetKeywordsByAIAsync(Guid recruitmentId)
     {
         var recruitmentContentArray =
-            await _recruitmentRepository
+            _recruitmentRepository
                 .GetAll(r => r.Id == recruitmentId)
                 .AsNoTracking()
                 .Include(r => r.Areas)
@@ -73,8 +73,15 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
                 .ThenInclude(a => a.TextLayout)
                 .Include(r => r.Areas)
                 .ThenInclude(a => a.KeyValueListLayout)
-                .SelectMany(r => r.Areas.Select(area => ChoosingLayout(area)))
-                .FirstOrDefaultAsync() ?? throw new NotFoundException("Recruitment not found");
+                .ToList()
+                .SelectMany(r =>
+                {
+                    var stringList = r.Areas.Select(area => ChoosingLayout(area)).ToList();
+                    // Add Recruitment Name
+                    stringList.Add(r.Name);
+                    return stringList;
+                })
+                .ToArray() ?? throw new NotFoundException("Recruitment not found");
 
         var content = string.Join(" ", recruitmentContentArray);
         return await GetKeywordsByAIAsync(content);
@@ -92,15 +99,14 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
         recruitment.Keywords.Clear();
 
         // Add new keywords
-        await Parallel.ForEachAsync(
-            keywords,
-            new ParallelOptions { MaxDegreeOfParallelism = 10 },
-            async (keyword, _) =>
+        keywords
+            .ToList()
+            .ForEach(async keyword =>
             {
                 var keywordEntity = await _keywordRepository
                     .GetAll(a => a.Id == keyword)
                     .Include(a => a.Recruitments)
-                    .FirstOrDefaultAsync(_);
+                    .FirstOrDefaultAsync();
                 if (keywordEntity != null)
                 {
                     keywordEntity.Recruitments.Add(recruitment);
@@ -109,8 +115,7 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
                 await _keywordRepository.AddAsync(
                     new KeywordRecord { Id = keyword, Recruitments = [recruitment] }
                 );
-            }
-        );
+            });
 
         await _unitOfWork.SaveChangesAsync();
     }

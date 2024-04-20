@@ -215,7 +215,6 @@ public class AreaController(
             () => AnalyzeRecruitmentKeywordAsync(areaId),
             TimeSpan.FromMinutes(1)
         );
-
         return Ok();
     }
 
@@ -299,9 +298,9 @@ public class AreaController(
         return await _aiService.GenerateResumeAreaAsync(userId, req.Title);
     }
 
-    private async Task AnalyzeRecruitmentKeywordAsync(Guid areaId)
+    [NonAction]
+    public async Task AnalyzeRecruitmentKeywordAsync(Guid areaId)
     {
-        // TODO: Remove the return when works done
         var area = await _areaService.GetByIdAsync(areaId);
         if (area == null || area.RecruitmentId == null)
         {

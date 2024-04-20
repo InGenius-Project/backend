@@ -2,6 +2,7 @@ namespace IngBackend.Controllers;
 
 using AutoMapper;
 using AutoWrapper.Wrappers;
+using IngBackendApi.Application.Attribute;
 using IngBackendApi.Application.Interfaces.Service;
 using IngBackendApi.Controllers;
 using IngBackendApi.Enum;
@@ -64,7 +65,7 @@ public class RecruitmentController(
     }
 
     [HttpPost]
-    [Authorize(Roles = "Company")]
+    [UserAuthorize(UserRole.Company, UserRole.Admin)]
     [ProducesResponseType(typeof(ResponseDTO<RecruitmentDTO>), StatusCodes.Status200OK)]
     public async Task<RecruitmentDTO> PostRecruitment([FromBody] RecruitmentPostDTO req)
     {
@@ -79,7 +80,7 @@ public class RecruitmentController(
     }
 
     [HttpDelete("{recruitmentId}")]
-    [Authorize(Roles = "Company")]
+    [UserAuthorize(UserRole.Company)]
     [ProducesResponseType(typeof(ResponseDTO<>), StatusCodes.Status200OK)]
     public async Task<ApiResponse> DeleteRecruitment(Guid recruitmentId)
     {
