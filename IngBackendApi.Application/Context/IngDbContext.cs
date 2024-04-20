@@ -212,5 +212,15 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
         modelBuilder.Entity<Area>().HasData(educationArea);
         modelBuilder.Entity<KeyValueListLayout>().HasData(educationalKeyValueListLayout);
         modelBuilder.Entity<KeyValueItem>().HasData(educationalKeyValueItem);
+        modelBuilder
+            .Entity<KeyValueItem>()
+            .HasMany(k => k.Key)
+            .WithMany(t => t.KeyValueItems)
+            .UsingEntity(i =>
+                i.HasData(
+                    new { KeyValueItemsId = educationalKeyValueItem.Id, KeyId = collegeTag.Id },
+                    new { KeyValueItemsId = educationalKeyValueItem.Id, KeyId = departmentTag.Id }
+                )
+            );
     }
 }

@@ -135,8 +135,6 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork) : I
         var userExperience = user.Areas.FirstOrDefault(a => a.AreaType.Name.Contains("經驗"));
         var userEducation = user.Areas.FirstOrDefault(a => a.AreaType.Name.Contains("教育"));
 
-        var content = new StringBuilder();
-
         // intro
         var userIntroString = selfIntro?.TextLayout?.Content ?? "";
 
@@ -148,11 +146,12 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork) : I
         var experienceString = userExperience?.TextLayout?.Content ?? "";
 
         // education
-        var educationArray = userEducation?.KeyValueListLayout?.Items?.SelectMany(i =>
-            i.Key.Select(k => k.Name)
-        );
+        var educationArray = userEducation
+            ?.KeyValueListLayout?.Items?.SelectMany(i => i.Key?.Select(k => k.Name))
+            .Where(i => i != null);
         var educationString = educationArray != null ? string.Join(", ", educationArray) : "";
 
+        var content = new StringBuilder();
         content.Append("簡介: ").Append(userIntroString).AppendLine();
         content.Append("技能: ").Append(skillString).AppendLine();
         content.Append("經驗: ").Append(experienceString).AppendLine();
