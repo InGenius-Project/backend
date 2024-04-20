@@ -26,18 +26,20 @@ public class AreaController(
     IResumeService resumeService,
     IWebHostEnvironment env,
     IAIService aiService,
-    IBackgroundJobClient backgroundJobClient
+    IBackgroundTaskService backgroundTaskService
 ) : BaseController
 {
     private readonly IUserService _userService = userService;
     private readonly IAreaService _areaService = areaService;
-    private readonly IBackgroundJobClient _backgroundJobClient = backgroundJobClient;
     private readonly IRecruitmentService _recruitmentService = recruitmentService;
     private readonly IResumeService _resumeService = resumeService;
     private readonly IMapper _mapper = mapper;
     private readonly IAreaTypeService _areaTypeService = areaTypeService;
     private readonly IWebHostEnvironment _env = env;
     private readonly IAIService _aiService = aiService;
+    private readonly IBackgroundTaskService _backgroundTaskService = backgroundTaskService;
+
+    private readonly Dictionary<Guid, string?> _taskMap = [];
 
     [HttpGet("{areaId}")]
     [ProducesResponseType(typeof(ResponseDTO<AreaDTO>), StatusCodes.Status200OK)]
@@ -212,10 +214,12 @@ public class AreaController(
         await _areaService.UpdateLayoutAsync(areaId, textLayoutDTO);
 
         // Analyze Keywords
-        _backgroundJobClient.Schedule(
+        await _backgroundTaskService.ScheduleTaskAsync(
+            areaId,
             () => AnalyzeRecruitmentKeywordAsync(areaId),
             TimeSpan.FromMinutes(1)
         );
+
         return Ok();
     }
 
@@ -236,7 +240,8 @@ public class AreaController(
         await _areaService.UpdateLayoutAsync(areaId, imageTextLayoutPostDTO);
 
         // Analyze Keywords
-        _backgroundJobClient.Schedule(
+        await _backgroundTaskService.ScheduleTaskAsync(
+            areaId,
             () => AnalyzeRecruitmentKeywordAsync(areaId),
             TimeSpan.FromMinutes(1)
         );

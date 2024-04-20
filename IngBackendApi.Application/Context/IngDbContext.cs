@@ -13,6 +13,7 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
     public DbSet<Resume> Resume { get; set; }
     public DbSet<Recruitment> Recruitment { get; set; }
     public DbSet<Area> Area { get; set; }
+    public DbSet<BackgroundTask> BaackgroundTask { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

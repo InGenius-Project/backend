@@ -84,6 +84,7 @@ builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IResumeService, ResumeService>();
 builder.Services.AddScoped<IRecruitmentService, RecruitmentService>();
 builder.Services.AddScoped<IAIService, AIService>();
+builder.Services.AddScoped<IBackgroundTaskService, BackgroundTaskService>();
 
 // builder.Services.AddScoped<ApiResponseMiddleware>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
