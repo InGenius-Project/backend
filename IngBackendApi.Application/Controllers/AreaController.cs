@@ -4,6 +4,7 @@ using AutoMapper;
 using AutoWrapper.Filters;
 using AutoWrapper.Wrappers;
 using Hangfire;
+using IngBackendApi.Application.Attribute;
 using IngBackendApi.Application.Interfaces.Service;
 using IngBackendApi.Enum;
 using IngBackendApi.Exceptions;
@@ -135,7 +136,7 @@ public class AreaController(
     }
 
     [HttpPost("type")]
-    [Authorize(Roles = "Admin, InternalUser")]
+    [UserAuthorize(UserRole.Admin, UserRole.InternalUser)]
     [ProducesResponseType(typeof(ResponseDTO<>), StatusCodes.Status200OK)]
     public async Task<ApiResponse> PostAreaType([FromBody] AreaTypePostDTO req)
     {
@@ -165,7 +166,7 @@ public class AreaController(
     }
 
     [HttpDelete("type")]
-    [Authorize(Roles = "Admin, InternalUser")]
+    [UserAuthorize(UserRole.Admin, UserRole.InternalUser)]
     [ProducesResponseType(typeof(ResponseDTO<>), StatusCodes.Status200OK)]
     public async Task<ApiResponse> DeleteAreaTypes([FromBody] List<int> ids)
     {

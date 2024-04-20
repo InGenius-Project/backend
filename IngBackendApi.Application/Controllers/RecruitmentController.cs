@@ -32,7 +32,7 @@ public class RecruitmentController(
 
     [HttpGet]
     [ProducesResponseType(typeof(List<RecruitmentDTO>), 200)]
-    [Authorize(Roles = "Company")]
+    [UserAuthorize(UserRole.Company)]
     public async Task<List<RecruitmentDTO>> GetRecruitmentsByUser()
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
@@ -102,7 +102,7 @@ public class RecruitmentController(
     }
 
     [HttpPost("{recruitmentId}/apply/{resumeId}")]
-    [Authorize(Roles = "Intern")]
+    [UserAuthorize(UserRole.Intern)]
     public async Task<ApiResponse> SendRecruitmentApply(Guid recruitmentId, Guid resumeId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
