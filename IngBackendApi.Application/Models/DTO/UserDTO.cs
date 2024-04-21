@@ -33,6 +33,13 @@ public class UserInfoDTO
     // public List<RecruitmentDTO>? Recruitments { get; set; }
 }
 
+public class ConnectionDTO
+{
+    public string ConnectionId { get; set; } = string.Empty;
+    public string GroupName { get; set; } = string.Empty;
+    public bool Connected { get; set; }
+}
+
 public class UserInfoPostDTO
 {
     public string? Username { get; set; }
@@ -51,4 +58,9 @@ public class UserSignInDTO
 {
     public string Email { get; set; }
     public string Password { get; set; }
+}
+
+public class ChatDTO
+{
+    public string Message { get; set; } = "";
 }

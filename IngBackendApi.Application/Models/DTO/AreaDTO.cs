@@ -113,7 +113,7 @@ public class KeyValueItemDTO
 {
     public Guid? Id { get; set; }
     public Guid? TagId { get; set; }
-    public TagDTO? Key { get; set; }
+    public List<TagDTO>? Key { get; set; }
     public string Value { get; set; } = "";
 }
 

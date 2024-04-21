@@ -4,6 +4,7 @@ using AutoMapper.EquivalencyExpression;
 using AutoWrapper;
 using Hangfire;
 using IngBackend.Repository;
+using IngBackendApi.Application.Hubs;
 using IngBackendApi.Application.Interfaces.Service;
 using IngBackendApi.Context;
 using IngBackendApi.Exceptions;
@@ -90,6 +91,13 @@ builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
 builder.Services.AddControllers();
 builder.Services.AddScoped<EmailService>();
 
+
+// Add SignalR
+builder.Services.AddSignalR();
+
+// Add Claim Accessor for SignalR
+builder.Services.AddHttpContextAccessor();
+
 // Json Serializer
 builder
     .Services.AddControllers()
@@ -151,6 +159,27 @@ builder.Services.AddAutoMapper(cfg =>
 builder
     .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
+    {
+        // Add SignalR authentication verify
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+
+                // If the request is for our hub...
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    path.StartsWithSegments("/chat"))
+                {
+                    // Read the token out of the query string
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
+
+        // Add normal controller authentication
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -162,7 +191,8 @@ builder
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(builder.Configuration["Secrets:JwtSecretKey"])
             )
-        }
+        };
+    }
     );
 
 // CORS
@@ -223,6 +253,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<ChatHub>("/Chat");
 
 // Ensure wwwroot/images/* directory exists, if not create it
 var paths = config.GetSection("ImageSavePath").Get<Dictionary<string, string>>() ?? [];

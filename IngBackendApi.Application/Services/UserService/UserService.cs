@@ -316,6 +316,16 @@ public class UserService(
         user.FavoriteRecruitments.RemoveAll(a => recruitmentIds.Contains(a.Id));
         await _unitOfWork.SaveChangesAsync();
     }
+    public async Task<List<ConnectionDTO>> GetUserConnection(Guid userId)
+    {
+        var user = await _repository.User
+            .GetAll()
+            .Include(u => u.Connections)
+            .FirstOrDefaultAsync(u => u.Id == userId)
+                ?? throw new UserNotFoundException();
+        return _mapper.Map<List<ConnectionDTO>>(user.Connections);
+    }
+
 
     private async Task<Image> SaveImageAsync(IFormFile file, string path)
     {

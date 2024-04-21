@@ -2,13 +2,16 @@ namespace IngBackend.Controllers;
 
 using AutoMapper;
 using AutoWrapper.Wrappers;
+using IngBackendApi.Application.Hubs;
 using IngBackendApi.Application.Interfaces.Service;
 using IngBackendApi.Controllers;
 using IngBackendApi.Enum;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Models.DTO;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using IngBackendApi.Application.Interfaces;
 
 [Route("api/[controller]")]
 [Authorize]
@@ -19,7 +22,8 @@ public class RecruitmentController(
     IUserService userService,
     IRecruitmentService recruitmentService,
     IResumeService resumeService,
-    IAIService aiService
+    IAIService aiService,
+    IHubContext<ChatHub, IChatHub> hubContext
 ) : BaseController
 {
     private readonly IMapper _mapper = mapper;
@@ -28,6 +32,7 @@ public class RecruitmentController(
     private readonly IAreaService _areaService = areaService;
     private readonly IAIService _aiService = aiService;
     private readonly IResumeService _resumeService = resumeService;
+    private readonly IHubContext<ChatHub, IChatHub> _hubContext = hubContext;
 
     [HttpGet]
     [ProducesResponseType(typeof(List<RecruitmentDTO>), 200)]
@@ -115,6 +120,8 @@ public class RecruitmentController(
         await _userService.CheckAndGetUserAsync(userId);
 
         await _recruitmentService.ApplyRecruitmentAsync(recruitmentId, resumeId, userId);
+
+
         return new ApiResponse("申請成功");
     }
 }
