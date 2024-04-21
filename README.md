@@ -28,22 +28,22 @@ Check [Dotnet Offical Website](https://dotnet.microsoft.com/en-us/download/dotne
 
 - Create file `IngBackendApi.Application/appsettings.Secrets.json` which is needed for running the application
 
-  ```json
-  // appsettings.Secrets.json example
+  ```python
+  # appsettings.Secrets.json example
   {
     "Secrets": {
-      // Generate a JWT secret key and paste here to handling jwt token authorization
+      # Generate a JWT secret key and paste here to handling jwt token authorization
       "JwtSecretKey": "<Your Secret Jwt Key>",
-      // This credential is for email server sending user signup verification mail
+      # This credential is for email server sending user signup verification mail (GMAIL)
       "EmailUsername": "<Your Email Server Username>",
       "EmailPassword": "<Your Email Server Password>"
     },
-    // ConnectionString in appsettings.Development.json is for dev purpose which should be Sqlite connection string
-    // This is for production database connection which should be SqlServer connection string
+    # ConnectionString in appsettings.Development.json is for dev purpose which should be Sqlite connection string
+    # This is for production database connection which should be SqlServer connection string
     "ConnectionStrings": {
       "Default": "<Prodction DataBase Connection String>"
     },
-    // You can disable AI function by removing AIService and relative using case in controllers
+    # You can disable AI function by removing AIService and relative using case in controllers
     "AI": {
       "Api": "<IngAi API>",
       "KeywordExtractionApi": "<IngAi KeywordExtractionApi API>",
@@ -78,7 +78,7 @@ dotnet restore
 
 - run
   ```
-  dotnet run --project IngBackend.Application
+  dotnet run --project .\IngBackendApi.Application\
   ```
 - run test
   ```
@@ -86,5 +86,5 @@ dotnet restore
   ```
 - Btw, if you want to watch changes
   ```
-  dotnet watch --project IngBackend.Application
+  dotnet watch --project .\IngBackendApi.Application\
   ```
