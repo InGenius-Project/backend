@@ -54,7 +54,7 @@ public class ChatHub(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAcc
         user.Connections.Add(
             new Connection
             {
-                Id = Context.ConnectionId,
+                ConnectionId = Context.ConnectionId,
                 GroupName = groupName,
                 Connected = true
             }
