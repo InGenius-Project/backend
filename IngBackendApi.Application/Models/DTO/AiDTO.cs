@@ -34,12 +34,12 @@ public class GenerateAreaPostDTO
 
 public class GenerateAreaByTitleDTO
 {
-    public required string AreaTitle { get; set; }
+    public required IEnumerable<string> AreaTitles { get; set; }
     public required UserResumeGenerationDTO UserResumeInfo { get; set; }
 }
 
 public class GenerateAreaByTitlePostDTO
 {
-    public required string AreaTitle { get; set; }
     public required string ResumeTitle { get; set; }
+    public required ICollection<string> AreaTitles { get; set; }
 }

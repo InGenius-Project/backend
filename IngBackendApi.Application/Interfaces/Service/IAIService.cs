@@ -9,5 +9,10 @@ public interface IAIService
     Task SetKeywordsAsync(string[] keywords, Guid recruitmentId);
     Task<IEnumerable<AreaDTO>> GenerateResumeAreaAsync(Guid userId, string resumeTitle);
     Task<IEnumerable<AiGeneratedAreaDTO>> GenerateAreaAsync(object requestBody);
-    Task<AreaDTO> GenerateResumeAreaByTitleAsync(Guid userId, string resumeTitle, string areaTitle);
+    Task<IEnumerable<AiGeneratedAreaDTO>> GenerateAreaByTitleAsync(object requestBody);
+    Task<IEnumerable<AreaDTO>> GenerateResumeAreaByTitleAsync(
+        Guid userId,
+        string resumeTitle,
+        IEnumerable<string> areaTitles
+    );
 }

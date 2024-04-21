@@ -49,8 +49,10 @@ public class ChatHub(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAcc
                 .Include(u => u.Connections)
                 .FirstOrDefaultAsync(u => u.Id == userId) ?? throw new UserNotFoundException();
 
+        // add to signalR group
         await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
 
+        // Add to database
         user.Connections.Add(
             new Connection
             {

@@ -219,10 +219,10 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
         return areaDTOs;
     }
 
-    public async Task<AreaDTO> GenerateResumeAreaByTitleAsync(
+    public async Task<IEnumerable<AreaDTO>> GenerateResumeAreaByTitleAsync(
         Guid userId,
         string resumeTitle,
-        string areaTitle
+        IEnumerable<string> areaTitles
     )
     {
         var user =
@@ -294,12 +294,11 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
         var postDTO = new GenerateAreaByTitleDTO
         {
             UserResumeInfo = userResumeGenerationDto,
-            AreaTitle = areaTitle
+            AreaTitles = areaTitles
         };
 
         var generatedArea = await GenerateAreaByTitleAsync(postDTO);
-        generatedArea.AreaTitle = areaTitle;
-        return _mapper.Map<AreaDTO>(generatedArea);
+        return _mapper.Map<IEnumerable<AreaDTO>>(generatedArea);
     }
 
     public async Task<IEnumerable<AiGeneratedAreaDTO>> GenerateAreaAsync(object requestBody)
@@ -319,7 +318,7 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
         return generatedArea;
     }
 
-    public async Task<AiGeneratedAreaDTO> GenerateAreaByTitleAsync(object requestBody)
+    public async Task<IEnumerable<AiGeneratedAreaDTO>> GenerateAreaByTitleAsync(object requestBody)
     {
         var response = await Helper.SendRequestAsync(_generateAreaByTitleApi, requestBody);
         var responseContent = await response.Content.ReadAsStringAsync();
@@ -330,10 +329,10 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
         var jsonString = new StringBuilder(responseContent.Trim("\\\"".ToCharArray()));
         jsonString.Replace("\\", "");
 
-        var generatedArea =
-            JsonConvert.DeserializeObject<AiGeneratedAreaDTO>(jsonString.ToString())
+        var generatedAreas =
+            JsonConvert.DeserializeObject<IEnumerable<AiGeneratedAreaDTO>>(jsonString.ToString())
             ?? throw new JsonParseException("AI response parse failed");
-        return generatedArea;
+        return generatedAreas;
     }
 
     private static string ChoosingLayout(Area area)
