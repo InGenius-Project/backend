@@ -229,4 +229,12 @@ public class UserController(
         await _userService.RemoveFavoriteRecruitmentAsync(userId, recruitmentIds);
         return new ApiResponse("Remove fav recruitment success");
     }
+
+    [HttpGet("connection")]
+    public async Task<List<ConnectionDTO>> GetUserConnection()
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        var connections = await _userService.GetUserConnection(userId);
+        return connections;
+    }
 }

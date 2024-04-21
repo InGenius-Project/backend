@@ -43,6 +43,17 @@ public class User : BaseEntity, IEntity<Guid>
     [JsonIgnore]
     public List<Recruitment> FavoriteRecruitments { get; set; } = [];
     public List<VerificationCode>? EmailVerifications { get; set; }
+
+    [JsonIgnore]
+    public ICollection<Connection> Connections { get; set; } = [];
+
+}
+
+public class Connection
+{
+    public string ConnectionId { get; set; } = string.Empty;
+    public string GroupName { get; set; } = string.Empty;
+    public bool Connected { get; set; }
 }
 
 public class Recruitment : BaseEntity, IEntity<Guid>

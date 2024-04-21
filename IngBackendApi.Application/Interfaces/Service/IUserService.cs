@@ -42,4 +42,6 @@ public interface IUserService : IService<User, UserInfoDTO, Guid>
     Task AddFavoriteRecruitmentAsync(Guid userId, List<Guid> recruitmentIds);
     Task RemoveFavoriteRecruitmentAsync(Guid userId, List<Guid> recruitmentIds);
     Task<List<RecruitmentDTO>> GetFavoriteRecruitmentsAsync(Guid userId);
+
+    Task<List<ConnectionDTO>> GetUserConnection(Guid userId);
 }
