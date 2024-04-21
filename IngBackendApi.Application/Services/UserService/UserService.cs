@@ -142,7 +142,6 @@ public class UserService(
         return user;
     }
 
-
     public async Task<UserInfoDTO> VerifyHashedPasswordAsync(UserSignInDTO req)
     {
         var query = _repository.User.GetUserByEmail(
@@ -284,9 +283,9 @@ public class UserService(
         var result = await _mapper.ProjectTo<RecruitmentDTO>(query).ToListAsync();
 
         var favRecruitmentIds = _repository
-          .User.GetAll(u => u.Id == userId)
-          .Include(u => u.FavoriteRecruitments)
-          .SelectMany(u => u.FavoriteRecruitments.Select(fr => fr.Id));
+            .User.GetAll(u => u.Id == userId)
+            .Include(u => u.FavoriteRecruitments)
+            .SelectMany(u => u.FavoriteRecruitments.Select(fr => fr.Id));
         result.ForEach(r => r.IsUserFav = favRecruitmentIds.Any(id => id == r.Id));
 
         return result;
@@ -316,16 +315,6 @@ public class UserService(
         user.FavoriteRecruitments.RemoveAll(a => recruitmentIds.Contains(a.Id));
         await _unitOfWork.SaveChangesAsync();
     }
-    public async Task<List<ConnectionDTO>> GetUserConnection(Guid userId)
-    {
-        var user = await _repository.User
-            .GetAll()
-            .Include(u => u.Connections)
-            .FirstOrDefaultAsync(u => u.Id == userId)
-                ?? throw new UserNotFoundException();
-        return _mapper.Map<List<ConnectionDTO>>(user.Connections);
-    }
-
 
     private async Task<Image> SaveImageAsync(IFormFile file, string path)
     {

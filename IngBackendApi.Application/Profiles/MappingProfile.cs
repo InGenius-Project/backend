@@ -32,7 +32,6 @@ public class MappingProfile : Profile
         CreateMap<UserSignUpDTO, UserInfoDTO>();
         CreateMap<TokenDTO, UserDTO>()
             .ForMember(dest => dest.Token, opt => opt.MapFrom(src => src));
-        CreateMap<Connection, ConnectionDTO>().ReverseMap();
         #endregion
 
         #region Resume Mapping

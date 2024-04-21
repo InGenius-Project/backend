@@ -19,14 +19,25 @@ public class ChatHub(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAcc
     private readonly IRepository<User, Guid> _userRepository = unitOfWork.Repository<User, Guid>();
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
+    // send message to all users
     public async Task SendMessage(string message) => await Clients.All.ReceiveMessage(message);
 
     public async Task SendMessageToCaller(string message) =>
         await Clients.Caller.ReceiveMessage(message);
 
-    public async Task SendMessageToGroup(string groupName, string message) =>
-        await Clients.Group(groupName).ReceiveMessage(message);
+    // user send message to group
+    public async Task SendMessageToGroup(string message, Guid groupId)
+    {
+        var group = (IClientProxy)Clients.Group(groupId.ToString());
+        if (group == null)
+        {
+            throw new NotFoundException("Group not found");
+        }
+        // check connection id if in group
+        await Clients.Group(groupId.ToString()).ReceiveMessage(message);
+    }
 
+    // Add new chat room
     public async Task AddGroup(string message, string groupName)
     {
         if (_httpContextAccessor.HttpContext == null)
@@ -46,28 +57,31 @@ public class ChatHub(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAcc
         var user =
             await _userRepository
                 .GetAll()
-                .Include(u => u.Connections)
-                .FirstOrDefaultAsync(u => u.Id == userId) ?? throw new UserNotFoundException();
+                .Include(x => x.ChatRooms)
+                .FirstOrDefaultAsync(x => x.Id == userId)
+            ?? throw new NotFoundException("User not found");
+
+        // create new group
+        var groupId = Guid.NewGuid();
+        var newGroup = new ChatRoom()
+        {
+            Id = groupId,
+            ChatRoomName = groupName,
+            OwnerId = userId
+        };
+        user.ChatRooms.Add(newGroup);
+        await _unitOfWork.SaveChangesAsync();
 
         // add to signalR group
-        await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
-
-        // Add to database
-        user.Connections.Add(
-            new Connection
-            {
-                ConnectionId = Context.ConnectionId,
-                GroupName = groupName,
-                Connected = true
-            }
-        );
-
-        await _unitOfWork.SaveChangesAsync();
-        await Clients.Group(groupName).ReceiveMessage(message);
+        await Groups.AddToGroupAsync(Context.ConnectionId, groupId.ToString());
+        await Clients.Group(groupId.ToString()).ReceiveMessage(message);
+        await Clients.Caller.ReceiveMessage(message);
     }
 
-    public async Task JoinGroup(string groupName)
+    // user join chat room
+    public async Task JoinGroup(Guid groupId)
     {
+        var groupName = groupId.ToString();
         await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
         await Clients
             .Group(groupName)

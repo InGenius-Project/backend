@@ -1,10 +1,11 @@
 namespace IngBackendApi.Models.DTO;
 
 using System.ComponentModel.DataAnnotations;
-using Newtonsoft.Json;
 
 public class UserResumeGenerationDTO
 {
+    public bool TitleOnly { get; set; }
+    public int AreaNum { get; set; } = 5;
     public required string ResumeTitle { get; set; }
     public required ICollection<UserInfoAreaDTO> Areas { get; set; }
 }
@@ -23,6 +24,8 @@ public class AiGeneratedAreaDTO
 
 public class GenerateAreaPostDTO
 {
+    public bool TitleOnly { get; set; }
+    public int AreaNum { get; set; } = 5;
     public required string Title { get; set; }
 
     [RegularExpression(

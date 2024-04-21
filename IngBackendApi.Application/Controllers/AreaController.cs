@@ -3,7 +3,6 @@ namespace IngBackendApi.Controllers;
 using AutoMapper;
 using AutoWrapper.Filters;
 using AutoWrapper.Wrappers;
-using Hangfire;
 using IngBackendApi.Application.Attribute;
 using IngBackendApi.Application.Interfaces.Service;
 using IngBackendApi.Enum;
@@ -299,7 +298,12 @@ public class AreaController(
         await _userService.CheckAndGetUserAsync(userId);
         if (req.Type == "resume")
         {
-            return await _aiService.GenerateResumeAreaAsync(userId, req.Title);
+            return await _aiService.GenerateResumeAreaAsync(
+                userId,
+                req.Title,
+                req.AreaNum,
+                req.TitleOnly
+            );
         }
         return await _aiService.GenerateResumeAreaAsync(userId, req.Title);
     }
