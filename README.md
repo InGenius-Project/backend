@@ -10,7 +10,7 @@
 ## About <a name = "about"></a>
 
 This is a web API project primarily built with C# EF Core.
-It serves as the backend for the backend for the internship matching platform "InG"
+It serves as the backend for the internship matching platform "InG".
 
 ## Getting Started <a name = "getting_started"></a>
 
