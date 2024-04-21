@@ -25,6 +25,9 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
     private readonly string _generateAreaApi =
         configuration.GetSection("AI").GetSection("GenerateAreaApi").Get<string>()
         ?? throw new NotFoundException("Generate Area API not found");
+    private readonly string _generateAreaByTitleApi =
+        configuration.GetSection("AI").GetSection("GenerateAreaByTitle").Get<string>()
+        ?? throw new NotFoundException("Generate Area By Title API not found");
 
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IRepository<KeywordRecord, string> _keywordRepository = unitOfWork.Repository<
@@ -216,6 +219,89 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
         return areaDTOs;
     }
 
+    public async Task<AreaDTO> GenerateResumeAreaByTitleAsync(
+        Guid userId,
+        string resumeTitle,
+        string areaTitle
+    )
+    {
+        var user =
+            await _userRepository
+                .GetAll(u => u.Id == userId)
+                .Include(u => u.Areas)
+                .ThenInclude(a => a.AreaType)
+                .Include(u => u.Areas)
+                .ThenInclude(u => u.ListLayout)
+                .ThenInclude(l => l.Items)
+                .ThenInclude(i => i.Type)
+                .Include(u => u.Areas)
+                .ThenInclude(u => u.TextLayout)
+                .Include(u => u.Areas)
+                .ThenInclude(u => u.ImageTextLayout)
+                .Include(u => u.Areas)
+                .ThenInclude(u => u.KeyValueListLayout)
+                .ThenInclude(k => k.Items)
+                .ThenInclude(i => i.Key)
+                .ThenInclude(k => k.Type)
+                .AsNoTracking()
+                .FirstOrDefaultAsync() ?? throw new NotFoundException("User not found");
+
+        var areaMap = new Dictionary<IEnumerable<string>, IEnumerable<Area>?>
+        {
+            { ["簡介", "自我介紹"], null },
+            { ["技能"], null },
+            { ["經驗"], null },
+            { ["教育"], null },
+            { ["作品"], null }
+        };
+
+        // Get Area By Key Name
+        foreach (var key in areaMap.Keys)
+        {
+            var areas = user.Areas.Where(a => key.Any(k => a.AreaType.Name.Contains(k))).ToList();
+            areas.ForEach(a =>
+            {
+                if (a.ListLayout != null)
+                {
+                    a.ListLayout.Id = Guid.Empty;
+                }
+                if (a.TextLayout != null)
+                {
+                    a.TextLayout.Id = Guid.Empty;
+                }
+                if (a.ImageTextLayout != null)
+                {
+                    a.ImageTextLayout.Id = Guid.Empty;
+                }
+                if (a.KeyValueListLayout != null)
+                {
+                    a.KeyValueListLayout.Id = Guid.Empty;
+                }
+            });
+            areaMap[key] = areas;
+        }
+
+        // Generate Post DTO
+        var userResumeGenerationDto = new UserResumeGenerationDTO()
+        {
+            ResumeTitle = resumeTitle,
+            Areas = _mapper
+                .Map<List<UserInfoAreaDTO>>(areaMap.Values.SelectMany(a => a.Select(aa => aa)))
+                .Where(i => i != null)
+                .ToList()
+        };
+
+        var postDTO = new GenerateAreaByTitleDTO
+        {
+            UserResumeInfo = userResumeGenerationDto,
+            AreaTitle = areaTitle
+        };
+
+        var generatedArea = await GenerateAreaByTitleAsync(postDTO);
+        generatedArea.AreaTitle = areaTitle;
+        return _mapper.Map<AreaDTO>(generatedArea);
+    }
+
     public async Task<IEnumerable<AiGeneratedAreaDTO>> GenerateAreaAsync(object requestBody)
     {
         var response = await Helper.SendRequestAsync(_generateAreaApi, requestBody);
@@ -229,6 +315,23 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
 
         var generatedArea =
             JsonConvert.DeserializeObject<IEnumerable<AiGeneratedAreaDTO>>(jsonString.ToString())
+            ?? throw new JsonParseException("AI response parse failed");
+        return generatedArea;
+    }
+
+    public async Task<AiGeneratedAreaDTO> GenerateAreaByTitleAsync(object requestBody)
+    {
+        var response = await Helper.SendRequestAsync(_generateAreaByTitleApi, requestBody);
+        var responseContent = await response.Content.ReadAsStringAsync();
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new BadRequestException("AI response failed");
+        }
+        var jsonString = new StringBuilder(responseContent.Trim("\\\"".ToCharArray()));
+        jsonString.Replace("\\", "");
+
+        var generatedArea =
+            JsonConvert.DeserializeObject<AiGeneratedAreaDTO>(jsonString.ToString())
             ?? throw new JsonParseException("AI response parse failed");
         return generatedArea;
     }

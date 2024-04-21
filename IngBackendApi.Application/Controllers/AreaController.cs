@@ -304,6 +304,18 @@ public class AreaController(
         return await _aiService.GenerateResumeAreaAsync(userId, req.Title);
     }
 
+    [HttpPost("generation/title")]
+    public async Task<AreaDTO> GenerateAreaByAreaTitle(GenerateAreaByTitlePostDTO req)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        await _userService.CheckAndGetUserAsync(userId);
+        return await _aiService.GenerateResumeAreaByTitleAsync(
+            userId,
+            req.ResumeTitle,
+            req.AreaTitle
+        );
+    }
+
     [NonAction]
     public async Task AnalyzeRecruitmentKeywordAsync(Guid areaId)
     {

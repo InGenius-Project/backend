@@ -31,3 +31,15 @@ public class GenerateAreaPostDTO
     )]
     public required string Type { get; set; }
 }
+
+public class GenerateAreaByTitleDTO
+{
+    public required string AreaTitle { get; set; }
+    public required UserResumeGenerationDTO UserResumeInfo { get; set; }
+}
+
+public class GenerateAreaByTitlePostDTO
+{
+    public required string AreaTitle { get; set; }
+    public required string ResumeTitle { get; set; }
+}
