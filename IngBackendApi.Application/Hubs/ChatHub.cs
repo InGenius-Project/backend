@@ -2,7 +2,6 @@
 
 using System.Security.Claims;
 using IngBackendApi.Application.Interfaces;
-using IngBackendApi.Context;
 using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Interfaces.UnitOfWork;
@@ -17,7 +16,17 @@ public class ChatHub(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAcc
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IRepository<User, Guid> _userRepository = unitOfWork.Repository<User, Guid>();
+    private readonly IRepository<ChatGroup, Guid> _chatGroupRepository = unitOfWork.Repository<
+        ChatGroup,
+        Guid
+    >();
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+
+    // Initialize GroupName and ConnectionIds
+    private readonly Dictionary<Guid, List<string>> _groupConnectionMap = unitOfWork
+        .Repository<ChatGroup, Guid>()
+        .GetAll()
+        .ToDictionary(x => x.Id, x => new List<string>());
 
     // send message to all users
     public async Task SendMessage(string message) => await Clients.All.ReceiveMessage(message);
@@ -28,7 +37,7 @@ public class ChatHub(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAcc
     // user send message to group
     public async Task SendMessageToGroup(string message, Guid groupId)
     {
-        var group = (IClientProxy)Clients.Group(groupId.ToString());
+        var group = Clients.Group(groupId.ToString());
         if (group == null)
         {
             throw new NotFoundException("Group not found");
@@ -63,7 +72,7 @@ public class ChatHub(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAcc
 
         // create new group
         var groupId = Guid.NewGuid();
-        var newGroup = new ChatRoom()
+        var newGroup = new ChatGroup()
         {
             Id = groupId,
             ChatRoomName = groupName,
@@ -74,6 +83,7 @@ public class ChatHub(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAcc
 
         // add to signalR group
         await Groups.AddToGroupAsync(Context.ConnectionId, groupId.ToString());
+
         await Clients.Group(groupId.ToString()).ReceiveMessage(message);
         await Clients.Caller.ReceiveMessage(message);
     }
@@ -87,4 +97,6 @@ public class ChatHub(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAcc
             .Group(groupName)
             .ReceiveMessage($"{Context.ConnectionId} has joined the group {groupName}.");
     }
+
+    public bool CheckIfGroupExist(Guid groupId) => _groupConnectionMap.ContainsKey(groupId);
 }

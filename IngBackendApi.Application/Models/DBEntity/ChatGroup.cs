@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using IngBackendApi.Interfaces.Repository;
 
-public class ChatRoom : BaseEntity, IEntity<Guid>
+public class ChatGroup : BaseEntity, IEntity<Guid>
 {
     public Guid Id { get; set; }
 
@@ -26,7 +26,7 @@ public class ChatMessage : BaseEntity, IEntity<Guid>
     public Guid ChatRoomId { get; set; }
 
     [JsonIgnore]
-    public ChatRoom ChatRoom { get; set; }
+    public ChatGroup ChatRoom { get; set; }
     public Guid SenderId { get; set; }
     public User Sender { get; set; }
 }

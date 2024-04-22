@@ -130,7 +130,7 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
         bool titleOnly = false
     )
     {
-        var userInfoAreaList = await GetUserInfoAreas(userId);
+        var userInfoAreaList = await GetUserInfoAreasAsync(userId);
         // Generate Post DTO
         var userResumeGenerationDto = new UserResumeGenerationDTO()
         {
@@ -149,6 +149,9 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
         // Classify Generated Data
         var areaDTOs = _mapper.Map<List<AreaDTO>>(generatedArea);
         areaDTOs.RemoveAll(a => _generatedAreaFilterList.Any(f => a.Title.Contains(f)));
+
+        // Add Layout Type
+        areaDTOs.ForEach(a => a.LayoutType = Enum.LayoutType.Text);
         var defaultArea = _generatedAreaFilterList
             .Select(a =>
                 userInfoAreaList.FirstOrDefault(ar =>
@@ -172,7 +175,7 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
         IEnumerable<string> areaTitles
     )
     {
-        var userInfoAreaList = await GetUserInfoAreas(userId);
+        var userInfoAreaList = await GetUserInfoAreasAsync(userId);
 
         // Generate Post DTO
         var userResumeGenerationDto = new UserResumeGenerationDTO()
@@ -228,7 +231,7 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
         return generatedAreas;
     }
 
-    private async Task<IEnumerable<Area>> GetUserInfoAreas(Guid userId)
+    private async Task<IEnumerable<Area>> GetUserInfoAreasAsync(Guid userId)
     {
         var user =
             await _userRepository

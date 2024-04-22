@@ -45,10 +45,10 @@ public class User : BaseEntity, IEntity<Guid>
     public List<VerificationCode>? EmailVerifications { get; set; }
 
     [JsonIgnore]
-    public ICollection<ChatRoom> ChatRooms { get; set; } = [];
+    public ICollection<ChatGroup> ChatRooms { get; set; } = [];
 
     [JsonIgnore]
-    public ICollection<ChatRoom> OwnedChatRooms { get; set; }
+    public ICollection<ChatGroup> OwnedChatRooms { get; set; }
 }
 
 public class Recruitment : BaseEntity, IEntity<Guid>
