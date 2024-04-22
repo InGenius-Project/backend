@@ -2,6 +2,7 @@
 
 public interface IChatHub
 {
-    public Task AddGroup(string groupName, string user);
-    public Task ReceiveMessage(string message);
+    Task SendMessage(string message);
+    Task AddGroup(string groupName, bool isPrivate = true);
+    Task JoinGroup(Guid groupId);
 }

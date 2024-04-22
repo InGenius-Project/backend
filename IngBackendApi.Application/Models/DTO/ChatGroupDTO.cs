@@ -6,6 +6,7 @@ public class ChatGroupInfoDTO
     public required string GroupName { get; set; }
     public bool IsPrivate { get; set; }
     public DateTime CreateTime { get; set; }
+    public IEnumerable<OwnerUserDTO> Users { get; set; } = [];
     public OwnerUserDTO Owner { get; set; }
 }
 

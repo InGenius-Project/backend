@@ -3,6 +3,7 @@
 using System.Security.Claims;
 using AutoMapper;
 using IngBackendApi.Application.Attribute;
+using IngBackendApi.Application.Interfaces;
 using IngBackendApi.Enum;
 using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Repository;
@@ -12,14 +13,13 @@ using IngBackendApi.Models.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 
 [Authorize]
 public class ChatHub(
     IHttpContextAccessor httpContextAccessor,
     IUnitOfWork unitOfWork,
     IMapper mapper
-) : Hub
+) : Hub, IChatHub
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IMapper _mapper = mapper;
@@ -112,15 +112,13 @@ public class ChatHub(
     }
 
     private async Task SendToCaller(ChatReceiveMethod method, object obj) =>
-        await Clients.Caller.SendAsync(method.ToString(), Serialize(obj));
+        await Clients.Caller.SendAsync(method.ToString(), obj);
 
     private async Task SendToGroup(ChatReceiveMethod method, object obj, Guid groupId) =>
-        await Clients.Group(groupId.ToString()).SendAsync(method.ToString(), Serialize(obj));
+        await Clients.Group(groupId.ToString()).SendAsync(method.ToString(), obj);
 
     private async Task SendToAll(ChatReceiveMethod method, object obj) =>
-        await Clients.All.SendAsync(method.ToString(), Serialize(obj));
-
-    private static string Serialize(object obj) => JsonConvert.SerializeObject(obj);
+        await Clients.All.SendAsync(method.ToString(), obj);
 
     private bool IsUserAbleToJoinGroup(Guid userId, Guid groupId)
     {
