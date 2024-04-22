@@ -49,6 +49,7 @@ public class User : BaseEntity, IEntity<Guid>
 
     [JsonIgnore]
     public ICollection<ChatGroup> OwnedChatRooms { get; set; }
+    public ICollection<ChatGroup> InvitedChatRooms { get; set; }
 }
 
 public class Recruitment : BaseEntity, IEntity<Guid>

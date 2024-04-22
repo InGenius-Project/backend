@@ -36,6 +36,7 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
         modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
         modelBuilder.Entity<User>().HasMany(u => u.Recruitments).WithOne(t => t.Publisher);
         modelBuilder.Entity<User>().HasMany(u => u.ChatRooms).WithMany(c => c.Users);
+        modelBuilder.Entity<User>().HasMany(u => u.InvitedChatRooms).WithMany(c => c.InvitedUsers);
         modelBuilder.Entity<ChatGroup>().HasOne(u => u.Owner).WithMany(t => t.OwnedChatRooms);
         modelBuilder
             .Entity<User>()

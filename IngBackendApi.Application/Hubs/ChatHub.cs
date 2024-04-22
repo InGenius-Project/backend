@@ -91,11 +91,15 @@ public class ChatHub(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAcc
     // user join chat room
     public async Task JoinGroup(Guid groupId)
     {
-        var groupName = groupId.ToString();
-        await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
+        if (!CheckIfGroupExist(groupId))
+        {
+            await Clients.Caller.ReceiveMessage("Group not exist");
+            return;
+        }
+        await Groups.AddToGroupAsync(Context.ConnectionId, groupId.ToString());
         await Clients
-            .Group(groupName)
-            .ReceiveMessage($"{Context.ConnectionId} has joined the group {groupName}.");
+            .Group(groupId.ToString())
+            .ReceiveMessage($"{Context.ConnectionId} has joined the group {groupId}.");
     }
 
     public bool CheckIfGroupExist(Guid groupId) => _groupConnectionMap.ContainsKey(groupId);

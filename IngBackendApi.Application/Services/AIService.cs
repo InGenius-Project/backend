@@ -194,7 +194,9 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
         };
 
         var generatedArea = await GenerateAreaByTitleAsync(postDTO);
-        return _mapper.Map<IEnumerable<AreaDTO>>(generatedArea);
+        var areaDTOs = _mapper.Map<List<AreaDTO>>(generatedArea);
+        areaDTOs.ForEach(a => a.LayoutType = Enum.LayoutType.Text);
+        return areaDTOs;
     }
 
     public async Task<IEnumerable<AiGeneratedAreaDTO>> GenerateAreaAsync(object requestBody)

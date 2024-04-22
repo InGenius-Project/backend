@@ -15,6 +15,7 @@ public class ChatGroup : BaseEntity, IEntity<Guid>
     public Guid OwnerId { get; set; }
     public User Owner { get; set; }
     public bool Private { get; set; } = true;
+    public ICollection<User> InvitedUsers { get; set; } = [];
 }
 
 public class ChatMessage : BaseEntity, IEntity<Guid>
