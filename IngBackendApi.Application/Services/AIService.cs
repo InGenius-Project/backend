@@ -196,6 +196,15 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
         var generatedArea = await GenerateAreaByTitleAsync(postDTO);
         var areaDTOs = _mapper.Map<List<AreaDTO>>(generatedArea);
         areaDTOs.ForEach(a => a.LayoutType = Enum.LayoutType.Text);
+        var defaultArea = _generatedAreaFilterList
+            .Select(a =>
+                userInfoAreaList.FirstOrDefault(ar =>
+                    ar.AreaType != null && a.Contains(ar.AreaType.Name)
+                )
+            )
+            .Where(i => i != null)
+            .ToList();
+        areaDTOs.AddRange(_mapper.Map<List<AreaDTO>>(defaultArea));
         return areaDTOs;
     }
 
