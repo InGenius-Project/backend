@@ -23,8 +23,7 @@ public class RecruitmentController(
     IUserService userService,
     IRecruitmentService recruitmentService,
     IResumeService resumeService,
-    IAIService aiService,
-    IHubContext<ChatHub, IChatHub> hubContext
+    IAIService aiService
 ) : BaseController
 {
     private readonly IMapper _mapper = mapper;
@@ -33,7 +32,6 @@ public class RecruitmentController(
     private readonly IAreaService _areaService = areaService;
     private readonly IAIService _aiService = aiService;
     private readonly IResumeService _resumeService = resumeService;
-    private readonly IHubContext<ChatHub, IChatHub> _hubContext = hubContext;
 
     [HttpGet]
     [ProducesResponseType(typeof(List<RecruitmentDTO>), 200)]

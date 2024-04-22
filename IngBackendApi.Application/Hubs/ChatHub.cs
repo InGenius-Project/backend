@@ -1,21 +1,28 @@
 ﻿namespace IngBackendApi.Application.Hubs;
 
 using System.Security.Claims;
-using IngBackendApi.Application.Interfaces;
+using AutoMapper;
+using IngBackendApi.Application.Attribute;
+using IngBackendApi.Enum;
 using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Interfaces.UnitOfWork;
 using IngBackendApi.Models.DBEntity;
+using IngBackendApi.Models.DTO;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 [Authorize]
-public class ChatHub(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor)
-    : Hub<IChatHub>
+public class ChatHub(
+    IHttpContextAccessor httpContextAccessor,
+    IUnitOfWork unitOfWork,
+    IMapper mapper
+) : Hub
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
     private readonly IRepository<User, Guid> _userRepository = unitOfWork.Repository<User, Guid>();
     private readonly IRepository<ChatGroup, Guid> _chatGroupRepository = unitOfWork.Repository<
         ChatGroup,
@@ -30,25 +37,23 @@ public class ChatHub(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAcc
         .ToDictionary(x => x.Id, x => new List<string>());
 
     // send message to all users
-    public async Task SendMessage(string message) => await Clients.All.ReceiveMessage(message);
-
-    public async Task SendMessageToCaller(string message) =>
-        await Clients.Caller.ReceiveMessage(message);
+    [UserAuthorize(UserRole.Admin, UserRole.InternalUser)]
+    public async Task SendMessage(string message) => await Clients.All.SendAsync(message);
 
     // user send message to group
     public async Task SendMessageToGroup(string message, Guid groupId)
     {
-        var group = Clients.Group(groupId.ToString());
-        if (group == null)
+        var userId = GetUserId();
+        if (!CheckIfUserInGroup(userId, groupId))
         {
-            throw new NotFoundException("Group not found");
+            throw new ForbiddenException("User not in group");
         }
         // check connection id if in group
-        await Clients.Group(groupId.ToString()).ReceiveMessage(message);
+        await SendToGroup(ChatReceiveMethod.Message, message, groupId);
     }
 
     // Add new chat room
-    public async Task AddGroup(string message, string groupName)
+    public async Task AddGroup(string groupName, bool isPrivate = true)
     {
         var userId = GetUserId();
         var user =
@@ -59,21 +64,23 @@ public class ChatHub(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAcc
             ?? throw new NotFoundException("User not found");
 
         // create new group
-        var groupId = Guid.NewGuid();
         var newGroup = new ChatGroup()
         {
-            Id = groupId,
-            ChatRoomName = groupName,
-            OwnerId = userId
+            GroupName = groupName,
+            OwnerId = userId,
+            Private = isPrivate
         };
         user.ChatRooms.Add(newGroup);
         await _unitOfWork.SaveChangesAsync();
 
-        // add to signalR group
-        await Groups.AddToGroupAsync(Context.ConnectionId, groupId.ToString());
+        var chatGroupDTO = _mapper.Map<ChatGroupInfoDTO>(newGroup);
 
-        await Clients.Group(groupId.ToString()).ReceiveMessage(message);
-        await Clients.Caller.ReceiveMessage(message);
+        // add to signalR group
+        await Groups.AddToGroupAsync(Context.ConnectionId, newGroup.Id.ToString());
+        _groupConnectionMap[newGroup.Id].Add(Context.ConnectionId);
+
+        await SendToGroup(ChatReceiveMethod.Message, "New Group Created", newGroup.Id);
+        await SendToCaller(ChatReceiveMethod.NewGroup, chatGroupDTO);
     }
 
     // user join chat room
@@ -81,22 +88,16 @@ public class ChatHub(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAcc
     {
         var userId = GetUserId();
 
-        // group not exist
-        if (!CheckIfGroupExist(groupId))
-        {
-            throw new NotFoundException("Group not found");
-        }
-
         // User already in group
-        if (IsUserInGroup(userId, groupId))
+        if (CheckIfUserInGroup(userId, groupId))
         {
             throw new BadRequestException("User already in group");
         }
 
         // User not in invite List
-        if (!IsUserWasInviteList(userId, groupId))
+        if (!IsUserAbleToJoinGroup(userId, groupId))
         {
-            throw new ForbiddenException("User not in invite list");
+            throw new ForbiddenException("User not able to join the group");
         }
 
         // Add to ConnectionId To Group
@@ -104,21 +105,40 @@ public class ChatHub(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAcc
         _groupConnectionMap[groupId].Add(Context.ConnectionId);
 
         // send message to group
-        await Clients
-            .Group(groupId.ToString())
-            .ReceiveMessage($"{Context.ConnectionId} has joined the group {groupId}.");
+        await SendToGroup(ChatReceiveMethod.Message, $"User {userId} Joined.", groupId);
 
         //  Add to DB Group
         await AddUserToDBGroup(userId, groupId);
     }
 
-    private bool IsUserWasInviteList(Guid userId, Guid groupId) =>
-        _chatGroupRepository
+    private async Task SendToCaller(ChatReceiveMethod method, object obj) =>
+        await Clients.Caller.SendAsync(method.ToString(), Serialize(obj));
+
+    private async Task SendToGroup(ChatReceiveMethod method, object obj, Guid groupId) =>
+        await Clients.Group(groupId.ToString()).SendAsync(method.ToString(), Serialize(obj));
+
+    private async Task SendToAll(ChatReceiveMethod method, object obj) =>
+        await Clients.All.SendAsync(method.ToString(), Serialize(obj));
+
+    private static string Serialize(object obj) => JsonConvert.SerializeObject(obj);
+
+    private bool IsUserAbleToJoinGroup(Guid userId, Guid groupId)
+    {
+        var chatGroup = _chatGroupRepository
             .GetAll(g => g.Id == groupId)
             .Include(x => x.InvitedUsers)
             .AsNoTracking()
-            .ToArray()
-            .Any(u => u.Id == userId);
+            .FirstOrDefault();
+        if (chatGroup == null)
+        {
+            return false;
+        }
+        if (!chatGroup.Private)
+        {
+            return true;
+        }
+        return chatGroup.InvitedUsers.Any(u => u.Id == userId);
+    }
 
     private async Task AddUserToDBGroup(Guid userId, Guid groupId)
     {
@@ -152,7 +172,7 @@ public class ChatHub(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAcc
         await _unitOfWork.SaveChangesAsync();
     }
 
-    private bool IsUserInGroup(Guid userId, Guid groupId)
+    private bool CheckIfUserInGroup(Guid userId, Guid groupId)
     {
         if (!_groupConnectionMap.TryGetValue(groupId, out var connectionList))
         {
@@ -164,17 +184,17 @@ public class ChatHub(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAcc
             return true;
         }
 
-        var isUserInGroup = _chatGroupRepository
+        var CheckIfUserInGroup = _chatGroupRepository
             .GetAll(g => g.Id == groupId)
             .Include(x => x.Users)
             .ToArray()
             .Any(u => u.Id == userId);
-        if (isUserInGroup)
+        if (CheckIfUserInGroup)
         {
             // add to map cache
             _groupConnectionMap[groupId].Add(Context.ConnectionId);
         }
-        return isUserInGroup;
+        return CheckIfUserInGroup;
     }
 
     private bool CheckIfGroupExist(Guid groupId) => _groupConnectionMap.ContainsKey(groupId);

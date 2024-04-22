@@ -9,7 +9,7 @@ public class ChatGroup : BaseEntity, IEntity<Guid>
     public Guid Id { get; set; }
 
     [Required(ErrorMessage = "ChatRoomName 不能為空")]
-    public string ChatRoomName { get; set; }
+    public required string GroupName { get; set; }
     public ICollection<User> Users { get; set; } = [];
     public ICollection<ChatMessage> Messages { get; set; } = [];
     public Guid OwnerId { get; set; }
@@ -27,6 +27,7 @@ public class ChatMessage : BaseEntity, IEntity<Guid>
     public Guid ChatRoomId { get; set; }
 
     [JsonIgnore]
+    [Required(ErrorMessage = "ChatRoom 不得為空")]
     public ChatGroup ChatRoom { get; set; }
     public Guid SenderId { get; set; }
     public User Sender { get; set; }

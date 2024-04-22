@@ -22,3 +22,10 @@ public enum AreaPostType
     Resume,
     Recruitment
 }
+
+public enum ChatReceiveMethod
+{
+    Message,
+    NewGroup,
+    JoinGroup,
+}

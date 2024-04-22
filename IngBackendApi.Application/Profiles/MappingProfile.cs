@@ -145,6 +145,15 @@ public class MappingProfile : Profile
                 opt => opt.MapFrom(src => new TextLayoutDTO { Content = src.Content })
             );
         #endregion
+
+        #region Chat
+        CreateMap<ChatGroup, ChatGroupInfoDTO>()
+            .ForMember(dest => dest.CreateTime, opt => opt.MapFrom(src => src.CreatedAt))
+            .ForMember(dest => dest.IsPrivate, opt => opt.MapFrom(src => src.Private));
+        CreateMap<ChatGroup, ChatGroupDTO>();
+        CreateMap<ChatMessage, ChatMessageDTO>()
+            .ForMember(dest => dest.SendTime, opt => opt.MapFrom(src => src.CreatedAt));
+        #endregion
     }
 
     public MappingProfile(IConfiguration configuration)

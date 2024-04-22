@@ -53,6 +53,15 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
         modelBuilder.Entity<User>().HasMany(u => u.ChatRooms).WithMany(c => c.Users);
         modelBuilder.Entity<User>().HasMany(u => u.InvitedChatRooms).WithMany(c => c.InvitedUsers);
         modelBuilder.Entity<ChatGroup>().HasOne(u => u.Owner).WithMany(t => t.OwnedChatRooms);
+
+        // delete messages when chat room is deleted
+        modelBuilder
+            .Entity<ChatGroup>()
+            .HasMany(u => u.Messages)
+            .WithOne(t => t.ChatRoom)
+            .HasForeignKey(t => t.ChatRoomId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         modelBuilder
             .Entity<User>()
             .HasMany(a => a.FavoriteRecruitments)
