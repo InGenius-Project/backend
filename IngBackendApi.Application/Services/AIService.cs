@@ -194,8 +194,12 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
         };
 
         var generatedArea = await GenerateAreaByTitleAsync(postDTO);
+
+        // Classify Generated Data
         var areaDTOs = _mapper.Map<List<AreaDTO>>(generatedArea);
         areaDTOs.RemoveAll(a => _generatedAreaFilterList.Any(f => a.Title.Contains(f)));
+
+        // Add Layout Type
         areaDTOs.ForEach(a => a.LayoutType = Enum.LayoutType.Text);
         var defaultArea = _generatedAreaFilterList
             .Select(a =>
@@ -206,6 +210,11 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
             .Where(i => i != null)
             .ToList();
         areaDTOs.AddRange(_mapper.Map<List<AreaDTO>>(defaultArea));
+
+        // Set Sequence
+        var sequence = 0;
+        areaDTOs.ForEach(a => a.Sequence = sequence++);
+
         return areaDTOs;
     }
 
