@@ -7,6 +7,7 @@ using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Interfaces.UnitOfWork;
 using IngBackendApi.Models.DBEntity;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
@@ -49,20 +50,7 @@ public class ChatHub(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAcc
     // Add new chat room
     public async Task AddGroup(string message, string groupName)
     {
-        if (_httpContextAccessor.HttpContext == null)
-        {
-            throw new UnauthorizedAccessException();
-        }
-
-        var userIdClaim =
-            _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)
-            ?? throw new UnauthorizedAccessException();
-
-        if (!Guid.TryParse(userIdClaim.Value, out var userId))
-        {
-            throw new UnauthorizedAccessException();
-        }
-
+        var userId = GetUserId();
         var user =
             await _userRepository
                 .GetAll()
@@ -91,16 +79,121 @@ public class ChatHub(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAcc
     // user join chat room
     public async Task JoinGroup(Guid groupId)
     {
+        var userId = GetUserId();
+
+        // group not exist
         if (!CheckIfGroupExist(groupId))
         {
-            await Clients.Caller.ReceiveMessage("Group not exist");
-            return;
+            throw new NotFoundException("Group not found");
         }
+
+        // User already in group
+        if (IsUserInGroup(userId, groupId))
+        {
+            throw new BadRequestException("User already in group");
+        }
+
+        // User not in invite List
+        if (!IsUserWasInviteList(userId, groupId))
+        {
+            throw new ForbiddenException("User not in invite list");
+        }
+
+        // Add to ConnectionId To Group
         await Groups.AddToGroupAsync(Context.ConnectionId, groupId.ToString());
+        _groupConnectionMap[groupId].Add(Context.ConnectionId);
+
+        // send message to group
         await Clients
             .Group(groupId.ToString())
             .ReceiveMessage($"{Context.ConnectionId} has joined the group {groupId}.");
+
+        //  Add to DB Group
+        await AddUserToDBGroup(userId, groupId);
     }
 
-    public bool CheckIfGroupExist(Guid groupId) => _groupConnectionMap.ContainsKey(groupId);
+    private bool IsUserWasInviteList(Guid userId, Guid groupId) =>
+        _chatGroupRepository
+            .GetAll(g => g.Id == groupId)
+            .Include(x => x.InvitedUsers)
+            .AsNoTracking()
+            .ToArray()
+            .Any(u => u.Id == userId);
+
+    private async Task AddUserToDBGroup(Guid userId, Guid groupId)
+    {
+        var group =
+            await _chatGroupRepository
+                .GetAll(g => g.Id == groupId)
+                .Include(x => x.Users)
+                .Include(x => x.InvitedUsers)
+                .FirstOrDefaultAsync() ?? throw new NotFoundException("Group not found");
+
+        //  user in group
+        if (group.Users.Any(u => u.Id == userId))
+        {
+            throw new BadRequestException("User already in group");
+        }
+
+        // user not in invite list
+        if (!group.InvitedUsers.Any(u => u.Id == userId))
+        {
+            throw new ForbiddenException("User not in invite list");
+        }
+
+        var user =
+            await _userRepository.GetAll().FirstOrDefaultAsync(u => u.Id == userId)
+            ?? throw new NotFoundException("User not found");
+
+        // remove invited user
+        group.InvitedUsers.Remove(group.InvitedUsers.First(u => u.Id == userId));
+        // add user to group
+        group.Users.Add(user);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    private bool IsUserInGroup(Guid userId, Guid groupId)
+    {
+        if (!_groupConnectionMap.TryGetValue(groupId, out var connectionList))
+        {
+            throw new NotFoundException("Group not found");
+        }
+
+        if (connectionList.Contains(Context.ConnectionId))
+        {
+            return true;
+        }
+
+        var isUserInGroup = _chatGroupRepository
+            .GetAll(g => g.Id == groupId)
+            .Include(x => x.Users)
+            .ToArray()
+            .Any(u => u.Id == userId);
+        if (isUserInGroup)
+        {
+            // add to map cache
+            _groupConnectionMap[groupId].Add(Context.ConnectionId);
+        }
+        return isUserInGroup;
+    }
+
+    private bool CheckIfGroupExist(Guid groupId) => _groupConnectionMap.ContainsKey(groupId);
+
+    private Guid GetUserId()
+    {
+        if (_httpContextAccessor.HttpContext == null)
+        {
+            throw new UnauthorizedAccessException();
+        }
+
+        var userIdClaim =
+            _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)
+            ?? throw new UnauthorizedAccessException();
+
+        if (!Guid.TryParse(userIdClaim.Value, out var userId))
+        {
+            throw new UnauthorizedAccessException();
+        }
+        return userId;
+    }
 }

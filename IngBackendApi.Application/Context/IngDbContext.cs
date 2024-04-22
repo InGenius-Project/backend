@@ -27,6 +27,21 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
                 r => r.HasOne<Resume>().WithMany().OnDelete(DeleteBehavior.NoAction)
             );
 
+        // Resume Area
+        modelBuilder
+            .Entity<Resume>()
+            .HasMany(r => r.Areas)
+            .WithOne(a => a.Resume)
+            .HasForeignKey(a => a.ResumeId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder
+            .Entity<Recruitment>()
+            .HasMany(r => r.Areas)
+            .WithOne(a => a.Recruitment)
+            .HasForeignKey(a => a.RecruitmentId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // User Area Relationship
         modelBuilder.Entity<Area>().HasOne(a => a.Owner);
         modelBuilder.Entity<Area>().HasOne(a => a.User).WithMany(u => u.Areas);
