@@ -74,10 +74,10 @@ else
 
 // Add services to the container.
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped(typeof(IService<,,>), typeof(Service<,,>)); // Repository Wrapper
-builder.Services.AddScoped<IRepositoryWrapper, RepositoryWrapper>();
+builder.Services.AddSingleton(typeof(IService<,,>), typeof(Service<,,>));
+builder.Services.AddScoped<IRepositoryWrapper, RepositoryWrapper>(); // Repository Wrapper
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddScoped<TokenService>();
+builder.Services.AddSingleton<TokenService>();
 builder.Services.AddScoped<IAreaService, AreaService>();
 builder.Services.AddScoped<IAreaTypeService, AreaTypeService>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -86,12 +86,10 @@ builder.Services.AddScoped<IResumeService, ResumeService>();
 builder.Services.AddScoped<IRecruitmentService, RecruitmentService>();
 builder.Services.AddScoped<IAIService, AIService>();
 builder.Services.AddScoped<IBackgroundTaskService, BackgroundTaskService>();
-
-// builder.Services.AddScoped<ApiResponseMiddleware>();
+builder.Services.AddSingleton<IGroupMapService, GroupMapService>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
 builder.Services.AddControllers();
 builder.Services.AddScoped<EmailService>();
-
 
 // Add SignalR
 builder.Services.AddSignalR();
@@ -170,8 +168,7 @@ builder
 
                 // If the request is for our hub...
                 var path = context.HttpContext.Request.Path;
-                if (!string.IsNullOrEmpty(accessToken) &&
-                    path.StartsWithSegments("/chat"))
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chat"))
                 {
                     // Read the token out of the query string
                     context.Token = accessToken;
@@ -193,8 +190,7 @@ builder
                 Encoding.UTF8.GetBytes(builder.Configuration["Secrets:JwtSecretKey"])
             )
         };
-    }
-    );
+    });
 
 // CORS
 var devCorsPolicy = "_devCorsPolicy";

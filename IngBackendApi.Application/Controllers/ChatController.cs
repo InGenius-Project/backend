@@ -139,6 +139,77 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
         return _mapper.Map<ChatGroupDTO>(chatGroup);
     }
 
+    [HttpGet("groups/invited")]
+    public async Task<IEnumerable<ChatGroupInfoDTO>> GetInvitedChatGroups()
+    {
+        var userId = (Guid?)ViewData["UserId"];
+        var user =
+            await _userRepository
+                .GetAll(u => u.Id == userId)
+                .Include(u => u.InvitedChatRooms)
+                .AsNoTracking()
+                .FirstOrDefaultAsync() ?? throw new UserNotFoundException();
+
+        return _mapper.Map<IEnumerable<ChatGroupInfoDTO>>(user.InvitedChatRooms);
+    }
+
+    [HttpGet("groups/{groupId}/invitations/users")]
+    public async Task<IEnumerable<OwnerUserDTO>> GetInvitedUsers(Guid groupId)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        var user = await _userRepository.GetByIdAsync(userId) ?? throw new UserNotFoundException();
+
+        var group =
+            await _chatGroupRepository
+                .GetAll(g => g.Id == groupId)
+                .Include(u => u.Users)
+                .Include(g => g.InvitedUsers)
+                .ThenInclude(u => u.Avatar)
+                .AsNoTracking()
+                .FirstOrDefaultAsync() ?? throw new NotFoundException("group not found");
+
+        if (!group.Users.Any(u => u.Id == userId))
+        {
+            throw new ForbiddenException();
+        }
+
+        return _mapper.Map<IEnumerable<OwnerUserDTO>>(group.InvitedUsers);
+    }
+
+    [HttpDelete("groups/{groupId}/users/{userId}/invitations")]
+    public async Task<ApiResponse> CancelInvitation(Guid groupId, Guid userId)
+    {
+        var currentUserId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        var user =
+            await _userRepository.GetByIdAsync(currentUserId) ?? throw new UserNotFoundException();
+
+        var group =
+            await _chatGroupRepository
+                .GetAll(g => g.Id == groupId)
+                .Include(u => u.InvitedUsers)
+                .Include(u => u.Users)
+                .FirstOrDefaultAsync() ?? throw new NotFoundException("group not found");
+
+        if (!group.Users.Any(u => u.Id == currentUserId))
+        {
+            throw new ForbiddenException();
+        }
+
+        if (!group.InvitedUsers.Any(u => u.Id == userId))
+        {
+            throw new BadRequestException("User has not been invited");
+        }
+
+        var invitedUser =
+            await _userRepository.GetByIdAsync(userId)
+            ?? throw new NotFoundException("The user invitation to deleted not found");
+
+        group.InvitedUsers.Remove(invitedUser);
+        await _unitOfWork.SaveChangesAsync();
+
+        return new ApiResponse("ok");
+    }
+
     private bool IsUserInGroup(Guid userId, Guid groupId)
     {
         var chatGroup =

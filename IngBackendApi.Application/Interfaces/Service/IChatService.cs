@@ -1,7 +1,10 @@
 namespace IngBackendApi.Interfaces.Service;
 
-public interface IChatService
+public interface IGroupMapService
 {
-    Task JoinGroup(Guid groupId);
-    Task AddGroup(string groupName);
+    void JoinGroup(Guid groupId, string connectionId);
+    void AddGroup(Guid groupId);
+    bool IsConnectionInGroup(Guid groupId, string connectionId);
+    bool IsGroupExist(Guid groupId);
+    void Sync();
 }

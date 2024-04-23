@@ -7,6 +7,7 @@ using IngBackendApi.Application.Interfaces;
 using IngBackendApi.Enum;
 using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Repository;
+using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Interfaces.UnitOfWork;
 using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
@@ -18,7 +19,8 @@ using Microsoft.EntityFrameworkCore;
 public class ChatHub(
     IHttpContextAccessor httpContextAccessor,
     IUnitOfWork unitOfWork,
-    IMapper mapper
+    IMapper mapper,
+    IGroupMapService groupMapService
 ) : Hub, IChatHub
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
@@ -29,12 +31,7 @@ public class ChatHub(
         Guid
     >();
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
-
-    // Initialize GroupName and ConnectionIds
-    private readonly Dictionary<Guid, List<string>> _groupConnectionMap = unitOfWork
-        .Repository<ChatGroup, Guid>()
-        .GetAll()
-        .ToDictionary(x => x.Id, x => new List<string>());
+    private readonly IGroupMapService _groupMapService = groupMapService;
 
     // send message to all users
     [UserAuthorize(UserRole.Admin, UserRole.InternalUser)]
@@ -77,7 +74,8 @@ public class ChatHub(
 
         // add to signalR group
         await Groups.AddToGroupAsync(Context.ConnectionId, newGroup.Id.ToString());
-        _groupConnectionMap[newGroup.Id].Add(Context.ConnectionId);
+        _groupMapService.AddGroup(newGroup.Id);
+        _groupMapService.JoinGroup(newGroup.Id, Context.ConnectionId);
 
         await SendToGroup(ChatReceiveMethod.Message, "New Group Created", newGroup.Id);
         await SendToCaller(ChatReceiveMethod.NewGroup, chatGroupDTO);
@@ -102,7 +100,7 @@ public class ChatHub(
 
         // Add to ConnectionId To Group
         await Groups.AddToGroupAsync(Context.ConnectionId, groupId.ToString());
-        _groupConnectionMap[groupId].Add(Context.ConnectionId);
+        _groupMapService.JoinGroup(groupId, Context.ConnectionId);
 
         // send message to group
         await SendToGroup(ChatReceiveMethod.Message, $"User {userId} Joined.", groupId);
@@ -172,30 +170,28 @@ public class ChatHub(
 
     private bool CheckIfUserInGroup(Guid userId, Guid groupId)
     {
-        if (!_groupConnectionMap.TryGetValue(groupId, out var connectionList))
+        if (!_groupMapService.IsGroupExist(groupId))
         {
             throw new NotFoundException("Group not found");
         }
 
-        if (connectionList.Contains(Context.ConnectionId))
+        if (_groupMapService.IsConnectionInGroup(groupId, Context.ConnectionId))
         {
             return true;
         }
 
-        var CheckIfUserInGroup = _chatGroupRepository
+        var checkIfUserInGroup = _chatGroupRepository
             .GetAll(g => g.Id == groupId)
             .Include(x => x.Users)
             .ToArray()
             .Any(u => u.Id == userId);
-        if (CheckIfUserInGroup)
+        if (checkIfUserInGroup)
         {
             // add to map cache
-            _groupConnectionMap[groupId].Add(Context.ConnectionId);
+            _groupMapService.JoinGroup(groupId, Context.ConnectionId);
         }
-        return CheckIfUserInGroup;
+        return checkIfUserInGroup;
     }
-
-    private bool CheckIfGroupExist(Guid groupId) => _groupConnectionMap.ContainsKey(groupId);
 
     private Guid GetUserId()
     {
