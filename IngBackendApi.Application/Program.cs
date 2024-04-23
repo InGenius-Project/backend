@@ -213,6 +213,7 @@ builder.Services.AddCors(options =>
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();
+            policy.SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost");
             policy
                 .WithOrigins("http://140.123.176.230:34004")
                 .AllowAnyHeader()
