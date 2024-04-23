@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using AutoMapper.EquivalencyExpression;
 using AutoWrapper;
@@ -92,7 +93,9 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<EmailService>();
 
 // Add SignalR
-builder.Services.AddSignalR();
+builder
+    .Services.AddSignalR()
+    .AddJsonProtocol(option => option.PayloadSerializerOptions.PropertyNamingPolicy = null);
 
 // Add Claim Accessor for SignalR
 builder.Services.AddHttpContextAccessor();
