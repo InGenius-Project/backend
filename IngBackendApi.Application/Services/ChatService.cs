@@ -1,24 +1,42 @@
 namespace IngBackendApi.Services;
 
-using IngBackendApi.Interfaces.Repository;
+using System.Data.Entity;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Interfaces.UnitOfWork;
 using IngBackendApi.Models.DBEntity;
 
 // NOTE: not Implemented
-public class ChatService(IUnitOfWork unitOfWork) : IChatService
+public class GroupMapService : IGroupMapService
 {
-    private readonly IUnitOfWork _unitOfWork = unitOfWork;
-    private readonly IRepository<User, Guid> _userRepository = unitOfWork.Repository<User, Guid>();
-    private readonly IRepository<ChatGroup, Guid> _chatGroupRepository = unitOfWork.Repository<
-        ChatGroup,
-        Guid
-    >();
+    private readonly Dictionary<Guid, List<string>> _groupConnectionMap = [];
+    private readonly IServiceProvider _services;
 
-    public async Task JoinGroup(Guid groupId) { }
-
-    public async Task AddGroup(string groupName)
+    public GroupMapService(IServiceProvider services)
     {
-        throw new NotImplementedException();
+        _services = services;
+        Sync();
+    }
+
+    public void JoinGroup(Guid groupId, string connectionId) =>
+        _groupConnectionMap[groupId].Add(connectionId);
+
+    public void AddGroup(Guid groupId) => _groupConnectionMap.Add(groupId, []);
+
+    public bool IsConnectionInGroup(Guid groupId, string connectionId) =>
+        _groupConnectionMap[groupId].Contains(connectionId);
+
+    public bool IsGroupExist(Guid groupId) => _groupConnectionMap.ContainsKey(groupId);
+
+    public void Sync()
+    {
+        using var scope = _services.CreateScope();
+        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        _groupConnectionMap.Clear();
+        unitOfWork
+            .Repository<ChatGroup, Guid>()
+            .GetAll()
+            .AsNoTracking()
+            .ToList()
+            .ForEach(c => _groupConnectionMap.Add(c.Id, []));
     }
 }
