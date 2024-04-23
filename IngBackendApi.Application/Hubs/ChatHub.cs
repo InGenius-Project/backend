@@ -65,7 +65,8 @@ public class ChatHub(
         {
             GroupName = groupName,
             OwnerId = userId,
-            Private = isPrivate
+            Private = isPrivate,
+            Users = [user]
         };
         user.ChatRooms.Add(newGroup);
         await _unitOfWork.SaveChangesAsync();
@@ -101,6 +102,8 @@ public class ChatHub(
         // Add to ConnectionId To Group
         await Groups.AddToGroupAsync(Context.ConnectionId, groupId.ToString());
         _groupMapService.JoinGroup(groupId, Context.ConnectionId);
+
+        await SendToCaller(ChatReceiveMethod.Message, $"User {userId} Joined.");
 
         // send message to group
         await SendToGroup(ChatReceiveMethod.Message, $"User {userId} Joined.", groupId);
