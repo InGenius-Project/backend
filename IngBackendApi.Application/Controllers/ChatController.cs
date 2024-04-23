@@ -210,6 +210,21 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
         return new ApiResponse("ok");
     }
 
+    [AllowAnonymous]
+    [HttpGet("groups/public")]
+    public async Task<IEnumerable<ChatGroupInfoDTO>> GetPublicGroup()
+    {
+        var groups = await _chatGroupRepository
+            .GetAll(c => !c.Private)
+            .Include(c => c.Users)
+            .ThenInclude(u => u.Avatar)
+            .Include(c => c.Owner)
+            .ThenInclude(o => o.Avatar)
+            .AsNoTracking()
+            .ToArrayAsync();
+        return _mapper.Map<IEnumerable<ChatGroupInfoDTO>>(groups);
+    }
+
     private bool IsUserInGroup(Guid userId, Guid groupId)
     {
         var chatGroup =
