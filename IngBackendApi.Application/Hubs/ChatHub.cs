@@ -70,6 +70,7 @@ public class ChatHub : Hub, IChatHub
             await _userRepository
                 .GetAll(u => u.Id == userId)
                 .Include(u => u.Avatar)
+                .AsNoTracking()
                 .FirstOrDefaultAsync() ?? throw new UserNotFoundException();
 
         var messageDTO = new ChatMessageDTO()
@@ -79,6 +80,7 @@ public class ChatHub : Hub, IChatHub
             SenderId = userId,
             Sender = _mapper.Map<OwnerUserDTO>(user)
         };
+
         // check connection id if in group
         await SendToGroup(ChatReceiveMethod.Message, messageDTO, groupId);
         await PushMessageToDBAsync(groupId, userId, message);
