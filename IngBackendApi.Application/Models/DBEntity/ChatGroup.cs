@@ -24,11 +24,11 @@ public class ChatMessage : BaseEntity, IEntity<Guid>
 
     [Required(ErrorMessage = "訊息不能為空")]
     public required string Message { get; set; }
-    public Guid ChatRoomId { get; set; }
+    public Guid GroupId { get; set; }
 
     [JsonIgnore]
     [Required(ErrorMessage = "ChatRoom 不得為空")]
-    public ChatGroup ChatRoom { get; set; }
+    public ChatGroup Group { get; set; }
     public Guid SenderId { get; set; }
     public User Sender { get; set; }
 }

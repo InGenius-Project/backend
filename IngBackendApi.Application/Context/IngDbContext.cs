@@ -71,8 +71,8 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
         modelBuilder
             .Entity<ChatGroup>()
             .HasMany(u => u.Messages)
-            .WithOne(t => t.ChatRoom)
-            .HasForeignKey(t => t.ChatRoomId)
+            .WithOne(t => t.Group)
+            .HasForeignKey(t => t.GroupId)
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder

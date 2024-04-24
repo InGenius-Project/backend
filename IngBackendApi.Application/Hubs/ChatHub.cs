@@ -66,8 +66,22 @@ public class ChatHub : Hub, IChatHub
         {
             throw new ForbiddenException("User not in group");
         }
+        var user =
+            await _userRepository
+                .GetAll(u => u.Id == userId)
+                .Include(u => u.Avatar)
+                .FirstOrDefaultAsync() ?? throw new UserNotFoundException();
+
+        var messageDTO = new ChatMessageDTO()
+        {
+            Message = message,
+            GroupId = groupId,
+            SenderId = userId,
+            Sender = _mapper.Map<OwnerUserDTO>(user)
+        };
         // check connection id if in group
-        await SendToGroup(ChatReceiveMethod.Message, message, groupId);
+        await SendToGroup(ChatReceiveMethod.Message, messageDTO, groupId);
+        await PushMessageToDBAsync(groupId, userId, message);
     }
 
     // Add new chat room
@@ -232,5 +246,25 @@ public class ChatHub : Hub, IChatHub
             throw new UnauthorizedAccessException();
         }
         return userId;
+    }
+
+    private async Task PushMessageToDBAsync(Guid groupId, Guid userId, string message)
+    {
+        var group =
+            await _chatGroupRepository
+                .GetAll(g => g.Id == groupId)
+                .Include(c => c.Messages)
+                .SingleOrDefaultAsync() ?? throw new NotFoundException("Group not found");
+
+        var user = await _userRepository.GetByIdAsync(userId) ?? throw new UserNotFoundException();
+        group.Messages.Add(
+            new ChatMessage()
+            {
+                Message = message,
+                GroupId = groupId,
+                SenderId = userId
+            }
+        );
+        await _unitOfWork.SaveChangesAsync();
     }
 }
