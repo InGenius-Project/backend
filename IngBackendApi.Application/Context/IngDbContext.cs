@@ -36,6 +36,19 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder
+            .Entity<User>()
+            .HasMany(u => u.Resumes)
+            .WithOne(r => r.User)
+            .HasForeignKey(r => r.UserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder
+            .Entity<Resume>()
+            .HasOne(u => u.User)
+            .WithMany(r => r.Resumes)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder
             .Entity<Recruitment>()
             .HasMany(r => r.Areas)
             .WithOne(a => a.Recruitment)
