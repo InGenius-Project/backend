@@ -16,22 +16,43 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 [Authorize]
-public class ChatHub(
-    IHttpContextAccessor httpContextAccessor,
-    IUnitOfWork unitOfWork,
-    IMapper mapper,
-    IGroupMapService groupMapService
-) : Hub, IChatHub
+public class ChatHub : Hub, IChatHub
 {
-    private readonly IUnitOfWork _unitOfWork = unitOfWork;
-    private readonly IMapper _mapper = mapper;
-    private readonly IRepository<User, Guid> _userRepository = unitOfWork.Repository<User, Guid>();
-    private readonly IRepository<ChatGroup, Guid> _chatGroupRepository = unitOfWork.Repository<
-        ChatGroup,
-        Guid
-    >();
-    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
-    private readonly IGroupMapService _groupMapService = groupMapService;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+    private readonly IRepository<User, Guid> _userRepository;
+    private readonly IRepository<ChatGroup, Guid> _chatGroupRepository;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IGroupMapService _groupMapService;
+
+    public ChatHub(
+        IHttpContextAccessor httpContextAccessor,
+        IUnitOfWork unitOfWork,
+        IMapper mapper,
+        IGroupMapService groupMapService
+    )
+    {
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
+        _userRepository = unitOfWork.Repository<User, Guid>();
+        _chatGroupRepository = unitOfWork.Repository<ChatGroup, Guid>();
+        _httpContextAccessor = httpContextAccessor;
+        _groupMapService = groupMapService;
+    }
+
+    public override async Task OnConnectedAsync()
+    {
+        var userId = GetUserId();
+        var user =
+            _userRepository.GetAll().Include(x => x.ChatRooms).SingleOrDefault(x => x.Id == userId)
+            ?? throw new NotFoundException("User not found");
+        user.ChatRooms.ToList()
+            .ForEach(async g =>
+                await Groups.AddToGroupAsync(Context.ConnectionId, g.Id.ToString())
+            );
+
+        await base.OnConnectedAsync();
+    }
 
     // send message to all users
     [UserAuthorize(UserRole.Admin, UserRole.InternalUser)]
