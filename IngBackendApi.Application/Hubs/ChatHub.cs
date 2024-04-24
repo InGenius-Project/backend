@@ -183,11 +183,10 @@ public class ChatHub(
             return true;
         }
 
-        var checkIfUserInGroup = _chatGroupRepository
-            .GetAll(g => g.Id == groupId)
-            .Include(x => x.Users)
-            .ToArray()
-            .Any(u => u.Id == userId);
+        var group =
+            _chatGroupRepository.GetAll(g => g.Id == groupId).Include(x => x.Users).FirstOrDefault()
+            ?? throw new NotFoundException("group not found");
+        var checkIfUserInGroup = group.Users.Any(u => u.Id == userId);
         if (checkIfUserInGroup)
         {
             // add to map cache
