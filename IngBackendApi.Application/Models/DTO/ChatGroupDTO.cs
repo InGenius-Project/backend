@@ -8,6 +8,7 @@ public class ChatGroupInfoDTO
     public DateTime CreateTime { get; set; }
     public IEnumerable<OwnerUserDTO> Users { get; set; } = [];
     public OwnerUserDTO Owner { get; set; }
+    public string? Description { get; set; }
 }
 
 public class ChatMessageDTO

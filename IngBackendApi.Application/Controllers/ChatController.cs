@@ -120,9 +120,9 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
     public async Task<ChatGroupDTO> GetChatGroup(Guid groupId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        if (!IsUserInGroup(userId, groupId))
+        if (!IsUserInGroup(userId, groupId) && !IsUserInInviteList(userId, groupId))
         {
-            throw new ForbiddenException("User not in group");
+            throw new ForbiddenException("User not in group or invite list");
         }
         var chatGroup =
             await _chatGroupRepository
@@ -234,5 +234,16 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
                 .AsNoTracking()
                 .FirstOrDefault() ?? throw new NotFoundException("Group not found");
         return chatGroup.Users.Any(u => u.Id == userId);
+    }
+
+    private bool IsUserInInviteList(Guid userId, Guid groupId)
+    {
+        var chatGroup =
+            _chatGroupRepository
+                .GetAll(g => g.Id == groupId)
+                .Include(g => g.InvitedUsers)
+                .AsNoTracking()
+                .FirstOrDefault() ?? throw new NotFoundException("Group not found");
+        return chatGroup.InvitedUsers.Any(u => u.Id == userId);
     }
 }

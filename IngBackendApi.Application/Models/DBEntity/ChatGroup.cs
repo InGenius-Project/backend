@@ -10,6 +10,7 @@ public class ChatGroup : BaseEntity, IEntity<Guid>
 
     [Required(ErrorMessage = "ChatRoomName 不能為空")]
     public required string GroupName { get; set; }
+    public string? Description { get; set; }
     public ICollection<User> Users { get; set; } = [];
     public ICollection<ChatMessage> Messages { get; set; } = [];
     public Guid OwnerId { get; set; }
