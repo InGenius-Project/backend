@@ -75,7 +75,7 @@ else
 
 // Add services to the container.
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddSingleton(typeof(IService<,,>), typeof(Service<,,>));
+builder.Services.AddScoped(typeof(IService<,,>), typeof(Service<,,>));
 builder.Services.AddScoped<IRepositoryWrapper, RepositoryWrapper>(); // Repository Wrapper
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSingleton<TokenService>();
