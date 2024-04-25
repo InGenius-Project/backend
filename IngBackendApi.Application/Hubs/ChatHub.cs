@@ -78,7 +78,8 @@ public class ChatHub : Hub, IChatHub
             Message = message,
             GroupId = groupId,
             SenderId = userId,
-            Sender = _mapper.Map<OwnerUserDTO>(user)
+            Sender = _mapper.Map<OwnerUserDTO>(user),
+            SendTime = DateTime.UtcNow,
         };
 
         // check connection id if in group
