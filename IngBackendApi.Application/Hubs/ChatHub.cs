@@ -115,7 +115,7 @@ public class ChatHub : Hub, IChatHub
         _groupMapService.AddGroup(newGroup.Id);
         _groupMapService.JoinGroup(newGroup.Id, Context.ConnectionId);
 
-        await SendToGroup(ChatReceiveMethod.Message, "New Group Created", newGroup.Id);
+        await SendToGroup(ChatReceiveMethod.BroadCast, "New Group Created", newGroup.Id);
         await SendToCaller(ChatReceiveMethod.NewGroup, chatGroupDTO);
     }
 
@@ -140,10 +140,10 @@ public class ChatHub : Hub, IChatHub
         await Groups.AddToGroupAsync(Context.ConnectionId, groupId.ToString());
         _groupMapService.JoinGroup(groupId, Context.ConnectionId);
 
-        await SendToCaller(ChatReceiveMethod.Message, $"User {userId} Joined.");
+        await SendToCaller(ChatReceiveMethod.BroadCast, $"User {userId} Joined.");
 
         // send message to group
-        await SendToGroup(ChatReceiveMethod.Message, $"User {userId} Joined.", groupId);
+        await SendToGroup(ChatReceiveMethod.BroadCast, $"User {userId} Joined.", groupId);
 
         //  Add to DB Group
         await AddUserToDBGroup(userId, groupId);
