@@ -193,7 +193,7 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
             AreaTitles = areaTitles
         };
 
-        var generatedArea = await GenerateAreaByTitleAsync(postDTO);
+        var generatedArea = await GenerateAreaAsync(postDTO, true);
 
         // Classify Generated Data
         var areaDTOs = _mapper.Map<List<AreaDTO>>(generatedArea);
@@ -218,9 +218,18 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
         return areaDTOs;
     }
 
-    public async Task<IEnumerable<AiGeneratedAreaDTO>> GenerateAreaAsync(object requestBody)
+    public async Task<AreaDTO> GenerateImageLayoutAreaAsync(string[] keywords, string textContent)
     {
-        var response = await Helper.SendRequestAsync(_generateAreaApi, requestBody);
+        throw new NotImplementedException();
+    }
+
+    private async Task<IEnumerable<AiGeneratedAreaDTO>> GenerateAreaAsync(
+        object requestBody,
+        bool byTitle = false
+    )
+    {
+        var api = byTitle ? _generateAreaByTitleApi : _generateAreaApi;
+        var response = await Helper.SendRequestAsync(api, requestBody);
         var responseContent = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
         {
@@ -233,23 +242,6 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
             JsonConvert.DeserializeObject<IEnumerable<AiGeneratedAreaDTO>>(jsonString.ToString())
             ?? throw new JsonParseException("AI response parse failed");
         return generatedArea;
-    }
-
-    public async Task<IEnumerable<AiGeneratedAreaDTO>> GenerateAreaByTitleAsync(object requestBody)
-    {
-        var response = await Helper.SendRequestAsync(_generateAreaByTitleApi, requestBody);
-        var responseContent = await response.Content.ReadAsStringAsync();
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new BadRequestException("AI response failed");
-        }
-        var jsonString = new StringBuilder(responseContent.Trim("\\\"".ToCharArray()));
-        jsonString.Replace("\\", "");
-
-        var generatedAreas =
-            JsonConvert.DeserializeObject<IEnumerable<AiGeneratedAreaDTO>>(jsonString.ToString())
-            ?? throw new JsonParseException("AI response parse failed");
-        return generatedAreas;
     }
 
     private async Task<IEnumerable<Area>> GetUserInfoAreasAsync(Guid userId)

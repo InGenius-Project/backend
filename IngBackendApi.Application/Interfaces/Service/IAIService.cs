@@ -13,8 +13,6 @@ public interface IAIService
         int areaNum = 5,
         bool titleOnly = false
     );
-    Task<IEnumerable<AiGeneratedAreaDTO>> GenerateAreaAsync(object requestBody);
-    Task<IEnumerable<AiGeneratedAreaDTO>> GenerateAreaByTitleAsync(object requestBody);
     Task<IEnumerable<AreaDTO>> GenerateResumeAreaByTitleAsync(
         Guid userId,
         string resumeTitle,
