@@ -28,5 +28,6 @@ public enum ChatReceiveMethod
     Message,
     NewGroup,
     JoinGroup,
-    BroadCast
+    BroadCast,
+    LastMessage
 }

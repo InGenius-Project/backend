@@ -44,12 +44,34 @@ public class ChatHub : Hub, IChatHub
     {
         var userId = GetUserId();
         var user =
-            _userRepository.GetAll().Include(x => x.ChatRooms).SingleOrDefault(x => x.Id == userId)
+            _userRepository
+            .GetAll()
+            .Include(x => x.ChatRooms)
+                .ThenInclude(c => c.Messages)
+            .SingleOrDefault(x => x.Id == userId)
             ?? throw new NotFoundException("User not found");
         user.ChatRooms.ToList()
             .ForEach(async g =>
                 await Groups.AddToGroupAsync(Context.ConnectionId, g.Id.ToString())
             );
+
+        foreach (var chatRoom in user.ChatRooms)
+        {
+            var lastMessage = chatRoom.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault();
+            if (lastMessage != null)
+            {
+                var messageDTO = new ChatMessageDTO()
+                {
+                    Message = lastMessage.Message,
+                    GroupId = lastMessage.GroupId,
+                    SenderId = userId,
+                    Sender = _mapper.Map<OwnerUserDTO>(user),
+                    SendTime = lastMessage.CreatedAt,
+                };
+
+                await SendToCaller(ChatReceiveMethod.LastMessage, messageDTO);
+            }
+        }
 
         await base.OnConnectedAsync();
     }
