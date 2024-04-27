@@ -15,6 +15,7 @@ using IngBackendApi.Interfaces.UnitOfWork;
 using IngBackendApi.Profiles;
 using IngBackendApi.Services;
 using IngBackendApi.Services.AreaService;
+using IngBackendApi.Services.Http;
 using IngBackendApi.Services.RecruitmentService;
 using IngBackendApi.Services.TagService;
 using IngBackendApi.Services.TokenServices;
@@ -89,8 +90,10 @@ builder.Services.AddScoped<IAIService, AIService>();
 builder.Services.AddScoped<IBackgroundTaskService, BackgroundTaskService>();
 builder.Services.AddSingleton<IGroupMapService, GroupMapService>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
-builder.Services.AddControllers();
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddSingleton<AiHttpClient>();
+
+builder.Services.AddControllers();
 
 // Add SignalR
 builder

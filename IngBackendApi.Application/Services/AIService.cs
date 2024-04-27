@@ -10,25 +10,15 @@ using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Interfaces.UnitOfWork;
 using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
-using Microsoft.AspNetCore.Mvc;
+using IngBackendApi.Services.Http;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMapper mapper)
+public class AIService(IUnitOfWork unitOfWork, IMapper mapper, AiHttpClient aiHttpClient)
     : IAIService
 {
-    private readonly string _aiKeywordExctractionApi =
-        configuration.GetSection("AI").GetSection("KeywordExtractionApi").Get<string>()
-        ?? throw new NotFoundException("Keyword Extraction API not found");
-
-    private readonly string _generateAreaApi =
-        configuration.GetSection("AI").GetSection("GenerateAreaApi").Get<string>()
-        ?? throw new NotFoundException("Generate Area API not found");
-    private readonly string _generateAreaByTitleApi =
-        configuration.GetSection("AI").GetSection("GenerateAreaByTitle").Get<string>()
-        ?? throw new NotFoundException("Generate Area By Title API not found");
-
+    private readonly AiHttpClient _aiHttpClient = aiHttpClient;
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IRepository<KeywordRecord, string> _keywordRepository = unitOfWork.Repository<
         KeywordRecord,
@@ -44,23 +34,6 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
     private readonly IRepository<User, Guid> _userRepository = unitOfWork.Repository<User, Guid>();
 
     private readonly IMapper _mapper = mapper;
-
-    public async Task<string[]> GetKeywordsByAIAsync(string content)
-    {
-        var all_keywords = await _keywordRepository.GetAll().Select(k => k.Id).ToArrayAsync();
-
-        var requestBody = new Dictionary<string, object>() { ["content"] = content };
-
-        var response = await Helper.SendRequestAsync(_aiKeywordExctractionApi, requestBody);
-        var responseContent = await response.Content.ReadAsStringAsync();
-
-        var jsonArray =
-            JArray.Parse(responseContent)
-            ?? throw new JsonParseException("AI response parse failed");
-
-        return jsonArray.ToObject<string[]>()
-            ?? throw new JsonParseException("AI response parse failed");
-    }
 
     public async Task<string[]> GetKeywordsByAIAsync(Guid recruitmentId)
     {
@@ -87,7 +60,7 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
                 .ToArray() ?? throw new NotFoundException("Recruitment not found");
 
         var content = string.Join(" ", recruitmentContentArray);
-        return await GetKeywordsByAIAsync(content);
+        return await _aiHttpClient.PostKeyExtractionAsync(content);
     }
 
     public async Task SetKeywordsAsync(string[] keywords, Guid recruitmentId)
@@ -144,7 +117,7 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
         };
 
         // Post And Get Response
-        var generatedArea = await GenerateAreaAsync(userResumeGenerationDto);
+        var generatedArea = await _aiHttpClient.PostGenerateAreasAsync(userResumeGenerationDto);
 
         // Classify Generated Data
         var areaDTOs = _mapper.Map<List<AreaDTO>>(generatedArea);
@@ -193,7 +166,7 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
             AreaTitles = areaTitles
         };
 
-        var generatedArea = await GenerateAreaAsync(postDTO, true);
+        var generatedArea = await _aiHttpClient.PostGenerateAreasAsync(postDTO, true);
 
         // Classify Generated Data
         var areaDTOs = _mapper.Map<List<AreaDTO>>(generatedArea);
@@ -218,31 +191,16 @@ public class AIService(IConfiguration configuration, IUnitOfWork unitOfWork, IMa
         return areaDTOs;
     }
 
-    public async Task<AreaDTO> GenerateImageLayoutAreaAsync(string[] keywords, string textContent)
-    {
-        throw new NotImplementedException();
-    }
-
-    private async Task<IEnumerable<AiGeneratedAreaDTO>> GenerateAreaAsync(
-        object requestBody,
-        bool byTitle = false
-    )
-    {
-        var api = byTitle ? _generateAreaByTitleApi : _generateAreaApi;
-        var response = await Helper.SendRequestAsync(api, requestBody);
-        var responseContent = await response.Content.ReadAsStringAsync();
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new BadRequestException("AI response failed");
-        }
-        var jsonString = new StringBuilder(responseContent.Trim("\\\"".ToCharArray()));
-        jsonString.Replace("\\", "");
-
-        var generatedArea =
-            JsonConvert.DeserializeObject<IEnumerable<AiGeneratedAreaDTO>>(jsonString.ToString())
-            ?? throw new JsonParseException("AI response parse failed");
-        return generatedArea;
-    }
+    // public async Task<AreaDTO> GenerateImageLayoutAreaAsync(
+    //     string areaTitle,
+    //     string userPrompt,
+    //     string resumeTitle,
+    //     Guid userId
+    // )
+    // {
+    //     var keywords = await GetKeywordsByAIAsync(areaTitle);
+    //     var content = await GenerateResumeAreaByTitleAsync(userId, resumeTitle, [areaTitle]);
+    // }
 
     private async Task<IEnumerable<Area>> GetUserInfoAreasAsync(Guid userId)
     {

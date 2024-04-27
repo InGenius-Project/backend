@@ -25,6 +25,16 @@ public class SystemInitException : Exception
         throw new ApiException(ex, Status500InternalServerError);
 }
 
+public class SystemInternalException : ApiException
+{
+    public SystemInternalException()
+        : base("系統內部錯誤") => throw new ApiException("系統內部錯誤", Status500InternalServerError);
+
+    public SystemInternalException(string message)
+        : base($"系統內部錯誤: {message}") =>
+        throw new ApiException("系統內部錯誤", Status500InternalServerError);
+}
+
 public class EntityNotFoundException : Exception
 {
     public EntityNotFoundException()
@@ -39,7 +49,6 @@ public class EntityNotFoundException : Exception
     public EntityNotFoundException(string message, Exception exception)
         : base(message, exception) { }
 }
-
 
 #region 400 Errors
 
@@ -103,9 +112,7 @@ public class UserNotFoundException : NotFoundException
         : base("使用者") { }
 }
 
-public class TagNotFoundException(string tagId) : NotFoundException($"標籤: {tagId}")
-{
-}
+public class TagNotFoundException(string tagId) : NotFoundException($"標籤: {tagId}") { }
 
 public class AreaNotFoundException : NotFoundException
 {
@@ -134,5 +141,29 @@ public class RecruitmentNotFoundException : NotFoundException
         : base($"職缺: {recruitmentId}") { }
 }
 
+#endregion
+
+#region System Internal Exception
+public class ConfigurationNotFoundException : Exception
+{
+    public ConfigurationNotFoundException()
+        : base("System Configuration File Not Found.") =>
+        throw new SystemInternalException($"System Configuration File Not Found.");
+
+    public ConfigurationNotFoundException(string configPath)
+        : base($"System Configuration File Not Found: {configPath}.") =>
+        throw new SystemInternalException($"System Configuration File Not Found: {configPath}.");
+}
+
+public class ServerNetworkException : Exception
+{
+    public ServerNetworkException()
+        : base("Server Network Connection Error.") =>
+        throw new SystemInternalException("Server Network Connection Error.");
+
+    public ServerNetworkException(string message)
+        : base($"Server Network Connection Error: {message}.") =>
+        throw new SystemInternalException($"Server Network Connection Error: {message}.");
+}
 
 #endregion
