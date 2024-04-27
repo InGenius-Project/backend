@@ -191,16 +191,11 @@ public class AIService(IUnitOfWork unitOfWork, IMapper mapper, AiHttpClient aiHt
         return areaDTOs;
     }
 
-    // public async Task<AreaDTO> GenerateImageLayoutAreaAsync(
-    //     string areaTitle,
-    //     string userPrompt,
-    //     string resumeTitle,
-    //     Guid userId
-    // )
-    // {
-    //     var keywords = await GetKeywordsByAIAsync(areaTitle);
-    //     var content = await GenerateResumeAreaByTitleAsync(userId, resumeTitle, [areaTitle]);
-    // }
+    public async Task<ImageTextLayoutDTO> GenerateImageLayoutAreaAsync(string areaTitle)
+    {
+        var keywords = await _aiHttpClient.PostKeyExtractionAsync(areaTitle);
+        throw new NotImplementedException();
+    }
 
     private async Task<IEnumerable<Area>> GetUserInfoAreasAsync(Guid userId)
     {

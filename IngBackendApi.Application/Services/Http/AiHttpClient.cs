@@ -3,34 +3,20 @@ namespace IngBackendApi.Services.Http;
 using System.Text;
 using IngBackendApi.Exceptions;
 using IngBackendApi.Models.DTO;
+using IngBackendApi.Models.Settings;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 public class AiHttpClient : IDisposable
 {
     private readonly HttpClient _client;
-    private readonly string _generateAreaApi;
-    private readonly string _generateAreaByTitleApi;
-    private readonly string _keyExtractionApi;
+    private readonly AiSetting _setting;
 
-    public AiHttpClient(IConfiguration config)
+    public AiHttpClient(SettingsFactory settingsFactory)
     {
-        var aiApiRoot =
-            config.GetSection("AI").GetSection("Root").Get<string>()
-            ?? throw new ConfigurationNotFoundException("AI:Root");
-
-        _client = new HttpClient { BaseAddress = new Uri(aiApiRoot) };
-
-        _generateAreaApi =
-            config.GetSection("AI").GetSection("GenerateAreaApi").Get<string>()
-            ?? throw new ConfigurationNotFoundException("AI:GenerateAreaApi");
-
-        _generateAreaByTitleApi =
-            config.GetSection("AI").GetSection("GenerateAreaByTitle").Get<string>()
-            ?? throw new ConfigurationNotFoundException("AI:GenerateAreaByTitle");
-        _keyExtractionApi =
-            config.GetSection("AI").GetSection("KeywordExtractionApi").Get<string>()
-            ?? throw new ConfigurationNotFoundException("AI:KeywordExtractionApi");
+        _setting = settingsFactory.GetSetting<AiSetting>();
+        // Apis
+        _client = new HttpClient { BaseAddress = new Uri(_setting.Api.Root) };
     }
 
     public async Task<IEnumerable<AiGeneratedAreaDTO>> PostGenerateAreasAsync(
@@ -38,7 +24,7 @@ public class AiHttpClient : IDisposable
         bool byTitle = false
     )
     {
-        var api = byTitle ? _generateAreaByTitleApi : _generateAreaApi;
+        var api = byTitle ? _setting.Api.GenerateAreaByTitle : _setting.Api.GenerateArea;
         var requestContent = ParseJsonContent(requestBody);
         var response = await _client.PostAsync(api, requestContent);
         var responseContent = await response.Content.ReadAsStringAsync();
@@ -60,7 +46,7 @@ public class AiHttpClient : IDisposable
     {
         var requestBody = new Dictionary<string, object>() { ["content"] = content };
         var body = ParseJsonContent(requestBody);
-        var response = await _client.PostAsync(_keyExtractionApi, body);
+        var response = await _client.PostAsync(_setting.Api.KeywordExtraction, body);
         var responseContent = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
         {
