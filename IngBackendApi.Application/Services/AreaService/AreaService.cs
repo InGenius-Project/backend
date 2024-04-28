@@ -177,13 +177,25 @@ public class AreaService(
             // delete old image if exist
             if (area.ImageTextLayout.Image != null)
             {
-                _imageRepository.Delete(area.ImageTextLayout.Image);
-                var fullpath = Path.Combine(_env.WebRootPath, area.ImageTextLayout.Image.Filepath);
-                if (File.Exists(fullpath))
+                if (area.ImageTextLayout.Image.Filepath != "")
                 {
-                    File.Delete(fullpath);
+                    _imageRepository.Delete(area.ImageTextLayout.Image);
+                    var fullpath = Path.Combine(
+                        _env.WebRootPath,
+                        area.ImageTextLayout.Image.Filepath
+                    );
+                    if (File.Exists(fullpath))
+                    {
+                        File.Delete(fullpath);
+                    }
+                }
+
+                if (area.ImageTextLayout.Image.Uri != null)
+                {
+                    area.ImageTextLayout.Image.Uri = null;
                 }
             }
+
             area.ImageTextLayout.Image = newImage;
             area.ImageTextLayout.TextContent = imageTextLayoutPostDTO.TextContent;
             area.ImageTextLayoutId = area.ImageTextLayout.Id;
@@ -275,7 +287,12 @@ public class AreaService(
 
     private async Task<Image> CreateImageFromUriAsync(string uri, string contentType = "image/jpg")
     {
-        var newImage = new Image { Filepath = "", ContentType = contentType };
+        var newImage = new Image
+        {
+            Uri = uri,
+            Filepath = "",
+            ContentType = contentType
+        };
         await _imageRepository.AddAsync(newImage);
         return newImage;
     }

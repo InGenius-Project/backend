@@ -325,7 +325,10 @@ public class AIService(
         // Get Area By Key Name
         foreach (var key in areaMap.Keys)
         {
-            var areas = user.Areas.Where(a => key.Any(k => a.AreaType.Name.Contains(k))).ToList();
+            var areas = user
+                .Areas.Where(a => a.AreaType != null)
+                .Where(a => key.Any(k => a.AreaType.Name.Contains(k)))
+                .ToList();
             areas.ForEach(a =>
             {
                 if (a.ListLayout != null)

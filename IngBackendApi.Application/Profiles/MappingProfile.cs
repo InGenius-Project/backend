@@ -195,7 +195,7 @@ public class MappingProfile : Profile
         {
             return image.Uri;
         }
-        if (image.Filepath.Contains("images/avatars"))
+        else if (image.Filepath.Contains("images/avatars"))
         {
             return $"{configuration["Domain:Url"]}api/user/avatar?imageId={image.Id}";
         }
