@@ -63,7 +63,7 @@ public class AIService(
                 .ThenInclude(a => a.TextLayout)
                 .Include(r => r.Areas)
                 .ThenInclude(a => a.KeyValueListLayout)
-                .Select(r => r.Areas)
+                .SelectMany(a => a.Areas)
                 .ToArrayAsync() ?? throw new NotFoundException("Recruitment not found");
 
         var content = string.Join("\n", areaArray.Select(a => a.ToString()));
