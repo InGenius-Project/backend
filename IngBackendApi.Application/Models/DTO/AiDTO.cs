@@ -19,7 +19,7 @@ public class UserInfoAreaDTO
 public class AiGeneratedAreaDTO
 {
     public required string AreaTitle { get; set; }
-    public required string Content { get; set; }
+    public string? Content { get; set; }
 }
 
 public class GenerateAreaPostDTO

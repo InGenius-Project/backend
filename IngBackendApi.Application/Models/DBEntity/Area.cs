@@ -148,6 +148,7 @@ public class Image : BaseEntity, IEntity<Guid>
 {
     [Key]
     public Guid Id { get; set; }
+    public string? Uri { get; set; }
     public string? AltContent { get; set; }
     public required string Filepath { get; set; }
     public required string ContentType { get; set; }

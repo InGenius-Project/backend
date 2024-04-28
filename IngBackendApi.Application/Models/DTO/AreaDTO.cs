@@ -21,6 +21,14 @@ public class AreaDTO
     public Guid? ResumeId { get; set; }
     public Guid? RecruitmentId { get; set; }
     public Guid? UserId { get; set; }
+
+    public void ClearLayouts()
+    {
+        TextLayout = null;
+        ImageTextLayout = null;
+        ListLayout = null;
+        KeyValueListLayout = null;
+    }
 }
 
 public class AreaPostDTO
@@ -71,21 +79,28 @@ public class TextLayoutDTO
     public required string Content { get; set; } = "";
 }
 
-public class ImageDTO
+public class ImageDTO : ImageInfo
 {
-    public Guid Id { get; set; }
-    public string? Uri { get; set; }
-    public string? AltContent { get; set; }
-
     [JsonIgnore]
     public string Filepath { get; set; }
-    public string ContentType { get; set; }
+}
+
+public class ImageSource
+{
+    public string Raw { get; set; }
+    public string Full { get; set; }
+    public string Regular { get; set; }
+    public string Small { get; set; }
+    public string Thumb { get; set; }
+    public string Download { get; set; }
 }
 
 public class ImageInfo
 {
     public Guid Id { get; set; }
     public string? Uri { get; set; }
+    public ImageSource Urls { get; set; }
+    public string? DownloadUri { get; set; }
     public string? AltContent { get; set; }
     public required string ContentType { get; set; }
 }

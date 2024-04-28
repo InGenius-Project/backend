@@ -92,6 +92,7 @@ builder.Services.AddSingleton<IGroupMapService, GroupMapService>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddSingleton<AiHttpClient>();
+builder.Services.AddSingleton<UnsplashHttpClient>();
 builder.Services.AddSingleton<SettingsFactory>();
 
 builder.Services.AddControllers();

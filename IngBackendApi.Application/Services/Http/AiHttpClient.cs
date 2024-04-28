@@ -27,38 +27,21 @@ public class AiHttpClient : IDisposable
         var api = byTitle ? _setting.Api.GenerateAreaByTitle : _setting.Api.GenerateArea;
         var requestContent = ParseJsonContent(requestBody);
         var response = await _client.PostAsync(api, requestContent);
-        var responseContent = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
         {
             throw new ServerNetworkException("PostGenerateAreasAsync response failed");
         }
-        var jsonString = new StringBuilder(responseContent.Trim("\\\"".ToCharArray()));
-        jsonString.Replace("\\", "");
-
-        var generatedArea =
-            JsonConvert.DeserializeObject<IEnumerable<AiGeneratedAreaDTO>>(jsonString.ToString())
-            ?? throw new JsonParseException("AI response parse failed");
-
-        return generatedArea;
+        var responseContent = await response.Content.ReadFromJsonAsync<List<AiGeneratedAreaDTO>>();
+        return responseContent ?? [];
     }
 
     public async Task<string[]> PostKeyExtractionAsync(string content)
     {
-        var requestBody = new Dictionary<string, object>() { ["content"] = content };
+        var requestBody = new Dictionary<string, string>() { ["content"] = content };
         var body = ParseJsonContent(requestBody);
         var response = await _client.PostAsync(_setting.Api.KeywordExtraction, body);
-        var responseContent = await response.Content.ReadAsStringAsync();
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new ServerNetworkException("PostKeyExtractionAsync response failed");
-        }
-
-        var jsonArray =
-            JArray.Parse(responseContent)
-            ?? throw new JsonParseException("AI response parse failed");
-
-        return jsonArray.ToObject<string[]>()
-            ?? throw new JsonParseException("AI response parse failed");
+        var stringArray = await response.Content.ReadFromJsonAsync<string[]>();
+        return stringArray ?? [];
     }
 
     private static StringContent ParseJsonContent(object body)
