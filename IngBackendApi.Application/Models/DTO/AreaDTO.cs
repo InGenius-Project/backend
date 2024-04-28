@@ -155,7 +155,8 @@ public class ImageTextLayoutPostDTO
 {
     public string AltContent { get; set; } = "";
     public string TextContent { get; set; } = "";
-    public required IFormFile Image { get; set; }
+    public string? Uri { get; set; }
+    public IFormFile? Image { get; set; }
 }
 
 public class KeyValueListLayoutPostDTO

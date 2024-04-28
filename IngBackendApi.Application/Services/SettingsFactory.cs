@@ -60,6 +60,19 @@ public class SettingsFactory(IConfiguration configuration)
                         }
                     };
         }
+        else if (typeof(T) == typeof(PathSetting))
+        {
+            return (T)
+                (object)
+                    new PathSetting()
+                    {
+                        Image = new PathSetting.ImageArea
+                        {
+                            Avatar = GetConfig(["Path", "Image", "Avatar"]),
+                            Area = GetConfig(["Path", "Image", "Area"]),
+                        },
+                    };
+        }
         throw new NotFoundException($"Setting type {typeof(T)} not found.");
     }
 }

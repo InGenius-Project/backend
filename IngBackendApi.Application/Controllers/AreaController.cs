@@ -368,7 +368,7 @@ public class AreaController(
         {
             return;
         }
-        var entity = await _aiService.GenerateSaftyReportAsync((Guid)area.RecruitmentId);
-        await _aiService.SaveSaftyReportAsync(entity);
+        var entity = await _aiService.GenerateSafetyReportAsync((Guid)area.RecruitmentId);
+        await _aiService.SaveSafetyReportAsync(entity);
     }
 }

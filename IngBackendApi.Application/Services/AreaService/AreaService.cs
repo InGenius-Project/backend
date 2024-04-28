@@ -3,11 +3,13 @@ namespace IngBackendApi.Services.AreaService;
 using AutoMapper;
 using IngBackendApi.Enum;
 using IngBackendApi.Exceptions;
+using IngBackendApi.Interfaces.Models;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Interfaces.UnitOfWork;
 using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
+using IngBackendApi.Models.Settings;
 using Microsoft.EntityFrameworkCore;
 
 public class AreaService(
@@ -16,10 +18,12 @@ public class AreaService(
     IRepositoryWrapper repository,
     IWebHostEnvironment env,
     IConfiguration config,
-    IAIService aiService
+    IAIService aiService,
+    SettingsFactory settingsFactory
 ) : Service<Area, AreaDTO, Guid>(unitOfWork, mapper), IAreaService
 {
     private readonly IMapper _mapper = mapper;
+    private readonly PathSetting _pathSetting = settingsFactory.GetSetting<PathSetting>();
     private readonly IRepositoryWrapper _repository = repository;
     private readonly IRepository<AreaType, int> _areaTypeRepository = unitOfWork.Repository<
         AreaType,
@@ -145,16 +149,15 @@ public class AreaService(
 
         area.ClearLayoutsExclude(a => a.ImageTextLayout);
 
-        // TODO: 保存圖片
-        var image = imageTextLayoutPostDTO.Image;
-        var filepath = _config["ImageSavePath:Area"] ?? "images/area";
-        // 保存圖片
-        var newImage = await SaveImageAsync(image, filepath);
+        var newImage =
+            imageTextLayoutPostDTO.Uri != null
+                ? await CreateImageFromUriAsync(imageTextLayoutPostDTO.Uri)
+                : await CreateImageFromFileAsync(imageTextLayoutPostDTO.Image);
         newImage.AltContent = imageTextLayoutPostDTO.AltContent;
 
         if (area.ImageTextLayout == null)
         {
-            // new image layout
+            // New image layout
             area.ImageTextLayout = new ImageTextLayout
             {
                 Image = newImage,
@@ -264,13 +267,20 @@ public class AreaService(
         return _mapper.Map<AreaDTO>(area);
     }
 
-    private async Task<Image> SaveImageAsync(IFormFile file, string path)
+    private async Task<Image> CreateImageFromUriAsync(string uri, string contentType = "image/jpg")
+    {
+        var newImage = new Image { Filepath = "", ContentType = contentType };
+        await _imageRepository.AddAsync(newImage);
+        return newImage;
+    }
+
+    private async Task<Image> CreateImageFromFileAsync(IFormFile file)
     {
         if (file.Length == 0)
         {
             throw new ArgumentException("File is empty");
         }
-
+        var path = _pathSetting.Image.Area;
         var newImage = new Image { Filepath = "", ContentType = file.ContentType };
         await _imageRepository.AddAsync(newImage);
 

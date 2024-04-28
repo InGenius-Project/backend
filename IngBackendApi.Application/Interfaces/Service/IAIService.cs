@@ -19,6 +19,6 @@ public interface IAIService
         IEnumerable<string> areaTitles
     );
 
-    Task<SafetyReport> GenerateSaftyReportAsync(Guid recruitmentId);
-    Task SaveSaftyReportAsync(SafetyReport safetyReport);
+    Task<SafetyReport> GenerateSafetyReportAsync(Guid recruitmentId);
+    Task SaveSafetyReportAsync(SafetyReport safetyReport);
 }

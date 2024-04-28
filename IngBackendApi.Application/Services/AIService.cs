@@ -190,7 +190,7 @@ public class AIService(
         };
     }
 
-    public async Task<SafetyReport> GenerateSaftyReportAsync(Guid recruitmentId)
+    public async Task<SafetyReport> GenerateSafetyReportAsync(Guid recruitmentId)
     {
         var recruitment =
             await _recruitmentRepository
@@ -219,7 +219,7 @@ public class AIService(
         return safetyReport;
     }
 
-    public async Task SaveSaftyReportAsync(SafetyReport safetyReport)
+    public async Task SaveSafetyReportAsync(SafetyReport safetyReport)
     {
         var recruitment =
             await _recruitmentRepository
@@ -246,22 +246,18 @@ public class AIService(
         areaDTOs.RemoveAll(a => _generatedAreaFilterList.Any(f => a.Title.Contains(f)));
 
         // Determine AreaType
-        await Parallel.ForEachAsync(
-            areaDTOs,
-            new ParallelOptions { MaxDegreeOfParallelism = 3 },
-            async (a, token) =>
+        foreach (var areaDTO in areaDTOs)
+        {
+            areaDTO.LayoutType = await GetAreaLayoutTypeAsync(areaDTO.Title);
+            if (areaDTO.LayoutType == Enum.LayoutType.ImageText)
             {
-                a.LayoutType = await GetAreaLayoutTypeAsync(a.Title);
-                if (a.LayoutType == Enum.LayoutType.ImageText)
-                {
-                    a.ImageTextLayout = await GenerateImageLayoutAreaAsync(
-                        a.Title,
-                        a.TextLayout?.Content ?? ""
-                    );
-                    a.TextLayout = null;
-                }
+                areaDTO.ImageTextLayout = await GenerateImageLayoutAreaAsync(
+                    areaDTO.Title,
+                    areaDTO.TextLayout?.Content ?? ""
+                );
+                areaDTO.TextLayout = null;
             }
-        );
+        }
 
         var defaultArea = _generatedAreaFilterList
             .Select(a =>
