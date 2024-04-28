@@ -3,6 +3,7 @@ namespace IngBackendApi.Services.AreaService;
 using AutoMapper;
 using IngBackendApi.Enum;
 using IngBackendApi.Exceptions;
+using IngBackendApi.Helpers;
 using IngBackendApi.Interfaces.Models;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Interfaces.Service;
@@ -152,7 +153,12 @@ public class AreaService(
         var newImage =
             imageTextLayoutPostDTO.Uri != null
                 ? await CreateImageFromUriAsync(imageTextLayoutPostDTO.Uri)
-                : await CreateImageFromFileAsync(imageTextLayoutPostDTO.Image);
+                : await CreateImageFromFileAsync(
+                    imageTextLayoutPostDTO.Image
+                        ?? throw new BadRequestException(
+                            "Uri and Image cannot be null at same time."
+                        )
+                );
         newImage.AltContent = imageTextLayoutPostDTO.AltContent;
 
         if (area.ImageTextLayout == null)
@@ -280,6 +286,8 @@ public class AreaService(
         {
             throw new ArgumentException("File is empty");
         }
+        Helper.CheckImage(file);
+
         var path = _pathSetting.Image.Area;
         var newImage = new Image { Filepath = "", ContentType = file.ContentType };
         await _imageRepository.AddAsync(newImage);

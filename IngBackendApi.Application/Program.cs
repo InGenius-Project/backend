@@ -264,7 +264,7 @@ app.MapControllers();
 app.MapHub<ChatHub>("/Chat");
 
 // Ensure wwwroot/images/* directory exists, if not create it
-var paths = config.GetSection("ImageSavePath").Get<Dictionary<string, string>>() ?? [];
+var paths = config.GetSection("Path").GetSection("Image").Get<Dictionary<string, string>>() ?? [];
 foreach (var path in paths)
 {
     var imagePath = Path.Combine(env.WebRootPath, path.Value);

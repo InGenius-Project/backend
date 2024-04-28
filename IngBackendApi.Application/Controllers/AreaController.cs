@@ -248,7 +248,6 @@ public class AreaController(
         await _areaService.CheckAreaOwnership(areaId, user.Id);
 
         // Check Image
-        Helper.CheckImage(imageTextLayoutPostDTO.Image);
         await _areaService.UpdateLayoutAsync(areaId, imageTextLayoutPostDTO);
 
         // Analyze Keywords & safety report
