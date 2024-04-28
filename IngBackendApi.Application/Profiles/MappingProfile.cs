@@ -184,17 +184,17 @@ public class MappingProfile : Profile
         CreateMap<User, UserInfoDTO>().EqualityComparison((dto, entity) => dto.Id == entity.Id);
     }
 
-    private static string GetImageUri(IConfiguration configuration, Image image)
+    private static string? GetImageUri(IConfiguration configuration, Image image)
     {
+        if (image.Uri != null)
+        {
+            return image.Uri;
+        }
         if (image.Filepath.Contains("images/avatars"))
         {
-            return string.Format(
-                "{0}api/user/avatar?imageId={1}",
-                configuration["Domain:Url"],
-                image.Id
-            );
+            return $"{configuration["Domain:Url"]}api/user/avatar?imageId={image.Id}";
         }
-        return string.Format("{0}api/area/image?id={1}", configuration["Domain:Url"], image.Id);
+        return $"{configuration["Domain:Url"]}api/area/image?id={image.Id}";
     }
 
     private static string GetLayoutContent(Area area)
