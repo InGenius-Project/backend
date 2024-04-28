@@ -13,7 +13,7 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
     public DbSet<Resume> Resume { get; set; }
     public DbSet<Recruitment> Recruitment { get; set; }
     public DbSet<Area> Area { get; set; }
-    public DbSet<BackgroundTask> BaackgroundTask { get; set; }
+    public DbSet<BackgroundTask> BackgroundTask { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -53,6 +53,20 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             .HasMany(r => r.Areas)
             .WithOne(a => a.Recruitment)
             .HasForeignKey(a => a.RecruitmentId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder
+            .Entity<Recruitment>()
+            .HasOne(r => r.SafetyReport)
+            .WithOne(s => s.Recruitment)
+            .HasForeignKey<SafetyReport>(s => s.RecruitmentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder
+            .Entity<SafetyReport>()
+            .HasOne(r => r.Recruitment)
+            .WithOne(s => s.SafetyReport)
+            .HasForeignKey<Recruitment>(s => s.SafetyReportId)
             .OnDelete(DeleteBehavior.SetNull);
 
         // User Area Relationship

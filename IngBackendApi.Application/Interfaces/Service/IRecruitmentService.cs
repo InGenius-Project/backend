@@ -15,4 +15,5 @@ public interface IRecruitmentService : IService<Recruitment, RecruitmentDTO, Gui
         Guid? userId
     );
     Task ApplyRecruitmentAsync(Guid recruitmentId, Guid resumeId, Guid userId);
+    Task<SafetyReport?> GetSafetyReportAsync(Guid recruitmentId);
 }

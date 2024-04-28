@@ -1,8 +1,6 @@
 namespace IngBackendApi.Models.DTO.HttpResponse;
 
-using Newtonsoft.Json;
-
-public class UnsplashResponse
+public class UnsplashSearchResponse
 {
     public class ImageLinksArea
     {

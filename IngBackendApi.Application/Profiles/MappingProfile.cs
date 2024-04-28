@@ -5,6 +5,7 @@ using AutoMapper.EquivalencyExpression;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
+using IngBackendApi.Models.DTO.HttpResponse;
 using Microsoft.CodeAnalysis;
 
 public class MappingProfile : Profile
@@ -144,6 +145,10 @@ public class MappingProfile : Profile
                 dest => dest.TextLayout,
                 opt => opt.MapFrom(src => new TextLayoutDTO { Content = src.Content })
             );
+        #endregion
+
+        #region AI Analyze
+        CreateMap<SafetyReportResponse, SafetyReport>();
         #endregion
 
         #region Chat

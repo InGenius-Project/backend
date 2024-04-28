@@ -20,13 +20,15 @@ public class UnsplashHttpClient : IDisposable
         );
     }
 
-    public async Task<UnsplashResponse> GetSearchAsync(string[] query)
+    public async Task<UnsplashSearchResponse> GetSearchAsync(string[] query)
     {
         var queryString = string.Join("+", query);
         queryString = queryString.Replace(" ", "+");
         var parameterString = $"?query={queryString}&";
         var unsplashResponse =
-            await _client.GetFromJsonAsync<UnsplashResponse>(_setting.Api.Search + parameterString)
+            await _client.GetFromJsonAsync<UnsplashSearchResponse>(
+                _setting.Api.Search + parameterString
+            )
             ?? throw new ServerNetworkException("Parse failed or Unsplash api cannot be reached.");
 
         return unsplashResponse;

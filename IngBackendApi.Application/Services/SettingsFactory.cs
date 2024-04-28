@@ -37,6 +37,7 @@ public class SettingsFactory(IConfiguration configuration)
                             KeywordExtraction = GetConfig(["AI", "Api", "KeywordExtraction"]),
                             GenerateArea = GetConfig(["AI", "Api", "GenerateArea"]),
                             GenerateAreaByTitle = GetConfig(["AI", "Api", "GenerateAreaByTitle"]),
+                            AnalysisRecruitment = GetConfig(["AI", "Api", "AnalysisRecruitment"])
                         }
                     };
         }

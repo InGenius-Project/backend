@@ -100,7 +100,6 @@ public class ImageInfo
     public Guid Id { get; set; }
     public string? Uri { get; set; }
     public ImageSource Urls { get; set; }
-    public string? DownloadUri { get; set; }
     public string? AltContent { get; set; }
     public required string ContentType { get; set; }
 }

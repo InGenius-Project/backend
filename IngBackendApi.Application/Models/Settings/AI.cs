@@ -8,6 +8,7 @@ public class AiSetting : Setting
         public string KeywordExtraction { get; set; }
         public string GenerateArea { get; set; }
         public string GenerateAreaByTitle { get; set; }
+        public string AnalysisRecruitment { get; set; }
     }
 
     public new string Name { get; set; } = "Ai Settings";

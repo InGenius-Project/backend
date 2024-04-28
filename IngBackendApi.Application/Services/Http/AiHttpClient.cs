@@ -3,6 +3,7 @@ namespace IngBackendApi.Services.Http;
 using System.Text;
 using IngBackendApi.Exceptions;
 using IngBackendApi.Models.DTO;
+using IngBackendApi.Models.DTO.HttpResponse;
 using IngBackendApi.Models.Settings;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -42,6 +43,16 @@ public class AiHttpClient : IDisposable
         var response = await _client.PostAsync(_setting.Api.KeywordExtraction, body);
         var stringArray = await response.Content.ReadFromJsonAsync<string[]>();
         return stringArray ?? [];
+    }
+
+    public async Task<SafetyReportResponse> PostSaftyReportAsync(SafetyReportPost safetyReportPost)
+    {
+        var body = ParseJsonContent(safetyReportPost);
+        var response = await _client.PostAsync(_setting.Api.AnalysisRecruitment, body);
+        var report =
+            await response.Content.ReadFromJsonAsync<SafetyReportResponse>()
+            ?? throw new ServerNetworkException("PostSaftyReportAsync response failed");
+        return report;
     }
 
     private static StringContent ParseJsonContent(object body)

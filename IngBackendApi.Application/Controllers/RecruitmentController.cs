@@ -8,7 +8,9 @@ using IngBackendApi.Application.Interfaces;
 using IngBackendApi.Application.Interfaces.Service;
 using IngBackendApi.Controllers;
 using IngBackendApi.Enum;
+using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Service;
+using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -115,4 +117,9 @@ public class RecruitmentController(
 
         return new ApiResponse("申請成功");
     }
+
+    [HttpGet("report/{recruitmentId}")]
+    public async Task<SafetyReport> GetSafetyReport(Guid recruitmentId) =>
+        await _recruitmentService.GetSafetyReportAsync(recruitmentId)
+        ?? throw new NotFoundException("Report not found.");
 }

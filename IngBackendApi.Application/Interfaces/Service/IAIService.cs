@@ -1,5 +1,6 @@
 namespace IngBackendApi.Interfaces.Service;
 
+using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
 
 public interface IAIService
@@ -17,4 +18,7 @@ public interface IAIService
         string resumeTitle,
         IEnumerable<string> areaTitles
     );
+
+    Task<SafetyReport> GenerateSaftyReportAsync(Guid recruitmentId);
+    Task SaveSaftyReportAsync(SafetyReport safetyReport);
 }

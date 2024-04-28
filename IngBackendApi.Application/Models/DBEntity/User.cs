@@ -52,34 +52,6 @@ public class User : BaseEntity, IEntity<Guid>
     public ICollection<ChatGroup> InvitedChatRooms { get; set; }
 }
 
-public class Recruitment : BaseEntity, IEntity<Guid>
-{
-    [Key]
-    public Guid Id { get; set; }
-
-    [MaxLength(15)]
-    public string Name { get; set; }
-
-    public bool Enable { get; set; }
-
-    [JsonIgnore]
-    public List<Area> Areas { get; set; }
-
-    [JsonIgnore]
-    public List<Resume> Resumes { get; set; } = [];
-
-    [JsonIgnore]
-    [Required]
-    public required User Publisher { get; set; }
-    public required Guid PublisherId { get; set; }
-
-    [JsonIgnore]
-    public List<User> FavoriteUsers { get; set; } = [];
-
-    [JsonIgnore]
-    public ICollection<KeywordRecord> Keywords { get; set; } = [];
-}
-
 public class VerificationCode : BaseEntity, IEntity<int>
 {
     [Key]

@@ -9,14 +9,14 @@ using IngBackendApi.Models.DBEntity;
 public class BackgroundTaskService(IUnitOfWork unitOfWork, IBackgroundJobClient backgroundJobClient)
     : IBackgroundTaskService
 {
-    private readonly IRepository<BackgroundTask, Guid> _backgroundTaskRepository =
-        unitOfWork.Repository<BackgroundTask, Guid>();
+    private readonly IRepository<BackgroundTask, string> _backgroundTaskRepository =
+        unitOfWork.Repository<BackgroundTask, string>();
 
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IBackgroundJobClient _backgroundJobClient = backgroundJobClient;
 
     public async Task ScheduleTaskAsync(
-        Guid assignedId,
+        string assignedId,
         System.Linq.Expressions.Expression<Action> methodCall,
         TimeSpan delay,
         bool removePreviousTask = true
@@ -40,7 +40,7 @@ public class BackgroundTaskService(IUnitOfWork unitOfWork, IBackgroundJobClient 
     }
 
     public async Task EnqueueTaskAsync(
-        Guid assignedId,
+        string assignedId,
         System.Linq.Expressions.Expression<Action> methodCall,
         bool removePreviousTask = true
     )

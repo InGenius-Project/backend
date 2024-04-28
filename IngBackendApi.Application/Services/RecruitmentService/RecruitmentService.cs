@@ -135,6 +135,16 @@ public class RecruitmentService(
         );
     }
 
+    public async Task<SafetyReport?> GetSafetyReportAsync(Guid recruitmentId)
+    {
+        var recruiment =
+            await _repository
+                .Recruitment.GetAll(r => r.Id == recruitmentId)
+                .Include(r => r.SafetyReport)
+                .SingleOrDefaultAsync() ?? throw new NotFoundException("Recruitment not exist.");
+        return recruiment.SafetyReport;
+    }
+
     public async Task ApplyRecruitmentAsync(Guid recruitmentId, Guid resumeId, Guid userId)
     {
         var recruitment =

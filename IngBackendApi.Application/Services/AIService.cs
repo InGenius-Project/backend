@@ -2,6 +2,7 @@ namespace IngBackendApi.Services;
 
 using System.Collections.Generic;
 using System.Globalization;
+using System.Security.Policy;
 using System.Text;
 using AutoMapper;
 using IngBackendApi.Exceptions;
@@ -11,7 +12,9 @@ using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Interfaces.UnitOfWork;
 using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
+using IngBackendApi.Models.DTO.HttpResponse;
 using IngBackendApi.Services.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -34,6 +37,8 @@ public class AIService(
         Recruitment,
         Guid
     >();
+    private readonly IRepository<SafetyReport, Guid> _safetyReportRepository =
+        unitOfWork.Repository<SafetyReport, Guid>();
 
     private readonly IEnumerable<string> _generatedAreaFilterList = ["技能", "教育背景", "作品"];
 
@@ -46,8 +51,8 @@ public class AIService(
 
     public async Task<string[]> GetKeywordsByAIAsync(Guid recruitmentId)
     {
-        var recruitmentContentArray =
-            _recruitmentRepository
+        var areaArray =
+            await _recruitmentRepository
                 .GetAll(r => r.Id == recruitmentId)
                 .AsNoTracking()
                 .Include(r => r.Areas)
@@ -58,17 +63,10 @@ public class AIService(
                 .ThenInclude(a => a.TextLayout)
                 .Include(r => r.Areas)
                 .ThenInclude(a => a.KeyValueListLayout)
-                .ToList()
-                .SelectMany(r =>
-                {
-                    var stringList = r.Areas.Select(area => ChoosingLayout(area)).ToList();
-                    // Add Recruitment Name
-                    stringList.Add(r.Name);
-                    return stringList;
-                })
-                .ToArray() ?? throw new NotFoundException("Recruitment not found");
+                .Select(r => r.Areas)
+                .ToArrayAsync() ?? throw new NotFoundException("Recruitment not found");
 
-        var content = string.Join(" ", recruitmentContentArray);
+        var content = string.Join("\n", areaArray.Select(a => a.ToString()));
         return await _aiHttpClient.PostKeyExtractionAsync(content);
     }
 
@@ -176,6 +174,7 @@ public class AIService(
         var keywords = await _aiHttpClient.PostKeyExtractionAsync(areaTitle);
         var imageSearchResults = await _unsplashHttpClient.GetSearchAsync(keywords);
         var result = imageSearchResults.Results.ToArray()[0];
+        result.Urls.Download = result.Links.Download;
         return new ImageTextLayoutDTO
         {
             Id = Guid.Empty,
@@ -184,12 +183,59 @@ public class AIService(
             {
                 Id = Guid.Empty,
                 Uri = result.Urls.Raw,
-                DownloadUri = result.Links.Download,
                 AltContent = result.Description,
                 Urls = result.Urls,
                 ContentType = "image/jpeg"
             }
         };
+    }
+
+    public async Task<SafetyReport> GenerateSaftyReportAsync(Guid recruitmentId)
+    {
+        var recruitment =
+            await _recruitmentRepository
+                .GetAll(r => r.Id == recruitmentId)
+                .Include(r => r.Areas)
+                .ThenInclude(a => a.TextLayout)
+                .Include(r => r.Areas)
+                .ThenInclude(a => a.ImageTextLayout)
+                .Include(r => r.Areas)
+                .ThenInclude(a => a.KeyValueListLayout)
+                .Include(r => r.Areas)
+                .ThenInclude(a => a.ListLayout)
+                .Include(r => r.Publisher)
+                .AsNoTracking()
+                .FirstOrDefaultAsync() ?? throw new NotFoundException("Recruitment not found.");
+
+        var companyName = recruitment.Publisher.Username;
+        var safetyReportPost = new SafetyReportPost
+        {
+            CompanyName = companyName,
+            Content = recruitment.ToString()
+        };
+        var response = await _aiHttpClient.PostSaftyReportAsync(safetyReportPost);
+        var safetyReport = _mapper.Map<SafetyReport>(response);
+        safetyReport.RecruitmentId = recruitmentId;
+        return safetyReport;
+    }
+
+    public async Task SaveSaftyReportAsync(SafetyReport safetyReport)
+    {
+        var recruitment =
+            await _recruitmentRepository
+                .GetAll(r => r.Id == safetyReport.RecruitmentId)
+                .SingleOrDefaultAsync() ?? throw new NotFoundException("Recruitment not found.");
+        if (recruitment.SafetyReport != null)
+        {
+            _mapper.Map(safetyReport, recruitment.SafetyReport);
+        }
+        else
+        {
+            await _safetyReportRepository.AddAsync(safetyReport);
+            recruitment.SafetyReport = safetyReport;
+            recruitment.SafetyReportId = safetyReport.Id;
+        }
+        await _unitOfWork.SaveChangesAsync();
     }
 
     private async Task AfterGeneratedProcessAsync(
@@ -307,18 +353,5 @@ public class AIService(
         }
         var returnValue = areaMap.Values.SelectMany(a => a.Select(aa => aa));
         return returnValue;
-    }
-
-    private static string ChoosingLayout(Area area)
-    {
-        if (area.TextLayout != null)
-        {
-            return area.TextLayout.Content;
-        }
-        if (area.ImageTextLayout != null)
-        {
-            return area.ImageTextLayout.TextContent ?? "";
-        }
-        return "";
     }
 }

@@ -2,9 +2,12 @@ namespace IngBackendApi.Models.DBEntity;
 
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Globalization;
 using System.Linq.Expressions;
+using System.Text;
 using System.Text.Json.Serialization;
 using IngBackendApi.Enum;
+using IngBackendApi.Interfaces.Models;
 using IngBackendApi.Interfaces.Repository;
 
 public class Area : BaseEntity, IEntity<Guid>
@@ -110,6 +113,32 @@ public class Area : BaseEntity, IEntity<Guid>
                 break;
         }
     }
+
+    public override string ToString()
+    {
+        var content = new StringBuilder();
+        if (ListLayout != null)
+        {
+            content.Append(ListLayout.ToString());
+        }
+        else if (ImageTextLayout != null)
+        {
+            content.Append(ImageTextLayout.ToString());
+        }
+        else if (KeyValueListLayout != null)
+        {
+            content.Append(KeyValueListLayout.ToString());
+        }
+        else if (TextLayout != null)
+        {
+            content.Append(TextLayout.ToString());
+        }
+        else
+        {
+            content.Append("");
+        }
+        return $"{Title}: {content}";
+    }
 }
 
 public class AreaType : BaseEntity, IEntity<int>
@@ -129,7 +158,18 @@ public class AreaType : BaseEntity, IEntity<int>
     public List<TagType>? ListTagTypes { get; set; }
 }
 
-public class TextLayout : BaseEntity, IEntity<Guid>
+public class Image : BaseEntity, IEntity<Guid>
+{
+    [Key]
+    public Guid Id { get; set; }
+    public string? Uri { get; set; }
+    public string? AltContent { get; set; }
+    public required string Filepath { get; set; }
+    public required string ContentType { get; set; }
+}
+
+#region Area Layout
+public class TextLayout : BaseEntity, IEntity<Guid>, IAreaLayout
 {
     [Key]
     public Guid Id { get; set; }
@@ -142,19 +182,11 @@ public class TextLayout : BaseEntity, IEntity<Guid>
     [ForeignKey("Area")]
     [Required]
     public Guid? AreaId;
+
+    public override string ToString() => Content;
 }
 
-public class Image : BaseEntity, IEntity<Guid>
-{
-    [Key]
-    public Guid Id { get; set; }
-    public string? Uri { get; set; }
-    public string? AltContent { get; set; }
-    public required string Filepath { get; set; }
-    public required string ContentType { get; set; }
-}
-
-public class ImageTextLayout : BaseEntity, IEntity<Guid>
+public class ImageTextLayout : BaseEntity, IEntity<Guid>, IAreaLayout
 {
     [Key]
     public Guid Id { get; set; }
@@ -168,9 +200,11 @@ public class ImageTextLayout : BaseEntity, IEntity<Guid>
     [ForeignKey("Area")]
     [Required]
     public Guid? AreaId;
+
+    public override string ToString() => $"Image Description: {TextContent}";
 }
 
-public class ListLayout : BaseEntity, IEntity<Guid>
+public class ListLayout : BaseEntity, IEntity<Guid>, IAreaLayout
 {
     [Key]
     public Guid Id { get; set; }
@@ -183,9 +217,15 @@ public class ListLayout : BaseEntity, IEntity<Guid>
     [JsonIgnore]
     [Required]
     public Area Area { get; set; }
+
+    public override string ToString()
+    {
+        var itemsString = string.Join(", ", Items?.Select(x => x.Name) ?? []);
+        return itemsString;
+    }
 }
 
-public class KeyValueListLayout : BaseEntity, IEntity<Guid>
+public class KeyValueListLayout : BaseEntity, IEntity<Guid>, IAreaLayout
 {
     [Key]
     public Guid Id { get; set; }
@@ -198,6 +238,21 @@ public class KeyValueListLayout : BaseEntity, IEntity<Guid>
     [ForeignKey("Area")]
     [Required]
     public Guid? AreaId;
+
+    public override string ToString()
+    {
+        var stringBuilder = new StringBuilder();
+        Items?.ForEach(x =>
+        {
+            var keysString = string.Join(", ", x.Key?.Select(x => x.Name) ?? []);
+            stringBuilder.AppendLine(
+                CultureInfo.GetCultureInfo("zh-TW"),
+                $"{x.Value}: {keysString}"
+            );
+        });
+
+        return stringBuilder.ToString();
+    }
 }
 
 public class KeyValueItem : BaseEntity, IEntity<Guid>
@@ -210,3 +265,4 @@ public class KeyValueItem : BaseEntity, IEntity<Guid>
     public Guid? keyValueListLayoutId { get; set; }
     public KeyValueListLayout KeyValueListLayout { get; set; }
 }
+#endregion
