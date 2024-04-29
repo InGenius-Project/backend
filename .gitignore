@@ -369,11 +369,6 @@ FodyWeavers.xsd
 # Migrations
 Migrations/
 
-# Srouces
-# wwwroot/
-wwwroot/avatars/*
-!wwwroot/avatars/UserDefault.jpg
-
 # appsettings.json
 appsettings.Secrets.json
 
@@ -384,3 +379,5 @@ appsettings.Secrets.json
 *.sqlite
 *.sqlite-*
 changelog.txt
+
+wwwroot/images/*
