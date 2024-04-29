@@ -179,7 +179,6 @@ public class AreaService(
             {
                 if (area.ImageTextLayout.Image.Filepath != "")
                 {
-                    _imageRepository.Delete(area.ImageTextLayout.Image);
                     var fullpath = Path.Combine(
                         _env.WebRootPath,
                         area.ImageTextLayout.Image.Filepath
@@ -188,6 +187,7 @@ public class AreaService(
                     {
                         File.Delete(fullpath);
                     }
+                    _imageRepository.Delete(area.ImageTextLayout.Image);
                 }
 
                 if (area.ImageTextLayout.Image.Uri != null)
