@@ -187,13 +187,13 @@ public class AreaService(
                     {
                         File.Delete(fullpath);
                     }
-                    _imageRepository.Delete(area.ImageTextLayout.Image);
                 }
 
                 if (area.ImageTextLayout.Image.Uri != null)
                 {
                     area.ImageTextLayout.Image.Uri = null;
                 }
+                _imageRepository.Delete(area.ImageTextLayout.Image);
             }
 
             area.ImageTextLayout.Image = newImage;
