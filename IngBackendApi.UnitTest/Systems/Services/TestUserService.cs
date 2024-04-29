@@ -10,6 +10,8 @@ using IngBackendApi.Profiles;
 using IngBackendApi.Services.UserService;
 using IngBackendApi.UnitTest.Fixtures;
 using IngBackendApi.UnitTest.Mocks;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 
 public class TestUserService : IDisposable
 {
@@ -20,8 +22,9 @@ public class TestUserService : IDisposable
     private readonly UserService _userService;
     private readonly Fixture _fixture;
     private readonly IngDbContext _context;
+    private readonly Mock<IConfiguration> _mockConfiguration;
+    private readonly Mock<IWebHostEnvironment> _env;
 
-    [Fact]
     public void Dispose() => GC.SuppressFinalize(this);
 
     public TestUserService()
@@ -31,10 +34,11 @@ public class TestUserService : IDisposable
         MappingProfile mappingProfile = new();
         MapperConfiguration configuration = new(cfg => cfg.AddProfile(mappingProfile));
         _mapper = new Mapper(configuration);
-
         _context = MemoryContextFixture.Generate();
 
         _repository = MockRepositoryWrapper.GetMock(_context);
+        _env = new Mock<IWebHostEnvironment>();
+        _mockConfiguration = new Mock<IConfiguration>();
 
         _passwordHasher = new Mock<IPasswordHasher>();
 
@@ -42,14 +46,13 @@ public class TestUserService : IDisposable
             _mockUnitofWork.Object,
             _mapper,
             _repository.Object,
-            _passwordHasher.Object
+            _passwordHasher.Object,
+            _env.Object,
+            _mockConfiguration.Object
         );
 
         _fixture = new Fixture();
-
     }
-
-
 
     [Fact]
     public async Task PostUser_UpdateExistedUser_PostSuccess()
@@ -58,28 +61,12 @@ public class TestUserService : IDisposable
         var existedUser = await _repository.Object.User.GetByIdAsync(Guid.Empty);
 
         // TODO: test Avatar and Tags
-        UserInfoPostDTO req = new()
-        {
-            Username = "updateTest",
-            Areas = [
-                new AreaPostDTO{
-                    Sequence = 0,
-                    IsDisplayed = true,
-                    Title = "TestArea"
-                }
-            ],
-        };
+        UserInfoPostDTO req = new() { Username = "updateTest" };
 
         // Act
         await _userService.PostUser(req, existedUser.Id); // update exist user
 
         // Assert
-        existedUser.Areas
-            .Should()
-            .BeEquivalentTo(
-                _mapper.Map<List<AreaPostDTO>>(req.Areas),
-                opt => opt.Excluding(x => x.Id));
-
+        existedUser.Username.Should().Be(req.Username);
     }
-
 }

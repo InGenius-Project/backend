@@ -1,8 +1,8 @@
-﻿using System.Linq.Expressions;
+namespace IngBackendApi.Repository;
+
+using System.Linq.Expressions;
 using IngBackendApi.Interfaces.Repository;
 using Microsoft.EntityFrameworkCore;
-
-namespace IngBackendApi.Repository;
 
 public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
     where TEntity : class, IEntity<TKey>
@@ -21,6 +21,8 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
         await _context.Set<TEntity>().AddAsync(entity);
     }
 
+    public void Delete(TEntity entity) => _dbSet.Remove(entity);
+
     public async Task DeleteByIdAsync(TKey id)
     {
         var entityToDelete = await _dbSet.FindAsync(id);
@@ -28,7 +30,6 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
         if (entityToDelete != null)
         {
             _dbSet.Remove(entityToDelete);
-            await SaveAsync();
         }
     }
 
@@ -91,19 +92,11 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
     public async Task UpdateAsync(TEntity entity)
     {
         _dbSet.Update(entity);
-        await SaveAsync();
     }
 
-    public async Task SaveAsync()
-    {
-        await _context.SaveChangesAsync();
-    }
+    public async Task SaveAsync() => await _context.SaveChangesAsync();
 
-    public void Attach<TTEntity>(TTEntity entity)
-    {
-        _context.Attach(entity);
-    }
-
+    public void Attach<TTEntity>(TTEntity entity) => _context.Attach(entity);
 
     /// <inheritdoc />
     public async Task<IEnumerable<TEntity>> CollectionAsync<TProperty>(
@@ -116,14 +109,9 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
     }
 
     /// <inheritdoc />
-    public void SetEntityState(TEntity entity, EntityState state)
-    {
+    public void SetEntityState(TEntity entity, EntityState state) =>
         _context.Entry(entity).State = state;
-    }
 
     /// <inheritdoc />
-    public IEnumerable<TEntity> GetLocal()
-    {
-        return _context.Set<TEntity>().Local.AsEnumerable();
-    }
+    public IEnumerable<TEntity> GetLocal() => _context.Set<TEntity>().Local.AsEnumerable();
 }

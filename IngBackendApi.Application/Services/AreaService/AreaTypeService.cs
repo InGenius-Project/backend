@@ -34,17 +34,15 @@ public class AreaTypeService(IUnitOfWork unitOfWork, IMapper mapper, IRepository
 
     public new async Task UpdateAsync(AreaTypeDTO areaTypeDto)
     {
-        var areaType = await _areaTypeRepository
-            .GetAll()
-            .Include(a => a.ListTagTypes)
-            .FirstOrDefaultAsync(a => a.Id.Equals(areaTypeDto.Id));
-        if (areaType == null)
-        {
-            throw new NotFoundException("areaType not found.");
-        }
+        var areaType =
+            await _areaTypeRepository
+                .GetAll()
+                .Include(a => a.ListTagTypes)
+                .FirstOrDefaultAsync(a => a.Id.Equals(areaTypeDto.Id))
+            ?? throw new NotFoundException("areaType not found.");
 
-        // TODO: 新增 TagType 的權限問題
         _mapper.Map(areaTypeDto, areaType);
+
         await _areaTypeRepository.SaveAsync();
     }
 
@@ -60,5 +58,20 @@ public class AreaTypeService(IUnitOfWork unitOfWork, IMapper mapper, IRepository
             .Include(a => a.ListTagTypes)
             .Where(x => x.UserRole.Any(a => roles.Contains(a)));
         return _mapper.Map<List<AreaTypeDTO>>(areaType);
+    }
+
+    public async Task CheckOwnerShip(int areaTypeId, UserRole userRole)
+    {
+        var area =
+            await _areaTypeRepository
+                .GetAll()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.Id == areaTypeId)
+            ?? throw new NotFoundException("area not found.");
+
+        if (!area.UserRole.Contains(userRole))
+        {
+            throw new ForbiddenException();
+        }
     }
 }

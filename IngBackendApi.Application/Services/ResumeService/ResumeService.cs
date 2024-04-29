@@ -1,4 +1,7 @@
-﻿using AutoMapper;
+﻿namespace IngBackendApi.Services.UserService;
+
+using AutoMapper;
+using IngBackendApi.Application.Interfaces.Service;
 using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Interfaces.UnitOfWork;
@@ -6,40 +9,70 @@ using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 
-namespace IngBackendApi.Services.UserService;
-
-public class ResumeService : Service<Resume, ResumeDTO, Guid>
+public class ResumeService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository)
+    : Service<Resume, ResumeDTO, Guid>(unitOfWork, mapper),
+        IResumeService
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-    private readonly IRepositoryWrapper _repository;
-    private readonly IRepository<Resume, Guid> _resumeRepository;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
+    private readonly IRepositoryWrapper _repository = repository;
 
-    public ResumeService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository) : base(unitOfWork, mapper)
+    public async Task<List<ResumeDTO>> GetUserResumesAsync(Guid userId)
     {
-        _unitOfWork = unitOfWork;
-        _repository = repository;
-        _mapper = mapper;
-        _resumeRepository = unitOfWork.Repository<Resume, Guid>();
+        var resumes = await _repository
+            .Resume.GetIncludeAll()
+            .Where(r => r.UserId == userId)
+            .AsNoTracking()
+            .ToListAsync();
+        return _mapper.Map<List<ResumeDTO>>(resumes);
     }
 
-    public IQueryable<Resume> GetResumeByUser(Guid userId)
+    public async Task<ResumeDTO?> GetResumeByIdIncludeAllAsync(Guid resumeId)
     {
-        var resumes = _resumeRepository.GetAll()
-            .Where(x => x.UserId.Equals(userId));
-        return resumes;
+        var resume = await _repository
+            .Resume.GetIncludeAll()
+            .Where(r => r.Id == resumeId)
+            .AsNoTracking()
+            .FirstOrDefaultAsync();
+        if (resume == null)
+        {
+            return null;
+        }
+
+        return _mapper.Map<ResumeDTO>(resume);
     }
 
-    /// <summary>
-    /// Asynchronously checks for the existence of a resume with the specified ID, retrieves it with its associated information, and throws an exception if not found.
-    /// </summary>
-    /// <param name="id">The ID of the resume to check and retrieve (Guid).</param>
-    /// <returns>A `Resume` object containing all information about the resume and its related entities.</returns>
-    /// <exception cref="NotFoundException">Throws a `NotFoundException` if no resume exists with the specified ID.</exception>
-    public async Task<ResumeDTO?> CheckAndGetResumeAsync(Guid id)
+    public async Task<List<ResumeDTO>> GetRecruitmentResumesAsync(Guid recruitmentId)
     {
-        var resume = _repository.Resume.GetResumeByIdIncludeAll(id) ?? throw new NotFoundException("履歷不存在");
-        return await _mapper.ProjectTo<ResumeDTO>(resume).FirstOrDefaultAsync();
+        var resumes = await _repository
+            .Resume.GetIncludeAll()
+            .Where(r => r.Recruitments.Any(x => x.Id == recruitmentId))
+            .AsNoTracking()
+            .ToListAsync();
+
+        resumes.ForEach(HideResumeArea);
+
+        return _mapper.Map<List<ResumeDTO>>(resumes);
+    }
+
+    public async Task<ResumeDTO> AddOrUpdateAsync(ResumeDTO resumeDTO, Guid userId)
+    {
+        var resume = await _repository.Resume.GetByIdAsync(resumeDTO.Id);
+        // Add new resume
+        if (resume == null)
+        {
+            resume = _mapper.Map<Resume>(resumeDTO);
+            resume.UserId = userId;
+            await _repository.Resume.AddAsync(resume);
+            await _unitOfWork.SaveChangesAsync();
+            return _mapper.Map<ResumeDTO>(resume);
+        }
+        // Update resume
+        _mapper.Map(resumeDTO, resume);
+        resume.UserId = userId;
+        await _repository.Resume.UpdateAsync(resume);
+        await _unitOfWork.SaveChangesAsync();
+        return _mapper.Map<ResumeDTO>(resume);
     }
 
     /// <summary>
@@ -52,11 +85,15 @@ public class ResumeService : Service<Resume, ResumeDTO, Guid>
     /// <exception cref="ForbiddenException">Throws a `ForbiddenException` if the user requesting access does not have permission to view the resume.</exception>
     public async Task<ResumeDTO> CheckAndGetResumeAsync(Guid id, UserInfoDTO user)
     {
-        var query = _repository.Resume.GetResumeByIdIncludeAll(id) ?? throw new NotFoundException("履歷不存在");
-        var resume = await query.FirstOrDefaultAsync();
+        var resume =
+            await _repository
+                .Resume.GetIncludeAll()
+                .AsNoTracking()
+                .Where(r => r.Id == id)
+                .FirstOrDefaultAsync() ?? throw new NotFoundException("Resume");
 
         // Is Owner
-        if (resume?.UserId == user.Id)
+        if (resume.UserId == user.Id)
         {
             return _mapper.Map<ResumeDTO>(resume);
         }
@@ -87,7 +124,6 @@ public class ResumeService : Service<Resume, ResumeDTO, Guid>
     /// <returns>True if the user is from a related company, false otherwise.</returns>
     private static bool IsRelatedCompany(Resume resume, Guid userId)
     {
-
         var relatedCompanyIdList = resume.Recruitments?.Select(x => x.PublisherId);
 
         if (relatedCompanyIdList == null)
@@ -111,8 +147,6 @@ public class ResumeService : Service<Resume, ResumeDTO, Guid>
     /// This function modifies the resume object in-place by directly changing its "Areas" property.
     /// It filters the list of areas, keeping only those marked with the "IsDisplayed" flag set to true.
     /// </remarks>
-    private static void HideResumeArea(Resume resume)
-    {
-        resume.Areas = resume.Areas?.Where(x => x.IsDisplayed).ToList();
-    }
+    private static void HideResumeArea(Resume resume) =>
+        resume.Areas = resume?.Areas?.Where(x => x.IsDisplayed).ToList();
 }

@@ -1,7 +1,7 @@
 namespace IngBackendApi.Models.DTO;
+
 using System.Text.Json.Serialization;
 using IngBackendApi.Enum;
-using IngBackendApi.Models.DBEntity;
 
 public class AreaDTO
 {
@@ -11,6 +11,7 @@ public class AreaDTO
     public required string Title { get; set; }
     public LayoutType? LayoutType { get; set; }
     public int? AreaTypeId { get; set; }
+    public AreaTypeDTO? AreaType { get; set; }
     public TextLayoutDTO? TextLayout { get; set; }
     public ImageTextLayoutDTO? ImageTextLayout { get; set; }
     public ListLayoutDTO? ListLayout { get; set; }
@@ -20,6 +21,14 @@ public class AreaDTO
     public Guid? ResumeId { get; set; }
     public Guid? RecruitmentId { get; set; }
     public Guid? UserId { get; set; }
+
+    public void ClearLayouts()
+    {
+        TextLayout = null;
+        ImageTextLayout = null;
+        ListLayout = null;
+        KeyValueListLayout = null;
+    }
 }
 
 public class AreaPostDTO
@@ -31,8 +40,6 @@ public class AreaPostDTO
     public LayoutType? LayoutType { get; set; }
     public int? AreaTypeId { get; set; }
 
-    // relation
-    [JsonIgnore]
     public Guid? UserId { get; set; }
     public Guid? ResumeId { get; set; }
     public Guid? RecruitmentId { get; set; }
@@ -72,30 +79,42 @@ public class TextLayoutDTO
     public required string Content { get; set; } = "";
 }
 
-public class ImageDTO
+public class ImageDTO : ImageInfo
+{
+    [JsonIgnore]
+    public string Filepath { get; set; }
+}
+
+public class ImageSource
+{
+    public string Raw { get; set; }
+    public string Full { get; set; }
+    public string Regular { get; set; }
+    public string Small { get; set; }
+    public string Thumb { get; set; }
+    public string Download { get; set; }
+}
+
+public class ImageInfo
 {
     public Guid Id { get; set; }
-    public required string Filename { get; set; }
+    public string? Uri { get; set; }
+    public ImageSource Urls { get; set; }
+    public string? AltContent { get; set; }
     public required string ContentType { get; set; }
-    public required byte[] Data { get; set; }
 }
 
 public class ImageTextLayoutDTO
 {
     public Guid Id { get; set; }
-    public ImageDTO? Image { get; set; }
+    public string TextContent { get; set; } = "";
+    public ImageInfo? Image { get; set; }
 }
 
 public class ListLayoutDTO
 {
     public Guid? Id { get; set; }
     public List<TagDTO>? Items { get; set; }
-}
-
-public class ListLayoutPostDTO
-{
-    public Guid? Id { get; set; }
-    public List<TagPostDTO>? Items { get; set; }
 }
 
 public class KeyValueListLayoutDTO
@@ -106,7 +125,47 @@ public class KeyValueListLayoutDTO
 
 public class KeyValueItemDTO
 {
-    public Guid Id { get; set; }
-    public Tag? Key { get; set; }
+    public Guid? Id { get; set; }
+
+    [JsonIgnore]
+    public List<Guid> TagIds { get; set; }
+    public List<TagDTO>? Key { get; set; }
     public string Value { get; set; } = "";
+}
+
+public class KeyValueItemPostDTO
+{
+    public Guid? Id { get; set; }
+    public List<Guid> TagIds { get; set; }
+    public string Value { get; set; } = "";
+}
+
+// POST DTO
+public class ListLayoutPostDTO
+{
+    public List<TagPostDTO>? Items { get; set; }
+}
+
+public class TextLayoutPostDTO
+{
+    public required string Content { get; set; } = "";
+}
+
+public class ImageTextLayoutPostDTO
+{
+    public string AltContent { get; set; } = "";
+    public string TextContent { get; set; } = "";
+    public string? Uri { get; set; }
+    public IFormFile? Image { get; set; }
+}
+
+public class KeyValueListLayoutPostDTO
+{
+    public List<KeyValueItemPostDTO>? Items { get; set; }
+}
+
+public class AreaSequencePostDTO
+{
+    public Guid Id { get; set; }
+    public int Sequence { get; set; }
 }

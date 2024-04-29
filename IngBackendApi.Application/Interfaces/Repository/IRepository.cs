@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 using IngBackendApi.Models.DBEntity;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,7 +17,8 @@ public interface IRepository<TEntity, Tkey>
         params Expression<Func<TEntity, object>>[] includes
     );
     Task UpdateAsync(TEntity entity);
-    Task DeleteByIdAsync(Tkey key);
+    void Delete(TEntity entity);
+    Task DeleteByIdAsync(Tkey id);
     Task SaveAsync();
     void Attach<TTEntity>(TTEntity entity);
 

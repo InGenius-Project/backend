@@ -1,10 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
+namespace IngBackendApi.Models.DBEntity;
+
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 using IngBackendApi.Enum;
 using IngBackendApi.Interfaces.Repository;
-
-namespace IngBackendApi.Models.DBEntity;
 
 public class User : BaseEntity, IEntity<Guid>
 {
@@ -29,39 +29,26 @@ public class User : BaseEntity, IEntity<Guid>
     public required string HashedPassword { get; set; }
 
     [JsonIgnore]
-    public List<Tag> Tags { get; set; } = new List<Tag> { };
+    public ICollection<Area> Areas { get; set; } = [];
 
     [JsonIgnore]
-    public List<Area> Areas { get; set; } = new List<Area> { };
+    public ICollection<Resume> Resumes { get; set; } = [];
 
     [JsonIgnore]
-    public List<Resume> Resumes { get; set; } = new List<Resume> { };
+    public ICollection<Recruitment>? Recruitments { get; set; } = [];
 
     [JsonIgnore]
-    public List<Recruitment>? Recruitments { get; set; } = new List<Recruitment> { };
-
-    public List<VerificationCode>? EmailVerifications { get; set; }
-}
-
-public class Recruitment : BaseEntity, IEntity<Guid>
-{
-    [Key]
-    public Guid Id { get; set; }
-
-    [MaxLength(15)]
-    public string Name { get; set; }
-
-    public bool Enable { get; set; }
+    public ICollection<Recruitment> FavoriteRecruitments { get; set; } = [];
+    public ICollection<VerificationCode>? EmailVerifications { get; set; }
 
     [JsonIgnore]
-    public List<Area> Areas { get; set; }
+    public ICollection<ChatGroup> ChatRooms { get; set; } = [];
 
     [JsonIgnore]
-    public IEnumerable<Resume> Resumes { get; set; } = new List<Resume>() { };
+    public ICollection<ChatGroup> OwnedChatRooms { get; set; } = [];
+    public ICollection<ChatGroup> InvitedChatRooms { get; set; } = [];
 
-    [Required]
-    public required User Publisher { get; set; }
-    public required Guid PublisherId { get; set; }
+    public ICollection<Tag> OwnedTags { get; set; } = [];
 }
 
 public class VerificationCode : BaseEntity, IEntity<int>

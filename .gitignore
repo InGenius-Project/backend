@@ -275,9 +275,6 @@ ServiceFabricBackup/
 *.bim.layout
 *.bim_*.settings
 *.rptproj.rsuser
-*- [Bb]ackup.rdl
-*- [Bb]ackup ([0-9]).rdl
-*- [Bb]ackup ([0-9][0-9]).rdl
 
 # Microsoft Fakes
 FakesAssemblies/
@@ -380,4 +377,4 @@ appsettings.Secrets.json
 *.sqlite-*
 changelog.txt
 
-wwwroot/images/*
+IngBackendApi.Application/wwwroot/images/*

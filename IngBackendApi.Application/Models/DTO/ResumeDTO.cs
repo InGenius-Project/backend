@@ -7,12 +7,11 @@ public class ResumeDTO
     public DateTime ModifiedAt { get; set; }
     public List<AreaDTO>? Areas { get; set; }
     public bool Visibility { get; set; }
+    public required UserInfoDTO User { get; set; }
 }
 public class ResumePostDTO
 {
-    public Guid? Id { get; set; } // Optional id provide
+    public Guid? Id { get; set; }
     public string? Title { get; set; }
-
-    public List<AreaDTO>? Areas { get; set; }
     public bool Visibility { get; set; }
 }

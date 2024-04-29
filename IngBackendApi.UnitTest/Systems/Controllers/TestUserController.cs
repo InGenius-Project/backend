@@ -1,4 +1,4 @@
-﻿namespace IngBackendApi.UnitTest.Systems.Controllers;
+namespace IngBackendApi.UnitTest.Systems.Controllers;
 
 using AutoMapper;
 using AutoWrapper.Wrappers;
@@ -9,6 +9,7 @@ using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
 using IngBackendApi.Profiles;
 using IngBackendApi.Services;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 
@@ -20,11 +21,17 @@ public class TestUserController : IDisposable
     private readonly Mock<IPasswordHasher> _mockPasswordHasher;
     private readonly Mock<IBackgroundJobClient> _mockBackgroundJobClient;
     private readonly Mock<EmailService> _mockEmailService;
+    private readonly Mock<IConfiguration> _mockConfiguration;
+    private readonly Mock<IWebHostEnvironment> _mockWebHostEnvironment;
+    private readonly Mock<ITokenService> _mockTokenService;
     private readonly Fixture _fixture;
 
     public TestUserController()
     {
         _mockUserService = new Mock<IUserService>();
+        _mockBackgroundJobClient = new Mock<IBackgroundJobClient>();
+        _mockTokenService = new Mock<ITokenService>();
+        _mockWebHostEnvironment = new Mock<IWebHostEnvironment>();
 
         MappingProfile mappingProfile = new();
         MapperConfiguration configuration = new(cfg => cfg.AddProfile(mappingProfile));
@@ -37,14 +44,14 @@ public class TestUserController : IDisposable
 
         _mockEmailService = new Mock<EmailService>(mockConfiguration.Object);
 
-
         _controller = new UserController(
             null, // Pass null for TokenService as it's not used in GetUser action
             _mockUserService.Object,
             _mapper,
             _mockPasswordHasher.Object,
             _mockBackgroundJobClient.Object,
-            _mockEmailService.Object
+            _mockEmailService.Object,
+            _mockWebHostEnvironment.Object
         );
 
         _fixture = new Fixture();
@@ -56,7 +63,9 @@ public class TestUserController : IDisposable
         // Arrange
         var userId = Guid.NewGuid();
         UserInfoDTO userInfoDto = new(); // Fill with test data as needed
-        _mockUserService.Setup(x => x.GetUserByIdIncludeAllAsync(Guid.Empty)).ReturnsAsync(userInfoDto);
+        _mockUserService
+            .Setup(x => x.GetUserByIdIncludeAllAsync(Guid.Empty))
+            .ReturnsAsync(userInfoDto);
 
         // Act
         var result = await _controller.GetUser();
@@ -67,15 +76,16 @@ public class TestUserController : IDisposable
     }
 
     [Fact]
-    public async Task GetUserInvalidUserIdThrowsApiException()
+    public async Task GetUser_InvalidUserId_ThrowsApiException()
     {
         // Arrange
         UserInfoDTO? nullValue = null;
-        _mockUserService.Setup(x => x.GetUserByIdIncludeAllAsync(Guid.Empty))
+        _mockUserService
+            .Setup(x => x.GetUserByIdIncludeAllAsync(Guid.Empty))
             .ReturnsAsync(nullValue);
 
         // Act
-        var exception = await Assert.ThrowsAsync<ApiException>(() => _controller.GetUser());
+        var exception = await Assert.ThrowsAsync<ApiException>(_controller.GetUser);
 
         // Assert
         Assert.Equal("使用者不存在", exception.Message);
@@ -83,7 +93,7 @@ public class TestUserController : IDisposable
     }
 
     [Fact]
-    public async Task PostUserValidUserInfoPostDTOReturnsSuccessfulResult()
+    public async Task PostUse_rValidUserInfoPostDTO_ReturnsSuccessfulResult()
     {
         // Arrange
         var userInfoPostDTO = _fixture.Create<UserInfoPostDTO>();
@@ -100,7 +110,7 @@ public class TestUserController : IDisposable
     }
 
     [Fact]
-    public async Task PostUserInValidUserInfoPostDTOReturnsSuccessfulResult()
+    public async Task PostUser_InValidUserInfoPostDTO_ReturnsSuccessfulResult()
     {
         // Arrange
         var userInfoPostDTO = _fixture.Create<UserInfoPostDTO>();
@@ -117,4 +127,3 @@ public class TestUserController : IDisposable
 
     public void Dispose() => GC.SuppressFinalize(this);
 }
-

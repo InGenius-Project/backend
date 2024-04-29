@@ -1,15 +1,21 @@
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using AutoMapper.EquivalencyExpression;
 using AutoWrapper;
 using Hangfire;
 using IngBackend.Repository;
+using IngBackendApi.Application.Hubs;
+using IngBackendApi.Application.Interfaces.Service;
 using IngBackendApi.Context;
+using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Interfaces.UnitOfWork;
 using IngBackendApi.Profiles;
 using IngBackendApi.Services;
 using IngBackendApi.Services.AreaService;
+using IngBackendApi.Services.Http;
 using IngBackendApi.Services.RecruitmentService;
 using IngBackendApi.Services.TagService;
 using IngBackendApi.Services.TokenServices;
@@ -17,14 +23,23 @@ using IngBackendApi.Services.UnitOfWork;
 using IngBackendApi.Services.UserService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration.AddJsonFile("appsettings.Secrets.json");
+try
+{
+    builder.Configuration.AddJsonFile("appsettings.Secrets.json");
+}
+catch
+{
+    throw new SystemInitException("Secret File Not Found.");
+}
 
 var env = builder.Environment;
+var config = builder.Configuration;
 
 // Development
 if (env.IsDevelopment())
@@ -45,7 +60,12 @@ if (env.IsDevelopment())
 {
     builder.Services.AddDbContext<IngDbContext>(options =>
     {
-        options.UseSqlite(connectionString);
+        options.UseSqlite(
+            connectionString,
+            o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
+        );
+        options.ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
+
         options.EnableSensitiveDataLogging();
     });
 }
@@ -56,26 +76,43 @@ else
 
 // Add services to the container.
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped(typeof(IService<,,>), typeof(Service<,,>)); // Repository Wrapper
-builder.Services.AddScoped<IRepositoryWrapper, RepositoryWrapper>();
+builder.Services.AddScoped(typeof(IService<,,>), typeof(Service<,,>));
+builder.Services.AddScoped<IRepositoryWrapper, RepositoryWrapper>(); // Repository Wrapper
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddScoped<TokenService>();
-builder.Services.AddScoped<ResumeService>();
+builder.Services.AddSingleton<TokenService>();
 builder.Services.AddScoped<IAreaService, AreaService>();
 builder.Services.AddScoped<IAreaTypeService, AreaTypeService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITagService, TagService>();
-builder.Services.AddScoped<RecruitmentService>();
-
-// builder.Services.AddScoped<ApiResponseMiddleware>();
+builder.Services.AddScoped<IResumeService, ResumeService>();
+builder.Services.AddScoped<IRecruitmentService, RecruitmentService>();
+builder.Services.AddScoped<IAIService, AIService>();
+builder.Services.AddScoped<IBackgroundTaskService, BackgroundTaskService>();
+builder.Services.AddSingleton<IGroupMapService, GroupMapService>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
-builder.Services.AddControllers();
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddSingleton<AiHttpClient>();
+builder.Services.AddSingleton<UnsplashHttpClient>();
+builder.Services.AddSingleton<ISettingsFactory, SettingsFactory>();
+
+builder.Services.AddControllers();
+
+// Add SignalR
+builder
+    .Services.AddSignalR()
+    .AddJsonProtocol(option => option.PayloadSerializerOptions.PropertyNamingPolicy = null);
+
+// Add Claim Accessor for SignalR
+builder.Services.AddHttpContextAccessor();
 
 // Json Serializer
 builder
     .Services.AddControllers()
-    .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
 
 // Add Logger
 builder.Logging.ClearProviders();
@@ -121,26 +158,52 @@ builder.Services.AddAutoMapper(cfg =>
     cfg.AddProfile(
         new MappingProfile(builder.Services.BuildServiceProvider().GetService<IPasswordHasher>())
     );
+    cfg.AddProfile(
+        new MappingProfile(builder.Services.BuildServiceProvider().GetService<IConfiguration>())
+    );
 });
 
 builder
     .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options => options.TokenValidationParameters = new TokenValidationParameters
+    .AddJwtBearer(options =>
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(
+        // Add SignalR authentication verify
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+
+                // If the request is for our hub...
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chat"))
+                {
+                    // Read the token out of the query string
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
+
+        // Add normal controller authentication
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(builder.Configuration["Secrets:JwtSecretKey"])
             )
+        };
     });
 
 // CORS
 var devCorsPolicy = "_devCorsPolicy";
-builder.Services.AddCors(options => options.AddPolicy(
+builder.Services.AddCors(options =>
+    options.AddPolicy(
         name: devCorsPolicy,
         policy =>
         {
@@ -154,13 +217,15 @@ builder.Services.AddCors(options => options.AddPolicy(
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();
+            policy.SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost");
             policy
                 .WithOrigins("http://140.123.176.230:34004")
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();
         }
-    ));
+    )
+);
 
 // Hangfire (Memory Storage)
 builder.Services.AddHangfire(config => config.UseInMemoryStorage());
@@ -181,11 +246,13 @@ app.UseApiResponseAndExceptionWrapper(
     new AutoWrapperOptions
     {
         // UseApiProblemDetailsException = true,
+        ExcludePaths = [new AutoWrapperExcludePath("/hangfire", ExcludeMode.StartWith)],
         ShowIsErrorFlagForSuccessfulResponse = true,
         ShowStatusCode = true,
     }
 );
 
+app.UseHangfireDashboard("/hangfire");
 app.UseCors(devCorsPolicy);
 app.UseHttpsRedirection();
 
@@ -194,18 +261,16 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Apply Migration
-using (var scope = app.Services.CreateScope())
+app.MapHub<ChatHub>("/Chat");
+
+// Ensure wwwroot/images/* directory exists, if not create it
+var paths = config.GetSection("Path").GetSection("Image").Get<Dictionary<string, string>>() ?? [];
+foreach (var path in paths)
 {
-    var services = scope.ServiceProvider;
-
-    Console.WriteLine("READY To Applying Migrations");
-
-    var context = services.GetRequiredService<IngDbContext>();
-    if (context.Database.GetPendingMigrations().Any())
+    var imagePath = Path.Combine(env.WebRootPath, path.Value);
+    if (!Directory.Exists(imagePath))
     {
-        Console.WriteLine("Applying Migrations...");
-        context.Database.Migrate();
+        Directory.CreateDirectory(imagePath);
     }
 }
 

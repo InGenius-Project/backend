@@ -3,7 +3,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>IngBackend</RootNamespace>
+    <RootNamespace>IngBackendApi</RootNamespace>
     <UserSecretsId>32118c39-d5be-4352-8dea-cc4ed29d8a12</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>.</DockerfileContext>
@@ -16,6 +16,7 @@
     <PackageReference Include="Hangfire" Version="1.8.7" />
     <PackageReference Include="Hangfire.InMemory" Version="0.7.0" />
     <PackageReference Include="MailKit" Version="4.3.0" />
+    <PackageReference Include="Microsoft.AspNet.SignalR" Version="2.4.3" />
     <PackageReference Include="Microsoft.EntityFrameworkcore.Sqlite" Version="8.0.0" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.5" />
     <PackageReference Include="MimeKit" Version="4.3.0" />

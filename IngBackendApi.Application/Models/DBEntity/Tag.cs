@@ -11,18 +11,20 @@ public class Tag : BaseEntity, IEntity<Guid>
     public required string Name { get; set; }
 
     public int TagTypeId { get; set; }
-    public required TagType Type { get; set; }
+
+    [Required]
+    public TagType Type { get; set; }
 
     public int Count { get; set; }
 
     [JsonIgnore]
-    public List<ListLayout>? ListLayouts { get; set; }
+    public ICollection<ListLayout> ListLayouts { get; set; } = [];
 
     [JsonIgnore]
-    public List<KeyValueItem>? KeyValueItems { get; set; }
+    public ICollection<KeyValueItem> KeyValueItems { get; set; } = [];
 
     [JsonIgnore]
-    public List<User>? User { get; set; }
+    public ICollection<User> Owners { get; set; } = [];
 }
 
 public class TagType : BaseEntity, IEntity<int>
@@ -38,5 +40,5 @@ public class TagType : BaseEntity, IEntity<int>
     public required string Color { get; set; }
 
     [JsonIgnore]
-    public List<AreaType>? AreaTypes { get; set; }
+    public ICollection<AreaType> AreaTypes { get; set; } = [];
 }

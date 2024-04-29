@@ -1,88 +1,125 @@
 namespace IngBackend.Controllers;
 
-using IngBackendApi.Controllers;
 using AutoMapper;
-using IngBackendApi.Services.UserService;
-using IngBackendApi.Services.RecruitmentService;
+using AutoWrapper.Wrappers;
+using IngBackendApi.Application.Attribute;
+using IngBackendApi.Application.Hubs;
+using IngBackendApi.Application.Interfaces;
+using IngBackendApi.Application.Interfaces.Service;
+using IngBackendApi.Controllers;
+using IngBackendApi.Enum;
+using IngBackendApi.Exceptions;
+using IngBackendApi.Interfaces.Service;
+using IngBackendApi.Models.DBEntity;
+using IngBackendApi.Models.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using IngBackendApi.Models.DTO;
-using AutoWrapper.Wrappers;
-using IngBackendApi.Enum;
-using IngBackendApi.Services.AreaService;
+using Microsoft.AspNetCore.SignalR;
 
 [Route("api/[controller]")]
 [Authorize]
 [ApiController]
-public class RecruitmentController(IMapper mapper, AreaService areaService, UserService userService, RecruitmentService recruitmentService) : BaseController
+public class RecruitmentController(
+    IMapper mapper,
+    IAreaService areaService,
+    IUserService userService,
+    IRecruitmentService recruitmentService,
+    IResumeService resumeService,
+    IAIService aiService
+) : BaseController
 {
     private readonly IMapper _mapper = mapper;
-    private readonly UserService _userService = userService;
-    private readonly RecruitmentService _recruitmentService = recruitmentService;
-    private readonly AreaService _areaService = areaService;
+    private readonly IUserService _userService = userService;
+    private readonly IRecruitmentService _recruitmentService = recruitmentService;
+    private readonly IAreaService _areaService = areaService;
+    private readonly IAIService _aiService = aiService;
+    private readonly IResumeService _resumeService = resumeService;
 
     [HttpGet]
     [ProducesResponseType(typeof(List<RecruitmentDTO>), 200)]
+    [UserAuthorize(UserRole.Company)]
     public async Task<List<RecruitmentDTO>> GetRecruitmentsByUser()
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId, UserRole.Company);
 
-        var recruitments = _recruitmentService.GetUserRecruitements(userId);
+        var recruitments = await _recruitmentService.GetPublisherRecruitmentsAsync(userId);
 
         var recruitmentsDTO = _mapper.Map<List<RecruitmentDTO>>(recruitments);
         return recruitmentsDTO;
     }
-
 
     [HttpGet("{recruitmentId}")]
     [ProducesResponseType(typeof(RecruitmentDTO), 200)]
     public async Task<RecruitmentDTO?> GetRecruitmentById(Guid recruitmentId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        var user = await _userService.CheckAndGetUserAsync(userId);
 
-        await _userService.CheckAndGetUserAsync(userId);
-        var recruitment = await _recruitmentService.GetByIdAsync(recruitmentId);
+        var recruitment = await _recruitmentService.GetRecruitmentByIdIncludeAllAsync(
+            recruitmentId
+        );
+
+        // Attach resumes to recruitment if user is the publisher
+        if (recruitment.PublisherId == userId && user.Role == UserRole.Company)
+        {
+            recruitment.Resumes = await _resumeService.GetRecruitmentResumesAsync(recruitmentId);
+        }
+
         return recruitment;
     }
 
     [HttpPost]
+    [UserAuthorize(UserRole.Company, UserRole.Admin)]
     [ProducesResponseType(typeof(ResponseDTO<RecruitmentDTO>), StatusCodes.Status200OK)]
-    public async Task<ApiResponse> PostRecruitment([FromBody] RecruitmentPostDTO req)
+    public async Task<RecruitmentDTO> PostRecruitment([FromBody] RecruitmentPostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.CheckAndGetUserAsync(userId);
+        await _userService.CheckAndGetUserAsync(userId);
 
-        var recruitment = await _recruitmentService.GetByIdAsync(req.Id ?? Guid.Empty);
-
-        // Add new recruitment
-        if (recruitment == null)
-        {
-            var newRecruitment = _mapper.Map<RecruitmentDTO>(req);
-            newRecruitment.Publisher = user;
-            await _recruitmentService.AddAsync(newRecruitment);
-            return new ApiResponse("Post Success");
-        }
-
-        // Patch
-        _mapper.Map(req, recruitment);
-        await _recruitmentService.UpdateAsync(recruitment);
-        await _userService.SaveChangesAsync();
-        return new ApiResponse("Post Success");
+        var recruitmentDTO = await _recruitmentService.AddOrUpdateAsync(
+            _mapper.Map<RecruitmentDTO>(req),
+            userId
+        );
+        return recruitmentDTO;
     }
 
     [HttpDelete("{recruitmentId}")]
+    [UserAuthorize(UserRole.Company)]
     [ProducesResponseType(typeof(ResponseDTO<>), StatusCodes.Status200OK)]
     public async Task<ApiResponse> DeleteRecruitment(Guid recruitmentId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
 
-        _ = await _userService.CheckAndGetUserAsync(userId);
+        // TODO: recruiment owner check  is missing
+        await _userService.CheckAndGetUserAsync(userId);
         await _recruitmentService.DeleteByIdAsync(recruitmentId);
         return new ApiResponse("刪除成功");
     }
 
+    [HttpPost("search")]
+    [AllowAnonymous]
+    public async Task<RecruitmentSearchResultDTO> SearchRecruitment(RecruitmentSearchPostDTO req)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        var result = await _recruitmentService.SearchRecruitmentsAsync(req, userId);
+        return result;
+    }
 
+    [HttpPost("{recruitmentId}/apply/{resumeId}")]
+    [UserAuthorize(UserRole.Intern)]
+    public async Task<ApiResponse> SendRecruitmentApply(Guid recruitmentId, Guid resumeId)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        await _userService.CheckAndGetUserAsync(userId);
 
+        await _recruitmentService.ApplyRecruitmentAsync(recruitmentId, resumeId, userId);
 
+        return new ApiResponse("申請成功");
+    }
+
+    [HttpGet("report/{recruitmentId}")]
+    public async Task<SafetyReport> GetSafetyReport(Guid recruitmentId) =>
+        await _recruitmentService.GetSafetyReportAsync(recruitmentId)
+        ?? throw new NotFoundException("Report not found.");
 }

@@ -15,3 +15,19 @@ public enum LayoutType
     List,
     KeyValueList
 }
+
+public enum AreaPostType
+{
+    User,
+    Resume,
+    Recruitment
+}
+
+public enum ChatReceiveMethod
+{
+    Message,
+    NewGroup,
+    JoinGroup,
+    BroadCast,
+    LastMessage
+}

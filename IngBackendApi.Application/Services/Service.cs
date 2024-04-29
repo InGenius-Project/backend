@@ -107,7 +107,12 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
 
     public async Task DeleteByIdAsync(TKey id)
     {
-        await _unitOfWork.Repository<TEntity, TKey>().DeleteByIdAsync(id);
+        var entity =
+            await _unitOfWork.Repository<TEntity, TKey>().GetByIdAsync(id)
+            ?? throw new EntityNotFoundException(
+                $"No {typeof(TEntity).Name} with id {id} was found"
+            );
+        _unitOfWork.Repository<TEntity, TKey>().Delete(entity);
         await _unitOfWork.SaveChangesAsync();
     }
 
@@ -120,7 +125,8 @@ public class Service<TEntity, TDto, TKey> : IService<TEntity, TDto, TKey>
 
     public async Task SaveChangesAsync() => await _unitOfWork.SaveChangesAsync();
 
-    private void Detach(TEntity entity) => _unitOfWork.Repository<TEntity, TKey>().SetEntityState(entity, EntityState.Detached);
+    private void Detach(TEntity entity) =>
+        _unitOfWork.Repository<TEntity, TKey>().SetEntityState(entity, EntityState.Detached);
 
     // /// <inheritdoc />
     // public virtual async Task AddRangeAsync(IEnumerable<TEntity> entities)

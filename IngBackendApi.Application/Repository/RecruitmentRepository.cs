@@ -1,38 +1,28 @@
-using IngBackend.Repository;
+namespace IngBackendApi.Repository;
+
 using IngBackendApi.Context;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Models.DBEntity;
 using Microsoft.EntityFrameworkCore;
 
-namespace IngBackendApi.Repository;
-
-public class RecruitmentRepository : Repository<Recruitment, Guid>, IRecruitmentRepository
+public class RecruitmentRepository(IngDbContext context)
+    : Repository<Recruitment, Guid>(context),
+        IRecruitmentRepository
 {
-    private readonly IngDbContext _context;
+    private readonly IngDbContext _context = context;
 
-    public RecruitmentRepository(IngDbContext context) : base(context)
-    {
-        _context = context;
-    }
-
-    public IQueryable<Recruitment> GetRecruitmentByIdIncludeAll(Guid id)
-    {
-        return _context.Recruitment
+    public IQueryable<Recruitment> GetIncludeAll() => _context
+            .Recruitment.Include(r => r.Publisher.Avatar)
             .Include(r => r.Areas)
                 .ThenInclude(a => a.TextLayout)
             .Include(r => r.Areas)
-                .ThenInclude(a => a.ImageTextLayout)
+                .ThenInclude(a => a.ImageTextLayout.Image)
             .Include(r => r.Areas)
-                .ThenInclude(a => a.ListLayout)
-                    .ThenInclude(l => l.Items)
+                .ThenInclude(a => a.ListLayout.Items)
+                .ThenInclude(t => t.Type)
             .Include(r => r.Areas)
-                .ThenInclude(a => a.KeyValueListLayout)
-                    .ThenInclude(kv => kv.Items)
-                        .ThenInclude(kvi => kvi.Key)
-            .Where(x => x.Id.Equals(id));
-
-    }
-
+                .ThenInclude(a => a.KeyValueListLayout.Items)
+                .ThenInclude(kvi => kvi.Key);
 
 
 }

@@ -1,4 +1,5 @@
 namespace IngBackendApi.Services.UserService;
+
 using System.Linq.Expressions;
 using AutoMapper;
 using IngBackendApi.Enum;
@@ -14,13 +15,21 @@ public class UserService(
     IUnitOfWork unitOfWork,
     IMapper mapper,
     IRepositoryWrapper repository,
-    IPasswordHasher passwordHasher
-    ) : Service<User, UserInfoDTO, Guid>(unitOfWork, mapper), IUserService
+    IPasswordHasher passwordHasher,
+    IWebHostEnvironment env,
+    IConfiguration config
+) : Service<User, UserInfoDTO, Guid>(unitOfWork, mapper), IUserService
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IMapper _mapper = mapper;
     private readonly IRepositoryWrapper _repository = repository;
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
+    private readonly IWebHostEnvironment _env = env;
+    private readonly IConfiguration _config = config;
+    private readonly IRepository<Image, Guid> _imageRepository = unitOfWork.Repository<
+        Image,
+        Guid
+    >();
 
     public async Task<UserInfoDTO?> GetUserByIdIncludeAllAsync(Guid userId)
     {
@@ -30,8 +39,7 @@ public class UserService(
 
     public async Task PostUser(UserInfoPostDTO req, Guid userId)
     {
-        var user = await _repository.User.GetUserByIdIncludeAll(userId).FirstOrDefaultAsync();
-        user.Areas.ForEach(x => _repository.Area.SetEntityState(x, EntityState.Detached));
+        var user = await _repository.User.GetByIdAsync(userId) ?? throw new UserNotFoundException();
         _mapper.Map(req, user);
         await _repository.User.UpdateAsync(user);
     }
@@ -134,15 +142,11 @@ public class UserService(
         return user;
     }
 
-    public async Task<ResumeDTO?> GetResumesByUserId(Guid userId)
-    {
-        var query = _repository.User.GetResumesByUserId(userId);
-        return await _mapper.ProjectTo<ResumeDTO>(query).FirstOrDefaultAsync();
-    }
-
     public async Task<UserInfoDTO> VerifyHashedPasswordAsync(UserSignInDTO req)
     {
-        var query = _repository.User.GetUserByEmail(req.Email.ToLower(System.Globalization.CultureInfo.CurrentCulture));
+        var query = _repository.User.GetUserByEmail(
+            req.Email.ToLower(System.Globalization.CultureInfo.CurrentCulture)
+        );
         var user = await query.FirstOrDefaultAsync() ?? throw new BadRequestException("帳號或密碼錯誤");
         var passwordValid = _passwordHasher.VerifyHashedPassword(user.HashedPassword, req.Password);
         if (!passwordValid)
@@ -154,7 +158,8 @@ public class UserService(
 
     public async Task AddUserResumeAsync(UserInfoDTO userDTO, ResumeDTO resumeDTO)
     {
-        var user = await _repository.User.GetByIdAsync(userDTO.Id) ?? throw new UserNotFoundException();
+        var user =
+            await _repository.User.GetByIdAsync(userDTO.Id) ?? throw new UserNotFoundException();
 
         user.Resumes.Add(_mapper.Map<Resume>(resumeDTO));
         await _unitOfWork.SaveChangesAsync();
@@ -162,7 +167,9 @@ public class UserService(
 
     public async Task<bool> VerifyEmailVerificationCode(UserInfoDTO req, string token)
     {
-        var user = await _repository.User.GetUserByIdIncludeAll(req.Id).FirstOrDefaultAsync();
+        var user =
+            await _repository.User.GetUserByIdIncludeAll(req.Id).FirstOrDefaultAsync()
+            ?? throw new UserNotFoundException();
 
         if (user.EmailVerifications == null)
         {
@@ -175,16 +182,17 @@ public class UserService(
 
         if (result)
         {
-            user.EmailVerifications.RemoveAll(e =>
-                e.Code == token || e.ExpiresTime > DateTime.UtcNow
-            );
+            user.EmailVerifications.ToList()
+                .RemoveAll(e => e.Code == token || e.ExpiresTime > DateTime.UtcNow);
         }
         return result;
     }
 
     public async Task<string> GenerateEmailConfirmationTokenAsync(UserInfoDTO req)
     {
-        var user = _repository.User.GetUserByIdIncludeAll(req.Id).FirstOrDefault() ?? throw new UserNotFoundException();
+        var user =
+            _repository.User.GetUserByIdIncludeAll(req.Id).FirstOrDefault()
+            ?? throw new UserNotFoundException();
         Random random = new();
         var length = 6;
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -225,5 +233,108 @@ public class UserService(
         }
 
         return !user.EmailVerifications.Any(e => e.Code == token);
+    }
+
+    public async Task SaveUserAvatarAsync(Guid userId, IFormFile image)
+    {
+        var user =
+            await _repository
+                .User.GetAll()
+                .Where(u => u.Id == userId)
+                .Include(u => u.Avatar)
+                .FirstOrDefaultAsync() ?? throw new UserNotFoundException();
+
+        var filepath = _config["ImageSavePath:Avatar"] ?? "images/avatars";
+        var newImage = await SaveImageAsync(image, filepath);
+
+        if (user.Avatar != null)
+        {
+            var fullpath = Path.Combine(_env.WebRootPath, user.Avatar.Filepath);
+            if (File.Exists(fullpath))
+            {
+                File.Delete(fullpath);
+            }
+            _imageRepository.Delete(user.Avatar);
+        }
+
+        user.Avatar = newImage;
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task<ImageDTO?> GetImageByIdAsync(Guid imageId)
+    {
+        var image = await _imageRepository.GetByIdAsync(imageId);
+        return _mapper.Map<ImageDTO>(image);
+    }
+
+    public async Task<List<RecruitmentDTO>> GetFavoriteRecruitmentsAsync(Guid userId)
+    {
+        var recruitmentIds = await _repository
+            .User.GetAll()
+            .Where(u => u.Id == userId)
+            .Include(a => a.FavoriteRecruitments)
+            .SelectMany(u => u.FavoriteRecruitments)
+            .Select(r => r.Id)
+            .ToListAsync();
+
+        var query = _repository
+            .Recruitment.GetIncludeAll()
+            .Where(r => recruitmentIds.Contains(r.Id));
+
+        var result = await _mapper.ProjectTo<RecruitmentDTO>(query).ToListAsync();
+
+        var favRecruitmentIds = _repository
+            .User.GetAll(u => u.Id == userId)
+            .Include(u => u.FavoriteRecruitments)
+            .SelectMany(u => u.FavoriteRecruitments.Select(fr => fr.Id));
+        result.ForEach(r => r.IsUserFav = favRecruitmentIds.Any(id => id == r.Id));
+
+        return result;
+    }
+
+    public async Task AddFavoriteRecruitmentAsync(Guid userId, List<Guid> recruitmentIds)
+    {
+        var user =
+            await _repository
+                .User.GetAll()
+                .Include(a => a.FavoriteRecruitments)
+                .FirstOrDefaultAsync(u => u.Id == userId) ?? throw new UserNotFoundException();
+        var recruitments =
+            _repository.Recruitment.GetAll(a => recruitmentIds.Contains(a.Id))
+            ?? throw new NotFoundException($"No Recruitment was found");
+        user.FavoriteRecruitments.ToList().AddRange(recruitments);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task RemoveFavoriteRecruitmentAsync(Guid userId, List<Guid> recruitmentIds)
+    {
+        var user =
+            await _repository
+                .User.GetAll()
+                .Include(a => a.FavoriteRecruitments)
+                .FirstOrDefaultAsync(u => u.Id == userId) ?? throw new UserNotFoundException();
+        user.FavoriteRecruitments.ToList().RemoveAll(a => recruitmentIds.Contains(a.Id));
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    private async Task<Image> SaveImageAsync(IFormFile file, string path)
+    {
+        if (file.Length == 0)
+        {
+            throw new ArgumentException("File is empty");
+        }
+
+        var newImage = new Image { Filepath = "", ContentType = file.ContentType };
+        await _imageRepository.AddAsync(newImage);
+
+        var fileId = newImage.Id;
+        var fileName = fileId.ToString();
+        var fullPath = Path.Combine(_env.WebRootPath, path, fileName);
+        using (var stream = new FileStream(fullPath, FileMode.Create))
+        {
+            file.CopyTo(stream);
+        }
+        newImage.Filepath = Path.Combine(path, fileName);
+        return newImage;
     }
 }
