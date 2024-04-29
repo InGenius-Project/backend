@@ -7,6 +7,7 @@ public interface ITagService : IService<Tag, TagDTO, Guid>
 {
     Task<List<TagDTO>> GetAllTagsByTypeIds(int[] typeIds);
     new Task<TagDTO> AddAsync(TagDTO tagDto);
+    Task<TagDTO> AddOrUpdateAsync(TagPostDTO tagDTO, Guid userId);
 
     /// <summary>
     /// Checks the ownership of a tag by a user.

@@ -1,8 +1,8 @@
 ﻿namespace IngBackend.Controllers;
 
-using IngBackendApi.Controllers;
 using AutoMapper;
 using AutoWrapper.Wrappers;
+using IngBackendApi.Controllers;
 using IngBackendApi.Enum;
 using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Service;
@@ -20,7 +20,7 @@ public class TagController(
     ITagService tagService,
     IService<TagType, TagTypeDTO, int> tagTypeService,
     IAreaService areaService
-    ) : BaseController
+) : BaseController
 {
     private readonly IUserService _userService = userService;
     private readonly IMapper _mapper = mapper;
@@ -55,32 +55,15 @@ public class TagController(
     public async Task<TagDTO> PostTag([FromBody] TagPostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        await _userService.CheckAndGetUserAsync(userId);
-        var tagId = req.Id ?? Guid.Empty;
-
-        var tagDto = await _tagService.GetByIdAsync(tagId);
-        if (tagDto == null)
-        {
-            // new tag
-            var newTag = _mapper.Map<TagDTO>(req);
-            newTag = await _tagService.AddAsync(newTag);
-            return newTag;
-        }
-
-        // check ownership
-        await _tagService.CheckOwnerShip(tagId, userId);
-
-        // update tag
-        _mapper.Map(req, tagDto);
-        await _tagService.UpdateAsync(tagDto);
-        return tagDto;
+        return await _tagService.AddOrUpdateAsync(req, userId);
     }
 
     [HttpGet("type/{id}")]
     [ProducesResponseType(typeof(ResponseDTO<TagTypeDTO>), StatusCodes.Status200OK)]
     public async Task<TagTypeDTO> GetTagType(int id)
     {
-        var tagType = await _tagTypeService.GetByIdAsync(id) ?? throw new NotFoundException("標籤");
+        var tagType =
+            await _tagTypeService.GetByIdAsync(id) ?? throw new NotFoundException("tag not found");
 
         return tagType;
     }

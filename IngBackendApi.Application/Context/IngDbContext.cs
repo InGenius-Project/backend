@@ -27,6 +27,7 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
                 r => r.HasOne<Resume>().WithMany().OnDelete(DeleteBehavior.NoAction)
             );
 
+        modelBuilder.Entity<Tag>().HasMany(t => t.Owners).WithMany(u => u.OwnedTags);
         // Resume Area
         modelBuilder
             .Entity<Resume>()

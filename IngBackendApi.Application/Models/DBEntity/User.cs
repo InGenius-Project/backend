@@ -29,27 +29,26 @@ public class User : BaseEntity, IEntity<Guid>
     public required string HashedPassword { get; set; }
 
     [JsonIgnore]
-    public List<Tag> Tags { get; set; } = [];
+    public ICollection<Area> Areas { get; set; } = [];
 
     [JsonIgnore]
-    public List<Area> Areas { get; set; } = [];
+    public ICollection<Resume> Resumes { get; set; } = [];
 
     [JsonIgnore]
-    public List<Resume> Resumes { get; set; } = [];
+    public ICollection<Recruitment>? Recruitments { get; set; } = [];
 
     [JsonIgnore]
-    public List<Recruitment>? Recruitments { get; set; } = [];
-
-    [JsonIgnore]
-    public List<Recruitment> FavoriteRecruitments { get; set; } = [];
-    public List<VerificationCode>? EmailVerifications { get; set; }
+    public ICollection<Recruitment> FavoriteRecruitments { get; set; } = [];
+    public ICollection<VerificationCode>? EmailVerifications { get; set; }
 
     [JsonIgnore]
     public ICollection<ChatGroup> ChatRooms { get; set; } = [];
 
     [JsonIgnore]
-    public ICollection<ChatGroup> OwnedChatRooms { get; set; }
-    public ICollection<ChatGroup> InvitedChatRooms { get; set; }
+    public ICollection<ChatGroup> OwnedChatRooms { get; set; } = [];
+    public ICollection<ChatGroup> InvitedChatRooms { get; set; } = [];
+
+    public ICollection<Tag> OwnedTags { get; set; } = [];
 }
 
 public class VerificationCode : BaseEntity, IEntity<int>

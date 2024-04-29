@@ -167,7 +167,9 @@ public class UserService(
 
     public async Task<bool> VerifyEmailVerificationCode(UserInfoDTO req, string token)
     {
-        var user = await _repository.User.GetUserByIdIncludeAll(req.Id).FirstOrDefaultAsync();
+        var user =
+            await _repository.User.GetUserByIdIncludeAll(req.Id).FirstOrDefaultAsync()
+            ?? throw new UserNotFoundException();
 
         if (user.EmailVerifications == null)
         {
@@ -180,9 +182,8 @@ public class UserService(
 
         if (result)
         {
-            user.EmailVerifications.RemoveAll(e =>
-                e.Code == token || e.ExpiresTime > DateTime.UtcNow
-            );
+            user.EmailVerifications.ToList()
+                .RemoveAll(e => e.Code == token || e.ExpiresTime > DateTime.UtcNow);
         }
         return result;
     }
@@ -301,7 +302,7 @@ public class UserService(
         var recruitments =
             _repository.Recruitment.GetAll(a => recruitmentIds.Contains(a.Id))
             ?? throw new NotFoundException($"No Recruitment was found");
-        user.FavoriteRecruitments.AddRange(recruitments);
+        user.FavoriteRecruitments.ToList().AddRange(recruitments);
         await _unitOfWork.SaveChangesAsync();
     }
 
@@ -312,7 +313,7 @@ public class UserService(
                 .User.GetAll()
                 .Include(a => a.FavoriteRecruitments)
                 .FirstOrDefaultAsync(u => u.Id == userId) ?? throw new UserNotFoundException();
-        user.FavoriteRecruitments.RemoveAll(a => recruitmentIds.Contains(a.Id));
+        user.FavoriteRecruitments.ToList().RemoveAll(a => recruitmentIds.Contains(a.Id));
         await _unitOfWork.SaveChangesAsync();
     }
 
