@@ -2,6 +2,7 @@ namespace IngBackendApi.Services.Http;
 
 using System.Text;
 using IngBackendApi.Exceptions;
+using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Models.DTO;
 using IngBackendApi.Models.DTO.HttpResponse;
 using IngBackendApi.Models.Settings;
@@ -13,7 +14,7 @@ public class AiHttpClient : IDisposable
     private readonly HttpClient _client;
     private readonly AiSetting _setting;
 
-    public AiHttpClient(SettingsFactory settingsFactory)
+    public AiHttpClient(ISettingsFactory settingsFactory)
     {
         _setting = settingsFactory.GetSetting<AiSetting>();
         // Apis

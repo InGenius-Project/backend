@@ -33,7 +33,6 @@ public class TestUserController : IDisposable
         _mockTokenService = new Mock<ITokenService>();
         _mockWebHostEnvironment = new Mock<IWebHostEnvironment>();
 
-
         MappingProfile mappingProfile = new();
         MapperConfiguration configuration = new(cfg => cfg.AddProfile(mappingProfile));
         _mapper = new Mapper(configuration);

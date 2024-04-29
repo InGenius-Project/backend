@@ -21,7 +21,7 @@ public class TestAreaController : IDisposable
     private readonly Mock<IRecruitmentService> _mockRecruitmentService;
     private readonly Mock<IResumeService> _mockResumeService;
     private readonly Mock<IAIService> _mockAIService;
-    private readonly Mock<IBackgroundJobClient> _mockBackgroundJobClient;
+    private readonly Mock<IBackgroundTaskService> _mockBackgroundTaskService;
     private readonly IMapper _mapper;
 
     public TestAreaController()
@@ -31,8 +31,8 @@ public class TestAreaController : IDisposable
         _mockResumeService = new Mock<IResumeService>();
         _mockRecruitmentService = new Mock<IRecruitmentService>();
         _mockAreaTypeService = new Mock<IAreaTypeService>();
-        _mockBackgroundJobClient = new Mock<IBackgroundJobClient>();
         _mockAIService = new Mock<IAIService>();
+        _mockBackgroundTaskService = new Mock<IBackgroundTaskService>();
 
         MappingProfile mappingProfile = new();
         MapperConfiguration configuration = new(cfg => cfg.AddProfile(mappingProfile));
@@ -49,7 +49,7 @@ public class TestAreaController : IDisposable
             _mockResumeService.Object,
             env.Object,
             _mockAIService.Object,
-            _mockBackgroundJobClient.Object
+            _mockBackgroundTaskService.Object
         );
     }
 

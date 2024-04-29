@@ -117,14 +117,14 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
                 new TagType
                 {
                     Id = 3,
-                    Name = "university",
+                    Name = "大學",
                     Value = "university",
                     Color = "#ffffff"
                 },
                 new TagType
                 {
                     Id = 4,
-                    Name = "department",
+                    Name = "科系",
                     Value = "department",
                     Color = "#ffffff"
                 },

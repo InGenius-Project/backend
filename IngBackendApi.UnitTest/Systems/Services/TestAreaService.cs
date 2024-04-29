@@ -4,6 +4,7 @@ using AutoMapper;
 using IngBackendApi.Context;
 using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Repository;
+using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Interfaces.UnitOfWork;
 using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
@@ -22,7 +23,9 @@ public class TestAreaService : IDisposable
     private readonly AreaService _areaService;
     private readonly Mock<IRepositoryWrapper> _repository;
     private readonly Mock<IWebHostEnvironment> _env;
+    private readonly Mock<IAIService> _aiService;
     private readonly Mock<IConfiguration> _mockConfiguration;
+    private readonly Mock<ISettingsFactory> _settingFactory;
 
     private readonly IRepository<AreaType, int> _areaTypeRepository;
     private readonly IngDbContext _context;
@@ -31,6 +34,8 @@ public class TestAreaService : IDisposable
     {
         _context = MemoryContextFixture.Generate();
         _mockUnitofWork = new Mock<IUnitOfWork>();
+        _aiService = new Mock<IAIService>();
+        _settingFactory = new Mock<ISettingsFactory>();
         _repository = MockRepositoryWrapper.GetMock(_context);
         var _config = new Mock<IConfiguration>();
 
@@ -46,7 +51,9 @@ public class TestAreaService : IDisposable
             _mapper,
             _repository.Object,
             env.Object,
-            _config.Object
+            _config.Object,
+            _aiService.Object,
+            _settingFactory.Object
         );
 
         _areaTypeRepository = _mockUnitofWork.Object.Repository<AreaType, int>();

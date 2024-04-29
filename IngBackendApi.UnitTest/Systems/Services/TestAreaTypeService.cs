@@ -25,6 +25,7 @@ public class TestAreaTypeService : IDisposable
     private readonly AreaFixture _areaFixture;
     private readonly TagFixture _tagFixture;
     private readonly IngDbContext context;
+
     public TestAreaTypeService()
     {
         _areaFixture = new AreaFixture();
@@ -41,8 +42,8 @@ public class TestAreaTypeService : IDisposable
         _areaTypeService = new AreaTypeService(_unitofWork, _mapper, _repository);
 
         _areaTypeRepository = _unitofWork.Repository<AreaType, int>();
-
     }
+
     [Fact]
     public async Task AddAsync_WhenCalled_ShouldAddArea()
     {
@@ -55,32 +56,30 @@ public class TestAreaTypeService : IDisposable
         // Assert
         var areaType = _areaTypeRepository.GetAll().First();
         areaType.Should().NotBeNull();
-
     }
 
     [Fact]
     public async Task UpdateAsync_WhenCalled_ShouldUpdateArea()
     {
-        // Arrange  
+        // Arrange
         var areaType = _areaFixture.Fixture.Create<AreaType>();
         var tagType = _tagFixture.Fixture.Create<TagType>();
 
         context.Set<AreaType>().Add(areaType);
         await context.SaveChangesAsync();
 
-        tagType.AreaTypes = new List<AreaType> { areaType };
+        tagType.AreaTypes = [areaType];
         context.Set<TagType>().Add(tagType);
         await context.SaveChangesAsync();
 
         var updateAreaTypeDto = _areaFixture.Fixture.Create<AreaTypeDTO>();
         updateAreaTypeDto.Id = areaType.Id;
-        updateAreaTypeDto.ListTagTypes = [
-           _mapper.Map<TagTypeDTO>(tagType)
-        ];
+        updateAreaTypeDto.ListTagTypes = [_mapper.Map<TagTypeDTO>(tagType)];
 
-        var undetachedEntriesCopy = context.ChangeTracker.Entries()
-        .Where(e => e.State != EntityState.Detached)
-        .ToList();
+        var undetachedEntriesCopy = context
+            .ChangeTracker.Entries()
+            .Where(e => e.State != EntityState.Detached)
+            .ToList();
 
         foreach (var entry in undetachedEntriesCopy)
         {
@@ -98,19 +97,20 @@ public class TestAreaTypeService : IDisposable
         updatedAreaType.LayoutType.Should().Be(updateAreaTypeDto.LayoutType);
         if (updateAreaTypeDto.UserRole != null)
         {
-            var result = updatedAreaType.UserRole?.All(x => updateAreaTypeDto.UserRole.Any(y => y == x));
+            var result = updatedAreaType.UserRole?.All(x =>
+                updateAreaTypeDto.UserRole.Any(y => y == x)
+            );
             result.Should().BeTrue();
         }
 
         if (updateAreaTypeDto.ListTagTypes != null)
         {
-            var result = updatedAreaType.ListTagTypes?.All(x => updateAreaTypeDto.ListTagTypes.Any(y => y.Id == x.Id));
+            var result = updatedAreaType.ListTagTypes?.All(x =>
+                updateAreaTypeDto.ListTagTypes.Any(y => y.Id == x.Id)
+            );
             result.Should().BeTrue();
         }
-
     }
-
-
 
     public void Dispose() => GC.SuppressFinalize(this);
 }

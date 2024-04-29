@@ -2,9 +2,10 @@ namespace IngBackendApi.Services;
 
 using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Models;
+using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Models.Settings;
 
-public class SettingsFactory(IConfiguration configuration)
+public class SettingsFactory(IConfiguration configuration) : ISettingsFactory
 {
     private readonly IConfiguration _config = configuration;
 

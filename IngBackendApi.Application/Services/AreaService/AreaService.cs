@@ -20,7 +20,7 @@ public class AreaService(
     IWebHostEnvironment env,
     IConfiguration config,
     IAIService aiService,
-    SettingsFactory settingsFactory
+    ISettingsFactory settingsFactory
 ) : Service<Area, AreaDTO, Guid>(unitOfWork, mapper), IAreaService
 {
     private readonly IMapper _mapper = mapper;

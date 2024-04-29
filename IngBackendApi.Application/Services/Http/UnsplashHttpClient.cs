@@ -2,6 +2,7 @@ namespace IngBackendApi.Services.Http;
 
 using System.Net.Http.Headers;
 using IngBackendApi.Exceptions;
+using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Models.DTO.HttpResponse;
 using IngBackendApi.Models.Settings;
 
@@ -10,7 +11,7 @@ public class UnsplashHttpClient : IDisposable
     private readonly HttpClient _client;
     private readonly UnsplashSetting _setting;
 
-    public UnsplashHttpClient(SettingsFactory settingsFactory)
+    public UnsplashHttpClient(ISettingsFactory settingsFactory)
     {
         _setting = settingsFactory.GetSetting<UnsplashSetting>();
         _client = new HttpClient() { BaseAddress = new Uri(_setting.Api.Root) };

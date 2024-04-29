@@ -55,7 +55,8 @@ public class TagController(
     public async Task<TagDTO> PostTag([FromBody] TagPostDTO req)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        return await _tagService.AddOrUpdateAsync(req, userId);
+        var tagDTO = await _tagService.AddOrUpdateAsync(req, userId);
+        return tagDTO;
     }
 
     [HttpGet("type/{id}")]
