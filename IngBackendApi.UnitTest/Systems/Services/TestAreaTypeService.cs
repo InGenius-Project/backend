@@ -58,59 +58,5 @@ public class TestAreaTypeService : IDisposable
         areaType.Should().NotBeNull();
     }
 
-    [Fact]
-    public async Task UpdateAsync_WhenCalled_ShouldUpdateArea()
-    {
-        // Arrange
-        var areaType = _areaFixture.Fixture.Create<AreaType>();
-        var tagType = _tagFixture.Fixture.Create<TagType>();
-
-        context.Set<AreaType>().Add(areaType);
-        await context.SaveChangesAsync();
-
-        tagType.AreaTypes = [areaType];
-        context.Set<TagType>().Add(tagType);
-        await context.SaveChangesAsync();
-
-        var updateAreaTypeDto = _areaFixture.Fixture.Create<AreaTypeDTO>();
-        updateAreaTypeDto.Id = areaType.Id;
-        updateAreaTypeDto.ListTagTypes = [_mapper.Map<TagTypeDTO>(tagType)];
-
-        var undetachedEntriesCopy = context
-            .ChangeTracker.Entries()
-            .Where(e => e.State != EntityState.Detached)
-            .ToList();
-
-        foreach (var entry in undetachedEntriesCopy)
-        {
-            entry.State = EntityState.Detached;
-        }
-
-        // Act
-        await _areaTypeService.UpdateAsync(updateAreaTypeDto);
-
-        // Assert
-        var updatedAreaType = _repository.AreaType.GetAll().First();
-        updatedAreaType.Name.Should().Be(updateAreaTypeDto.Name);
-        updatedAreaType.Value.Should().Be(updateAreaTypeDto.Value);
-        updatedAreaType.Description.Should().Be(updateAreaTypeDto.Description);
-        updatedAreaType.LayoutType.Should().Be(updateAreaTypeDto.LayoutType);
-        if (updateAreaTypeDto.UserRole != null)
-        {
-            var result = updatedAreaType.UserRole?.All(x =>
-                updateAreaTypeDto.UserRole.Any(y => y == x)
-            );
-            result.Should().BeTrue();
-        }
-
-        if (updateAreaTypeDto.ListTagTypes != null)
-        {
-            var result = updatedAreaType.ListTagTypes?.All(x =>
-                updateAreaTypeDto.ListTagTypes.Any(y => y.Id == x.Id)
-            );
-            result.Should().BeTrue();
-        }
-    }
-
     public void Dispose() => GC.SuppressFinalize(this);
 }

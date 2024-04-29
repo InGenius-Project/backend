@@ -34,14 +34,12 @@ public class AreaTypeService(IUnitOfWork unitOfWork, IMapper mapper, IRepository
 
     public new async Task UpdateAsync(AreaTypeDTO areaTypeDto)
     {
-        var areaType = await _areaTypeRepository
-            .GetAll()
-            .Include(a => a.ListTagTypes)
-            .FirstOrDefaultAsync(a => a.Id.Equals(areaTypeDto.Id));
-        if (areaType == null)
-        {
-            throw new NotFoundException("areaType not found.");
-        }
+        var areaType =
+            await _areaTypeRepository
+                .GetAll()
+                .Include(a => a.ListTagTypes)
+                .FirstOrDefaultAsync(a => a.Id.Equals(areaTypeDto.Id))
+            ?? throw new NotFoundException("areaType not found.");
 
         _mapper.Map(areaTypeDto, areaType);
 
@@ -64,10 +62,12 @@ public class AreaTypeService(IUnitOfWork unitOfWork, IMapper mapper, IRepository
 
     public async Task CheckOwnerShip(int areaTypeId, UserRole userRole)
     {
-        var area = await _areaTypeRepository
-            .GetAll()
-            .AsNoTracking()
-            .FirstOrDefaultAsync(a => a.Id == areaTypeId) ?? throw new NotFoundException("area not found.");
+        var area =
+            await _areaTypeRepository
+                .GetAll()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.Id == areaTypeId)
+            ?? throw new NotFoundException("area not found.");
 
         if (!area.UserRole.Contains(userRole))
         {

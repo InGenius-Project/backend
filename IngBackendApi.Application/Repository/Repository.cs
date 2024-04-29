@@ -94,15 +94,9 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
         _dbSet.Update(entity);
     }
 
-    public async Task SaveAsync()
-    {
-        await _context.SaveChangesAsync();
-    }
+    public async Task SaveAsync() => await _context.SaveChangesAsync();
 
-    public void Attach<TTEntity>(TTEntity entity)
-    {
-        _context.Attach(entity);
-    }
+    public void Attach<TTEntity>(TTEntity entity) => _context.Attach(entity);
 
     /// <inheritdoc />
     public async Task<IEnumerable<TEntity>> CollectionAsync<TProperty>(
@@ -115,14 +109,9 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
     }
 
     /// <inheritdoc />
-    public void SetEntityState(TEntity entity, EntityState state)
-    {
+    public void SetEntityState(TEntity entity, EntityState state) =>
         _context.Entry(entity).State = state;
-    }
 
     /// <inheritdoc />
-    public IEnumerable<TEntity> GetLocal()
-    {
-        return _context.Set<TEntity>().Local.AsEnumerable();
-    }
+    public IEnumerable<TEntity> GetLocal() => _context.Set<TEntity>().Local.AsEnumerable();
 }
