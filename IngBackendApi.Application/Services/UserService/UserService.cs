@@ -188,11 +188,13 @@ public class UserService(
         return result;
     }
 
-    public async Task<string> GenerateEmailConfirmationTokenAsync(UserInfoDTO req)
+    public async Task<string> GenerateEmailConfirmationTokenAsync(Guid userId)
     {
         var user =
-            _repository.User.GetUserByIdIncludeAll(req.Id).FirstOrDefault()
-            ?? throw new UserNotFoundException();
+            _repository
+                .User.GetAll(a => a.Id == userId)
+                .Include(u => u.EmailVerifications)
+                .SingleOrDefault() ?? throw new UserNotFoundException();
         Random random = new();
         var length = 6;
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -200,7 +202,7 @@ public class UserService(
 
         do
         {
-            token = new String(
+            token = new string(
                 Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray()
             );
         } while (!IsEmailVerificationCodeAvailable(user, token));
@@ -217,10 +219,10 @@ public class UserService(
     public bool VerifyEducationEmail(string email)
     {
         // TODO: need third-party service to handle
-        if (!email.Contains("edu"))
-        {
-            return false;
-        }
+        // if (!email.Contains("edu"))
+        // {
+        //     return false;
+        // }
 
         return true;
     }

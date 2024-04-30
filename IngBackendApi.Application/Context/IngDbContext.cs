@@ -70,6 +70,36 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             .HasForeignKey<Recruitment>(s => s.SafetyReportId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        #region Area Layouts
+        modelBuilder
+            .Entity<Area>()
+            .HasOne(a => a.KeyValueListLayout)
+            .WithOne(a => a.Area)
+            .HasForeignKey<Area>(a => a.KeyValueListLayoutId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder
+            .Entity<Area>()
+            .HasOne(a => a.ListLayout)
+            .WithOne(a => a.Area)
+            .HasForeignKey<Area>(a => a.ListLayoutId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder
+            .Entity<Area>()
+            .HasOne(a => a.TextLayout)
+            .WithOne(a => a.Area)
+            .HasForeignKey<Area>(a => a.TextLayoutId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder
+            .Entity<Area>()
+            .HasOne(a => a.ImageTextLayout)
+            .WithOne(a => a.Area)
+            .HasForeignKey<Area>(a => a.ImageTextLayoutId)
+            .OnDelete(DeleteBehavior.Cascade);
+        #endregion
+
         // User Area Relationship
         modelBuilder.Entity<Area>().HasOne(a => a.Owner);
         modelBuilder.Entity<Area>().HasOne(a => a.User).WithMany(u => u.Areas);
@@ -94,6 +124,19 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             .Entity<User>()
             .HasMany(a => a.FavoriteRecruitments)
             .WithMany(r => r.FavoriteUsers);
+
+        modelBuilder.Entity<User>().HasMany(u => u.Recruitments).WithOne(t => t.Publisher);
+        modelBuilder.Entity<User>().HasMany(u => u.ChatRooms).WithMany(c => c.Users);
+        modelBuilder.Entity<User>().HasMany(u => u.InvitedChatRooms).WithMany(c => c.InvitedUsers);
+        modelBuilder.Entity<ChatGroup>().HasOne(u => u.Owner).WithMany(t => t.OwnedChatRooms);
+
+        // delete messages when chat room is deleted
+        modelBuilder
+            .Entity<ChatGroup>()
+            .HasMany(u => u.Messages)
+            .WithOne(t => t.Group)
+            .HasForeignKey(t => t.GroupId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         #region Default TagType
         var customTagType = new TagType

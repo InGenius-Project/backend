@@ -35,7 +35,7 @@ public interface IUserService : IService<User, UserInfoDTO, Guid>
     Task<UserInfoDTO> VerifyHashedPasswordAsync(UserSignInDTO req);
     Task AddUserResumeAsync(UserInfoDTO userDTO, ResumeDTO resumeDTO);
     Task<bool> VerifyEmailVerificationCode(UserInfoDTO req, string token);
-    Task<string> GenerateEmailConfirmationTokenAsync(UserInfoDTO req);
+    Task<string> GenerateEmailConfirmationTokenAsync(Guid userId);
     bool VerifyEducationEmail(string email);
     Task SaveUserAvatarAsync(Guid userId, IFormFile image);
     Task<ImageDTO?> GetImageByIdAsync(Guid imageId);

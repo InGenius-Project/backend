@@ -113,6 +113,12 @@ public class UserController(
         {
             throw new BadRequestException("帳號已經存在");
         }
+        var allowedRoles = new List<UserRole>() { UserRole.Intern, UserRole.Company };
+
+        if (!allowedRoles.Contains(req.Role))
+        {
+            throw new BadRequestException($"{req.Role} not allowed");
+        }
 
         var user = await _userService.AddAsync(req);
 
@@ -127,7 +133,7 @@ public class UserController(
         }
 
         // TODO: send auth email
-        var token = await _userService.GenerateEmailConfirmationTokenAsync(user);
+        var token = await _userService.GenerateEmailConfirmationTokenAsync(user.Id);
         var subject = "[noreply] InG 註冊驗證碼";
         var message = $"<h1>您的驗證碼是: {token}，此驗證碼於10分鐘後失效</h1>";
 
@@ -137,9 +143,9 @@ public class UserController(
         );
         _backgroundJobClient.Enqueue(() => Console.WriteLine($"Email sent: {user.Email}"));
 
-        var TokenDTO = _tokenService.GenerateToken(user);
+        var tokenDTO = _tokenService.GenerateToken(user);
 
-        return TokenDTO;
+        return tokenDTO;
     }
 
     [AllowAnonymous]
