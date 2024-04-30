@@ -70,6 +70,36 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             .HasForeignKey<Recruitment>(s => s.SafetyReportId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        #region Area Layouts
+        modelBuilder
+            .Entity<Area>()
+            .HasOne(a => a.KeyValueListLayout)
+            .WithOne(a => a.Area)
+            .HasForeignKey<Area>(a => a.KeyValueListLayoutId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder
+            .Entity<Area>()
+            .HasOne(a => a.ListLayout)
+            .WithOne(a => a.Area)
+            .HasForeignKey<Area>(a => a.ListLayoutId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder
+            .Entity<Area>()
+            .HasOne(a => a.TextLayout)
+            .WithOne(a => a.Area)
+            .HasForeignKey<Area>(a => a.TextLayoutId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder
+            .Entity<Area>()
+            .HasOne(a => a.ImageTextLayout)
+            .WithOne(a => a.Area)
+            .HasForeignKey<Area>(a => a.ImageTextLayoutId)
+            .OnDelete(DeleteBehavior.Cascade);
+        #endregion
+
         // User Area Relationship
         modelBuilder.Entity<Area>().HasOne(a => a.Owner);
         modelBuilder.Entity<Area>().HasOne(a => a.User).WithMany(u => u.Areas);
