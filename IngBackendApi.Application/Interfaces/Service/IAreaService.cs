@@ -18,4 +18,5 @@ public interface IAreaService : IService<Area, AreaDTO, Guid>
     new Task UpdateAsync(AreaDTO areaDto);
     Task<ImageDTO?> GetImageByIdAsync(Guid imageId);
     Task<AreaDTO> AddOrUpdateAsync(AreaDTO areaDTO, Guid userId);
+    Task<IEnumerable<AreaDTO>> GetUserAreaByAreaTypeIdAsync(Guid userId, int areaTypeId);
 }

@@ -345,6 +345,13 @@ public class AreaController(
         );
     }
 
+    [HttpGet("areaType/{areaTypeId}")]
+    public async Task<IEnumerable<AreaDTO>> GetUserAreaByAreaType(int areaTypeId)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        return await _areaService.GetUserAreaByAreaTypeIdAsync(userId, areaTypeId);
+    }
+
     [NonAction]
     public async Task AnalyzeRecruitmentKeywordAsync(Guid areaId)
     {
