@@ -103,6 +103,20 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             Value = "skill",
             Color = "#123"
         };
+        var universityTagType = new TagType
+        {
+            Id = 3,
+            Name = "大學",
+            Value = "university",
+            Color = "#ffffff"
+        };
+        var departmentTagType = new TagType
+        {
+            Id = 4,
+            Name = "科系",
+            Value = "department",
+            Color = "#ffffff"
+        };
 
         modelBuilder
             .Entity<TagType>()
@@ -114,20 +128,8 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
                     Value = "custom",
                     Color = "#ffffff",
                 },
-                new TagType
-                {
-                    Id = 3,
-                    Name = "大學",
-                    Value = "university",
-                    Color = "#ffffff"
-                },
-                new TagType
-                {
-                    Id = 4,
-                    Name = "科系",
-                    Value = "department",
-                    Color = "#ffffff"
-                },
+                departmentTagType,
+                universityTagType,
                 skillTagType
             );
 
@@ -254,6 +256,22 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             UserRole = [Enum.UserRole.Intern, Enum.UserRole.Admin, Enum.UserRole.Company],
             LayoutType = Enum.LayoutType.KeyValueList,
         };
+
+        modelBuilder.Entity<AreaType>()
+            .HasMany(a => a.ListTagTypes)
+            .WithMany(t => t.AreaTypes)
+            .UsingEntity(i => i.HasData(
+                    new
+                    {
+                        AreaTypeId = educationAreaType.Id,
+                        TagTypeId = universityTagType.Id
+                    },
+                    new
+                    {
+                        AreaTypeId = educationAreaType.Id,
+                        TagTypeId = departmentTagType.Id
+                    }
+            ));
 
         modelBuilder.Entity<Tag>().HasData(collegeTag, departmentTag);
         modelBuilder.Entity<AreaType>().HasData(educationAreaType);
