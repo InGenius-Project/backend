@@ -95,7 +95,14 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             .HasMany(a => a.FavoriteRecruitments)
             .WithMany(r => r.FavoriteUsers);
 
-        // TODO: Default data
+        #region Default TagType
+        var customTagType = new TagType
+        {
+            Id = 1,
+            Name = "自定義",
+            Value = "custom",
+            Color = "#ffffff",
+        };
         var skillTagType = new TagType
         {
             Id = 2,
@@ -117,25 +124,13 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             Value = "department",
             Color = "#ffffff"
         };
-
         modelBuilder
             .Entity<TagType>()
-            .HasData(
-                new TagType
-                {
-                    Id = 1,
-                    Name = "自定義",
-                    Value = "custom",
-                    Color = "#ffffff",
-                },
-                departmentTagType,
-                universityTagType,
-                skillTagType
-            );
+            .HasData(customTagType, departmentTagType, universityTagType, skillTagType);
+        #endregion
 
         modelBuilder.Entity<AreaType>().HasIndex(t => t.Value).IsUnique();
         modelBuilder.Entity<AreaType>().Property(t => t.Id).ValueGeneratedOnAdd();
-
         modelBuilder
             .Entity<AreaType>()
             .HasData(
@@ -181,7 +176,15 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
                     at.HasData(new { AreaTypeId = 1, TagTypeId = skillTagType.Id });
                 }
             );
+    }
 
+    private void SeedTestingData(
+        ModelBuilder modelBuilder,
+        TagType universityTagType,
+        TagType departmentTagType,
+        TagType skillTagType
+    )
+    {
         var hasher = new PasswordHasher();
         var user = new User
         {
@@ -220,7 +223,7 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
         };
         modelBuilder.Entity<User>().HasData(user, internalUser, companyUser, adminUser);
 
-        # region Ai generation test data
+        #region Ai generation test data
         var collegeTag = new Tag()
         {
             Id = Guid.NewGuid(),
@@ -257,21 +260,16 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             LayoutType = Enum.LayoutType.KeyValueList,
         };
 
-        modelBuilder.Entity<AreaType>()
+        modelBuilder
+            .Entity<AreaType>()
             .HasMany(a => a.ListTagTypes)
             .WithMany(t => t.AreaTypes)
-            .UsingEntity(i => i.HasData(
-                    new
-                    {
-                        AreaTypeId = educationAreaType.Id,
-                        TagTypeId = universityTagType.Id
-                    },
-                    new
-                    {
-                        AreaTypeId = educationAreaType.Id,
-                        TagTypeId = departmentTagType.Id
-                    }
-            ));
+            .UsingEntity(i =>
+                i.HasData(
+                    new { AreaTypeId = educationAreaType.Id, TagTypeId = universityTagType.Id },
+                    new { AreaTypeId = educationAreaType.Id, TagTypeId = departmentTagType.Id }
+                )
+            );
 
         modelBuilder.Entity<Tag>().HasData(collegeTag, departmentTag);
         modelBuilder.Entity<AreaType>().HasData(educationAreaType);
