@@ -30,6 +30,7 @@ public class AreaService(
         AreaType,
         int
     >();
+    private readonly IRepository<User, Guid> _userRepository = unitOfWork.Repository<User, Guid>();
     private readonly IConfiguration _config = config;
     private readonly IRepository<Image, Guid> _imageRepository = unitOfWork.Repository<
         Image,
@@ -283,6 +284,35 @@ public class AreaService(
         _mapper.Map(areaDTO, area);
         await _repository.Area.SaveAsync();
         return _mapper.Map<AreaDTO>(area);
+    }
+
+    public async Task<IEnumerable<AreaDTO>> GetUserAreaByAreaTypeIdAsync(
+        Guid userId,
+        int areaTypeId
+    )
+    {
+        var user =
+            await _userRepository
+                .GetAll()
+                .Where(u => u.Id == userId)
+                .Include(u => u.Areas)
+                .ThenInclude(a => a.AreaType)
+                .Include(u => u.Areas)
+                .ThenInclude(a => a.ListLayout.Items)
+                .Include(u => u.Areas)
+                .ThenInclude(a => a.KeyValueListLayout.Items)
+                .ThenInclude(i => i.Key)
+                .Include(u => u.Areas)
+                .ThenInclude(a => a.ImageTextLayout.Image)
+                .Include(u => u.Areas)
+                .ThenInclude(a => a.TextLayout)
+                .SingleOrDefaultAsync() ?? throw new UserNotFoundException();
+        if (user.Areas == null)
+        {
+            return [];
+        }
+
+        return _mapper.Map<IEnumerable<AreaDTO>>(user.Areas.Where(a => a.AreaTypeId == areaTypeId));
     }
 
     private async Task<Image> CreateImageFromUriAsync(string uri, string contentType = "image/jpg")
