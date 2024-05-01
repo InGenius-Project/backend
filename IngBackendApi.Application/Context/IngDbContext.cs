@@ -47,7 +47,8 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             .Entity<Resume>()
             .HasOne(u => u.User)
             .WithMany(r => r.Resumes)
-            .OnDelete(DeleteBehavior.SetNull);
+            .HasForeignKey(r => r.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder
             .Entity<Recruitment>()
@@ -101,8 +102,20 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
         #endregion
 
         // User Area Relationship
-        modelBuilder.Entity<Area>().HasOne(a => a.Owner);
+        modelBuilder
+            .Entity<Area>()
+            .HasOne(a => a.Owner)
+            .WithMany(u => u.OwnedAreas)
+            .HasForeignKey(a => a.OwnerId)
+            .OnDelete(DeleteBehavior.NoAction);
+
         modelBuilder.Entity<Area>().HasOne(a => a.User).WithMany(u => u.Areas);
+        modelBuilder
+            .Entity<Area>()
+            .HasOne(a => a.Resume)
+            .WithMany(r => r.Areas)
+            .HasForeignKey(a => a.ResumeId)
+            .OnDelete(DeleteBehavior.NoAction);
 
         modelBuilder.Entity<TagType>().HasIndex(t => t.Value).IsUnique();
         modelBuilder.Entity<TagType>().Property(t => t.Id).ValueGeneratedOnAdd();
@@ -110,7 +123,12 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
         modelBuilder.Entity<User>().HasMany(u => u.Recruitments).WithOne(t => t.Publisher);
         modelBuilder.Entity<User>().HasMany(u => u.ChatRooms).WithMany(c => c.Users);
         modelBuilder.Entity<User>().HasMany(u => u.InvitedChatRooms).WithMany(c => c.InvitedUsers);
-        modelBuilder.Entity<ChatGroup>().HasOne(u => u.Owner).WithMany(t => t.OwnedChatRooms);
+        modelBuilder
+            .Entity<ChatGroup>()
+            .HasOne(u => u.Owner)
+            .WithMany(t => t.OwnedChatRooms)
+            .HasForeignKey(a => a.OwnerId)
+            .OnDelete(DeleteBehavior.NoAction);
 
         // delete messages when chat room is deleted
         modelBuilder
@@ -123,7 +141,13 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
         modelBuilder
             .Entity<User>()
             .HasMany(a => a.FavoriteRecruitments)
-            .WithMany(r => r.FavoriteUsers);
+            .WithMany(r => r.FavoriteUsers)
+            .UsingEntity<Dictionary<string, object>>(
+                "FavoriteRecruitmentsFavoriteUsers",
+                l => l.HasOne<Recruitment>().WithMany().OnDelete(DeleteBehavior.NoAction),
+                r => r.HasOne<User>().WithMany().OnDelete(DeleteBehavior.NoAction)
+            );
+        ;
 
         modelBuilder.Entity<User>().HasMany(u => u.Recruitments).WithOne(t => t.Publisher);
         modelBuilder.Entity<User>().HasMany(u => u.ChatRooms).WithMany(c => c.Users);
@@ -167,9 +191,22 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             Value = "department",
             Color = "#ffffff"
         };
+        var areaTagType = new TagType
+        {
+            Id = 5,
+            Name = "區域",
+            Value = "area",
+            Color = "#ffffff"
+        };
         modelBuilder
             .Entity<TagType>()
-            .HasData(customTagType, departmentTagType, universityTagType, skillTagType);
+            .HasData(
+                customTagType,
+                departmentTagType,
+                universityTagType,
+                skillTagType,
+                areaTagType
+            );
         #endregion
 
         modelBuilder.Entity<AreaType>().HasIndex(t => t.Value).IsUnique();
