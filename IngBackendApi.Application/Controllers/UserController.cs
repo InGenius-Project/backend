@@ -235,4 +235,21 @@ public class UserController(
         await _userService.RemoveFavoriteRecruitmentAsync(userId, recruitmentIds);
         return new ApiResponse("Remove fav recruitment success");
     }
+
+    [HttpPost("background")]
+    public async Task<ApiResponse> PostUserBackground([FromForm] ImagePostDTO req)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        req.ValidateModel();
+        await _userService.UpdateUserBackgroundAsync(userId, req);
+        return new ApiResponse("Ok");
+    }
+
+    [HttpDelete("background")]
+    public async Task<ApiResponse> DeleteUserBackground()
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        await _userService.RemoveUserBackgroundAsync(userId);
+        return new ApiResponse("Ok");
+    }
 }
