@@ -70,7 +70,12 @@ if (env.IsDevelopment())
 }
 else
 {
-    builder.Services.AddDbContext<IngDbContext>(options => options.UseSqlServer(connectionString));
+    builder.Services.AddDbContext<IngDbContext>(options =>
+        options.UseSqlServer(
+            connectionString,
+            o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
+        )
+    );
 }
 
 // Add services to the container.

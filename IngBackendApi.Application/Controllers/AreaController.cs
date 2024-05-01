@@ -7,7 +7,6 @@ using IngBackendApi.Application.Attribute;
 using IngBackendApi.Application.Interfaces.Service;
 using IngBackendApi.Enum;
 using IngBackendApi.Exceptions;
-using IngBackendApi.Helpers;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Models.DTO;
 using Microsoft.AspNetCore.Authorization;
@@ -62,7 +61,7 @@ public class AreaController(
         await _userService.CheckAndGetUserAsync(userId);
 
         // check all id exist
-        var parsedUserId = req.UserId ?? Guid.Empty;
+        var parsedUserId = userId;
         var parsedRecruimentId = req.RecruitmentId ?? Guid.Empty;
         var parsedResumeId = req.ResumeId ?? Guid.Empty;
         var parsedAreaTypeId = req.AreaTypeId.GetValueOrDefault();
@@ -95,7 +94,8 @@ public class AreaController(
 
         // Add User Relationship
         var areaDTO = _mapper.Map<AreaDTO>(req);
-        areaDTO = await _areaService.AddOrUpdateAsync(areaDTO, userId);
+
+        areaDTO = await _areaService.AddOrUpdateAsync(areaDTO, parsedUserId);
         areaDTO =
             await _areaService.GetAreaIncludeAllById(areaDTO.Id)
             ?? throw new NotFoundException("This is a internalError. Contact the manager.");

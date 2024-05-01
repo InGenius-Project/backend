@@ -68,10 +68,10 @@ public class AreaService(
         var area = await _repository
             .Area.GetAll()
             .Include(a => a.User)
+            .Include(a => a.Owner)
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id.Equals(areaId));
-
-        if (area == null || area.UserId != userId)
+        if (area == null || area.OwnerId != userId)
         {
             throw new ForbiddenException();
         }
@@ -265,7 +265,12 @@ public class AreaService(
 
     public async Task<AreaDTO> AddOrUpdateAsync(AreaDTO areaDTO, Guid userId)
     {
-        var area = await _repository.Area.GetByIdAsync(areaDTO.Id);
+        var area = await _repository
+            .Area.GetAll(a => a.Id == areaDTO.Id)
+            .Include(a => a.Owner)
+            .Include(a => a.User)
+            .SingleOrDefaultAsync();
+
         if (area == null && areaDTO.Id != Guid.Empty)
         {
             throw new NotFoundException("Area not found");
