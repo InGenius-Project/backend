@@ -49,7 +49,15 @@ if (env.IsDevelopment())
 // Production
 if (env.IsProduction())
 {
-    builder.Configuration.AddJsonFile("appsettings.Production.json");
+    builder.Configuration.AddJsonFile("appsettings.Production.json").AddEnvironmentVariables();
+    var portVar = Environment.GetEnvironmentVariable("PORT");
+    if (portVar is { Length: > 0 } && int.TryParse(portVar, out var port))
+    {
+        builder.WebHost.ConfigureKestrel(options =>
+        {
+            options.ListenAnyIP(port);
+        });
+    }
 }
 
 // Connnect to database
