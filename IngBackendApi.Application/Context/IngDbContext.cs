@@ -125,7 +125,27 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             .HasMany(a => a.FavoriteRecruitments)
             .WithMany(r => r.FavoriteUsers);
 
-        // TODO: Default data
+        modelBuilder.Entity<User>().HasMany(u => u.Recruitments).WithOne(t => t.Publisher);
+        modelBuilder.Entity<User>().HasMany(u => u.ChatRooms).WithMany(c => c.Users);
+        modelBuilder.Entity<User>().HasMany(u => u.InvitedChatRooms).WithMany(c => c.InvitedUsers);
+        modelBuilder.Entity<ChatGroup>().HasOne(u => u.Owner).WithMany(t => t.OwnedChatRooms);
+
+        // delete messages when chat room is deleted
+        modelBuilder
+            .Entity<ChatGroup>()
+            .HasMany(u => u.Messages)
+            .WithOne(t => t.Group)
+            .HasForeignKey(t => t.GroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        #region Default TagType
+        var customTagType = new TagType
+        {
+            Id = 1,
+            Name = "自定義",
+            Value = "custom",
+            Color = "#ffffff",
+        };
         var skillTagType = new TagType
         {
             Id = 2,
@@ -133,37 +153,27 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             Value = "skill",
             Color = "#123"
         };
-
+        var universityTagType = new TagType
+        {
+            Id = 3,
+            Name = "大學",
+            Value = "university",
+            Color = "#ffffff"
+        };
+        var departmentTagType = new TagType
+        {
+            Id = 4,
+            Name = "科系",
+            Value = "department",
+            Color = "#ffffff"
+        };
         modelBuilder
             .Entity<TagType>()
-            .HasData(
-                new TagType
-                {
-                    Id = 1,
-                    Name = "自定義",
-                    Value = "custom",
-                    Color = "#ffffff",
-                },
-                new TagType
-                {
-                    Id = 3,
-                    Name = "大學",
-                    Value = "university",
-                    Color = "#ffffff"
-                },
-                new TagType
-                {
-                    Id = 4,
-                    Name = "科系",
-                    Value = "department",
-                    Color = "#ffffff"
-                },
-                skillTagType
-            );
+            .HasData(customTagType, departmentTagType, universityTagType, skillTagType);
+        #endregion
 
         modelBuilder.Entity<AreaType>().HasIndex(t => t.Value).IsUnique();
         modelBuilder.Entity<AreaType>().Property(t => t.Id).ValueGeneratedOnAdd();
-
         modelBuilder
             .Entity<AreaType>()
             .HasData(
@@ -209,7 +219,15 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
                     at.HasData(new { AreaTypeId = 1, TagTypeId = skillTagType.Id });
                 }
             );
+    }
 
+    private void SeedTestingData(
+        ModelBuilder modelBuilder,
+        TagType universityTagType,
+        TagType departmentTagType,
+        TagType skillTagType
+    )
+    {
         var hasher = new PasswordHasher();
         var user = new User
         {
@@ -248,7 +266,7 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
         };
         modelBuilder.Entity<User>().HasData(user, internalUser, companyUser, adminUser);
 
-        # region Ai generation test data
+        #region Ai generation test data
         var collegeTag = new Tag()
         {
             Id = Guid.NewGuid(),
@@ -284,6 +302,17 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             UserRole = [Enum.UserRole.Intern, Enum.UserRole.Admin, Enum.UserRole.Company],
             LayoutType = Enum.LayoutType.KeyValueList,
         };
+
+        modelBuilder
+            .Entity<AreaType>()
+            .HasMany(a => a.ListTagTypes)
+            .WithMany(t => t.AreaTypes)
+            .UsingEntity(i =>
+                i.HasData(
+                    new { AreaTypeId = educationAreaType.Id, TagTypeId = universityTagType.Id },
+                    new { AreaTypeId = educationAreaType.Id, TagTypeId = departmentTagType.Id }
+                )
+            );
 
         modelBuilder.Entity<Tag>().HasData(collegeTag, departmentTag);
         modelBuilder.Entity<AreaType>().HasData(educationAreaType);
