@@ -167,9 +167,16 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             Value = "department",
             Color = "#ffffff"
         };
+        var areaTagType = new TagType
+        {
+            Id = 5,
+            Name = "區域",
+            Value = "area",
+            Color = "#ffffff"
+        };
         modelBuilder
             .Entity<TagType>()
-            .HasData(customTagType, departmentTagType, universityTagType, skillTagType);
+            .HasData(customTagType, departmentTagType, universityTagType, skillTagType, areaTagType);
         #endregion
 
         modelBuilder.Entity<AreaType>().HasIndex(t => t.Value).IsUnique();
