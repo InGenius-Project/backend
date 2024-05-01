@@ -28,14 +28,6 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-try
-{
-    builder.Configuration.AddJsonFile("appsettings.Secrets.json");
-}
-catch
-{
-    throw new SystemInitException("Secret File Not Found.");
-}
 
 var env = builder.Environment;
 var config = builder.Configuration;
@@ -43,6 +35,7 @@ var config = builder.Configuration;
 // Development
 if (env.IsDevelopment())
 {
+    builder.Configuration.AddJsonFile("appsettings.Secrets.json");
     builder.Configuration.AddJsonFile("appsettings.Development.json");
 }
 
