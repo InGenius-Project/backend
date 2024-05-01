@@ -20,6 +20,7 @@ public class User : BaseEntity, IEntity<Guid>
     public UserRole Role { get; set; }
 
     public Image? Avatar { get; set; }
+    public Image? BackgroundImage { get; set; }
 
     [MaxLength(124)]
     [Required]
@@ -30,6 +31,9 @@ public class User : BaseEntity, IEntity<Guid>
 
     [JsonIgnore]
     public ICollection<Area> Areas { get; set; } = [];
+
+    [JsonIgnore]
+    public ICollection<Area> OwnedAreas { get; set; } = [];
 
     [JsonIgnore]
     public ICollection<Resume> Resumes { get; set; } = [];
@@ -48,6 +52,7 @@ public class User : BaseEntity, IEntity<Guid>
     public ICollection<ChatGroup> OwnedChatRooms { get; set; } = [];
     public ICollection<ChatGroup> InvitedChatRooms { get; set; } = [];
 
+    [JsonIgnore]
     public ICollection<Tag> OwnedTags { get; set; } = [];
 }
 

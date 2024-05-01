@@ -4,11 +4,13 @@ using System.Linq.Expressions;
 using AutoMapper;
 using IngBackendApi.Enum;
 using IngBackendApi.Exceptions;
+using IngBackendApi.Helpers;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Interfaces.UnitOfWork;
 using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
+using IngBackendApi.Models.Settings;
 using Microsoft.EntityFrameworkCore;
 
 public class UserService(
@@ -17,7 +19,8 @@ public class UserService(
     IRepositoryWrapper repository,
     IPasswordHasher passwordHasher,
     IWebHostEnvironment env,
-    IConfiguration config
+    IConfiguration config,
+    ISettingsFactory settingsFactory
 ) : Service<User, UserInfoDTO, Guid>(unitOfWork, mapper), IUserService
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
@@ -30,6 +33,10 @@ public class UserService(
         Image,
         Guid
     >();
+
+    private readonly IRepository<User, Guid> _userRepository = unitOfWork.Repository<User, Guid>();
+
+    private readonly PathSetting _pathSetting = settingsFactory.GetSetting<PathSetting>();
 
     public async Task<UserInfoDTO?> GetUserByIdIncludeAllAsync(Guid userId)
     {
@@ -246,8 +253,7 @@ public class UserService(
                 .Include(u => u.Avatar)
                 .FirstOrDefaultAsync() ?? throw new UserNotFoundException();
 
-        var filepath = _config["ImageSavePath:Avatar"] ?? "images/avatars";
-        var newImage = await SaveImageAsync(image, filepath);
+        var newImage = await CreateImageFromFileAsync(image);
 
         if (user.Avatar != null)
         {
@@ -319,13 +325,60 @@ public class UserService(
         await _unitOfWork.SaveChangesAsync();
     }
 
-    private async Task<Image> SaveImageAsync(IFormFile file, string path)
+    public async Task UpdateUserBackgroundAsync(Guid userId, ImagePostDTO req)
+    {
+        var user =
+            await _userRepository
+                .GetAll()
+                .Where(u => u.Id == userId)
+                .Include(u => u.BackgroundImage)
+                .SingleOrDefaultAsync() ?? throw new UserNotFoundException();
+        var newImage =
+            req.Image != null
+                ? await CreateImageFromFileAsync(req.Image)
+                : await CreateImageFromUriAsync(req.Uri ?? throw new BadRequestException());
+        user.BackgroundImage = newImage;
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task RemoveUserBackgroundAsync(Guid userId)
+    {
+        var user =
+            await _userRepository
+                .GetAll()
+                .Where(u => u.Id == userId)
+                .Include(u => u.BackgroundImage)
+                .SingleOrDefaultAsync() ?? throw new UserNotFoundException();
+        if (user.BackgroundImage == null)
+        {
+            await _unitOfWork.SaveChangesAsync();
+            return;
+        }
+        if (user.BackgroundImage.Filepath == "")
+        {
+            user.BackgroundImage = null;
+            await _unitOfWork.SaveChangesAsync();
+            return;
+        }
+
+        var imagePath = Path.Combine(env.WebRootPath, user.BackgroundImage.Filepath);
+        if (Directory.Exists(imagePath))
+        {
+            Directory.Delete(imagePath);
+        }
+        user.BackgroundImage = null;
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    private async Task<Image> CreateImageFromFileAsync(IFormFile file)
     {
         if (file.Length == 0)
         {
             throw new ArgumentException("File is empty");
         }
+        Helper.CheckImage(file);
 
+        var path = _pathSetting.Image.Avatar;
         var newImage = new Image { Filepath = "", ContentType = file.ContentType };
         await _imageRepository.AddAsync(newImage);
 
@@ -337,6 +390,18 @@ public class UserService(
             file.CopyTo(stream);
         }
         newImage.Filepath = Path.Combine(path, fileName);
+        return newImage;
+    }
+
+    private async Task<Image> CreateImageFromUriAsync(string uri, string contentType = "image/jpg")
+    {
+        var newImage = new Image
+        {
+            Uri = uri,
+            Filepath = "",
+            ContentType = contentType
+        };
+        await _imageRepository.AddAsync(newImage);
         return newImage;
     }
 }

@@ -13,7 +13,8 @@ public class OwnerUserDTO
     public Guid Id { get; set; }
     public string Email { get; set; }
     public string Username { get; set; }
-    public ImageDTO Avatar { get; set; }
+    public ImageDTO? Avatar { get; set; }
+    public ImageDTO? BackgroundImage { get; set; }
 }
 
 public class UserInfoDTO
@@ -24,13 +25,12 @@ public class UserInfoDTO
     public bool Verified { get; set; }
 
     public string Username { get; set; }
-    public ImageDTO Avatar { get; set; }
+    public ImageDTO? Avatar { get; set; }
+    public ImageDTO? BackgroundImage { get; set; }
+
     public UserRole Role { get; set; }
     public List<AreaDTO> Areas { get; set; }
     public List<TagDTO>? Tags { get; set; }
-
-    // public List<ResumeDTO>? Resumes { get; set; }
-    // public List<RecruitmentDTO>? Recruitments { get; set; }
 }
 
 public class ConnectionDTO

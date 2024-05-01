@@ -1,7 +1,9 @@
 namespace IngBackendApi.Models.DTO;
 
+using System.Drawing;
 using System.Text.Json.Serialization;
 using IngBackendApi.Enum;
+using IngBackendApi.Exceptions;
 
 public class AreaDTO
 {
@@ -168,4 +170,18 @@ public class AreaSequencePostDTO
 {
     public Guid Id { get; set; }
     public int Sequence { get; set; }
+}
+
+public class ImagePostDTO
+{
+    public IFormFile? Image { get; set; }
+    public string? Uri { get; set; }
+
+    public void ValidateModel()
+    {
+        if (Image == null && Uri == null)
+        {
+            throw new BadRequestException("Image & Uri cannot be null at same time.");
+        }
+    }
 }

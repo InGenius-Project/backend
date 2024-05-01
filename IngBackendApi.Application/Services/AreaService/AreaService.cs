@@ -71,7 +71,7 @@ public class AreaService(
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id.Equals(areaId));
 
-        if (area == null || area.OwnerId != userId)
+        if (area == null || area.UserId != userId)
         {
             throw new ForbiddenException();
         }
