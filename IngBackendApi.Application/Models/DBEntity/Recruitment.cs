@@ -11,7 +11,6 @@ public class Recruitment : BaseEntity, IEntity<Guid>
     [Key]
     public Guid Id { get; set; }
 
-    [MaxLength(15)]
     public string Name { get; set; }
 
     public bool Enable { get; set; }
