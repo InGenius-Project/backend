@@ -95,23 +95,21 @@ public class AIService(
         recruitment.Keywords.Clear();
 
         // Add new keywords
-        keywords
-            .ToList()
-            .ForEach(async keyword =>
+        foreach (var keyword in keywords)
+        {
+            var keywordEntity = await _keywordRepository
+                .GetAll(a => a.Id == keyword)
+                .Include(a => a.Recruitments)
+                .FirstOrDefaultAsync();
+            if (keywordEntity != null)
             {
-                var keywordEntity = await _keywordRepository
-                    .GetAll(a => a.Id == keyword)
-                    .Include(a => a.Recruitments)
-                    .FirstOrDefaultAsync();
-                if (keywordEntity != null)
-                {
-                    keywordEntity.Recruitments.Add(recruitment);
-                    return;
-                }
-                await _keywordRepository.AddAsync(
-                    new KeywordRecord { Id = keyword, Recruitments = [recruitment] }
-                );
-            });
+                keywordEntity.Recruitments.Add(recruitment);
+                return;
+            }
+            await _keywordRepository.AddAsync(
+                new KeywordRecord { Id = keyword, Recruitments = [recruitment] }
+            );
+        }
 
         await _unitOfWork.SaveChangesAsync();
     }
