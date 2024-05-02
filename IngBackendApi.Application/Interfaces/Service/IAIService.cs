@@ -1,5 +1,6 @@
 namespace IngBackendApi.Interfaces.Service;
 
+using IngBackendApi.Enum;
 using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
 
@@ -7,16 +8,18 @@ public interface IAIService
 {
     Task<string[]> GetKeywordsByAIAsync(Guid recruitmentId);
     Task SetKeywordsAsync(string[] keywords, Guid recruitmentId);
-    Task<IEnumerable<AreaDTO>> GenerateResumeAreaAsync(
+    Task<IEnumerable<AreaDTO>> GenerateAreaAsync(
         Guid userId,
-        string resumeTitle,
+        string title,
+        AreaGenType genType,
         int areaNum = 5,
         bool titleOnly = false
     );
-    Task<IEnumerable<AreaDTO>> GenerateResumeAreaByTitleAsync(
+    Task<IEnumerable<AreaDTO>> GenerateAreaByTitleAsync(
         Guid userId,
-        string resumeTitle,
-        IEnumerable<string> areaTitles
+        string title,
+        IEnumerable<string> areaTitles,
+        AreaGenType genType
     );
 
     Task<SafetyReport> GenerateSafetyReportAsync(Guid recruitmentId);

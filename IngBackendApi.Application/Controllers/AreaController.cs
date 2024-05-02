@@ -321,16 +321,14 @@ public class AreaController(
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
-        if (req.Type == "resume")
-        {
-            return await _aiService.GenerateResumeAreaAsync(
-                userId,
-                req.Title,
-                req.AreaNum,
-                req.TitleOnly
-            );
-        }
-        return await _aiService.GenerateResumeAreaAsync(userId, req.Title);
+
+        return await _aiService.GenerateAreaAsync(
+            userId,
+            req.Title,
+            req.Type,
+            req.AreaNum,
+            req.TitleOnly
+        );
     }
 
     [HttpPost("generation/title")]
@@ -338,10 +336,11 @@ public class AreaController(
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
-        return await _aiService.GenerateResumeAreaByTitleAsync(
+        return await _aiService.GenerateAreaByTitleAsync(
             userId,
-            req.ResumeTitle,
-            req.AreaTitles
+            req.Title,
+            req.AreaTitles,
+            req.Type
         );
     }
 

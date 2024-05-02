@@ -1,12 +1,9 @@
 namespace IngBackendApi.Services;
 
 using System.Collections.Generic;
-using System.Globalization;
-using System.Security.Policy;
-using System.Text;
 using AutoMapper;
+using IngBackendApi.Enum;
 using IngBackendApi.Exceptions;
-using IngBackendApi.Helpers;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Interfaces.UnitOfWork;
@@ -14,10 +11,7 @@ using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
 using IngBackendApi.Models.DTO.HttpResponse;
 using IngBackendApi.Services.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 public class AIService(
     IUnitOfWork unitOfWork,
@@ -41,6 +35,25 @@ public class AIService(
         unitOfWork.Repository<SafetyReport, Guid>();
 
     private readonly IEnumerable<string> _generatedAreaFilterList = ["技能", "教育背景", "作品"];
+    private readonly Dictionary<IEnumerable<string>, IEnumerable<Area>?> _userAreaMap =
+        new()
+        {
+            { ["簡介", "自我介紹"], null },
+            { ["技能"], null },
+            { ["經驗"], null },
+            { ["教育"], null },
+            { ["作品"], null }
+        };
+
+    private readonly Dictionary<IEnumerable<string>, IEnumerable<Area>?> _companyAreaMap =
+        new()
+        {
+            { ["簡介", "職缺介紹"], null },
+            { ["技能"], null },
+            { ["經驗"], null },
+            { ["教育"], null },
+            { ["聯絡"], null }
+        };
 
     private readonly IRepository<User, Guid> _userRepository = unitOfWork.Repository<User, Guid>();
     private readonly IRepository<AreaType, int> _areaTypeRepository = unitOfWork.Repository<
@@ -103,28 +116,33 @@ public class AIService(
         await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<AreaDTO>> GenerateResumeAreaAsync(
+    public async Task<IEnumerable<AreaDTO>> GenerateAreaAsync(
         Guid userId,
-        string resumeTitle,
+        string title,
+        AreaGenType genType,
         int areaNum = 5,
         bool titleOnly = false
     )
     {
-        var userInfoAreaList = await GetUserInfoAreasAsync(userId);
+        var userInfoAreaList = await GetUserInfoAreasAsync(
+            userId,
+            genType == AreaGenType.Resume ? _userAreaMap : _companyAreaMap
+        );
         // Generate Post DTO
-        var userResumeGenerationDto = new UserResumeGenerationDTO()
+        var areaGenerationDto = new AreaGenerationDTO()
         {
             TitleOnly = titleOnly,
             AreaNum = areaNum,
-            ResumeTitle = resumeTitle,
+            Title = title,
             Areas = _mapper
                 .Map<List<UserInfoAreaDTO>>(userInfoAreaList)
                 .Where(i => i != null)
-                .ToList()
+                .ToList(),
+            Type = genType
         };
 
         // Post And Get Response
-        var generatedArea = await _aiHttpClient.PostGenerateAreasAsync(userResumeGenerationDto);
+        var generatedArea = await _aiHttpClient.PostGenerateAreasAsync(areaGenerationDto);
 
         // Classify Generated Data
         var areaDTOs = _mapper.Map<List<AreaDTO>>(generatedArea);
@@ -133,27 +151,32 @@ public class AIService(
         return areaDTOs;
     }
 
-    public async Task<IEnumerable<AreaDTO>> GenerateResumeAreaByTitleAsync(
+    public async Task<IEnumerable<AreaDTO>> GenerateAreaByTitleAsync(
         Guid userId,
-        string resumeTitle,
-        IEnumerable<string> areaTitles
+        string title,
+        IEnumerable<string> areaTitles,
+        AreaGenType genType
     )
     {
-        var userInfoAreaList = await GetUserInfoAreasAsync(userId);
+        var userInfoAreaList = await GetUserInfoAreasAsync(
+            userId,
+            genType == AreaGenType.Resume ? _userAreaMap : _companyAreaMap
+        );
 
         // Generate Post DTO
-        var userResumeGenerationDto = new UserResumeGenerationDTO()
+        var areaGenerationDto = new AreaGenerationDTO()
         {
-            ResumeTitle = resumeTitle,
+            Title = title,
             Areas = _mapper
                 .Map<List<UserInfoAreaDTO>>(userInfoAreaList)
                 .Where(i => i != null)
-                .ToList()
+                .ToList(),
+            Type = genType
         };
 
         var postDTO = new GenerateAreaByTitleDTO
         {
-            UserResumeInfo = userResumeGenerationDto,
+            UserInfo = areaGenerationDto,
             AreaTitles = areaTitles
         };
 
@@ -243,13 +266,13 @@ public class AIService(
         List<AreaDTO> userInfoAreaList
     )
     {
-        areaDTOs.RemoveAll(a => _generatedAreaFilterList.Any(f => a.Title.Contains(f)));
+        // areaDTOs.RemoveAll(a => _generatedAreaFilterList.Any(f => a.Title.Contains(f)));
 
         // Determine AreaType
         foreach (var areaDTO in areaDTOs)
         {
             areaDTO.LayoutType = await GetAreaLayoutTypeAsync(areaDTO.Title);
-            if (areaDTO.LayoutType == Enum.LayoutType.ImageText)
+            if (areaDTO.LayoutType == LayoutType.ImageText)
             {
                 areaDTO.ImageTextLayout = await GenerateImageLayoutAreaAsync(
                     areaDTO.Title,
@@ -268,6 +291,10 @@ public class AIService(
             .Where(i => i != null)
             .ToList();
 
+        areaDTOs.RemoveAll(a =>
+            defaultArea.Any(f => f?.AreaType?.Name != null && a.Title.Contains(f.AreaType.Name))
+        );
+
         areaDTOs.AddRange(_mapper.Map<List<AreaDTO>>(defaultArea));
 
         // Set Sequence
@@ -275,7 +302,7 @@ public class AIService(
         areaDTOs.ForEach(a => a.Sequence = sequence++);
     }
 
-    private async Task<Enum.LayoutType> GetAreaLayoutTypeAsync(string keyword)
+    private async Task<LayoutType> GetAreaLayoutTypeAsync(string keyword)
     {
         var areaType = await _areaTypeRepository
             .GetAll(a => keyword.Contains(a.Name))
@@ -289,7 +316,10 @@ public class AIService(
         return areaType.LayoutType;
     }
 
-    private async Task<IEnumerable<Area>> GetUserInfoAreasAsync(Guid userId)
+    private async Task<IEnumerable<Area>> GetUserInfoAreasAsync(
+        Guid userId,
+        Dictionary<IEnumerable<string>, IEnumerable<Area>?> areaMap
+    )
     {
         var user =
             await _userRepository
@@ -311,16 +341,6 @@ public class AIService(
                 .ThenInclude(k => k.Type)
                 .AsNoTracking()
                 .FirstOrDefaultAsync() ?? throw new NotFoundException("User not found");
-
-        // Map selected area
-        var areaMap = new Dictionary<IEnumerable<string>, IEnumerable<Area>?>
-        {
-            { ["簡介", "自我介紹"], null },
-            { ["技能"], null },
-            { ["經驗"], null },
-            { ["教育"], null },
-            { ["作品"], null }
-        };
 
         // Get Area By Key Name
         foreach (var key in areaMap.Keys)
