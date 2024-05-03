@@ -212,12 +212,8 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy
-                .WithOrigins("https://ingenius.website")
-                .AllowCredentials()
-                .AllowAnyHeader()
-                .AllowAnyMethod();
-            policy
-                .WithOrigins("https://www.ingenius.website")
+                .WithOrigins("https://ingenius.website", "https://www.ingenius.website")
+                .SetIsOriginAllowedToAllowWildcardSubdomains()
                 .AllowCredentials()
                 .AllowAnyHeader()
                 .AllowAnyMethod();
@@ -273,6 +269,7 @@ app.UseApiResponseAndExceptionWrapper(
 
 app.UseHangfireDashboard("/hangfire");
 app.UseCors(devCorsPolicy);
+
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
