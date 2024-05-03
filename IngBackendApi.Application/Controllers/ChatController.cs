@@ -139,6 +139,32 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
         return _mapper.Map<ChatGroupDTO>(chatGroup);
     }
 
+
+    [HttpDelete("groups/{groupId}")]
+    public async Task<ApiResponse> DeleteChatGroup(Guid groupId)
+    {
+        var currentUserId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        var user =
+            await _userRepository.GetByIdAsync(currentUserId) ?? throw new UserNotFoundException();
+
+        var group =
+            await _chatGroupRepository
+                .GetAll(g => g.Id == groupId)
+                .Include(u => u.Users)
+                .Include(u => u.Owner)
+                .FirstOrDefaultAsync() ?? throw new NotFoundException("group not found");
+
+        if (group.Owner.Id != currentUserId)
+        {
+            throw new ForbiddenException();
+        }
+
+        await _chatGroupRepository.DeleteByIdAsync(group.Id);
+        await _unitOfWork.SaveChangesAsync();
+
+        return new ApiResponse();
+    }
+
     [HttpGet("groups/invited")]
     public async Task<IEnumerable<ChatGroupInfoDTO>> GetInvitedChatGroups()
     {
@@ -209,6 +235,7 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
 
         return new ApiResponse("ok");
     }
+
 
     [AllowAnonymous]
     [HttpGet("groups/public")]
