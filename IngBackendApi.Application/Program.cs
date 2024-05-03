@@ -212,6 +212,21 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy
+                .WithOrigins("https://ingenius.website")
+                .AllowCredentials()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+            policy
+                .WithOrigins("https://www.ingenius.website")
+                .AllowCredentials()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+            policy
+                .WithOrigins("https://150.117.18.40")
+                .AllowCredentials()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+            policy
                 .WithOrigins("http://localhost:34004")
                 .AllowAnyHeader()
                 .AllowAnyMethod()

@@ -11,4 +11,7 @@ public class KeywordRecord : BaseEntity, IEntity<string>
 
     [JsonIgnore]
     public ICollection<Recruitment> Recruitments { get; set; } = [];
+
+    [JsonIgnore]
+    public ICollection<Resume> Resumes { get; set; } = [];
 }
