@@ -321,6 +321,22 @@ public class AreaService(
         return _mapper.Map<IEnumerable<AreaDTO>>(user.Areas.Where(a => a.AreaTypeId == areaTypeId));
     }
 
+    public async Task<IEnumerable<AreaDTO>> GetRecruitmentAreaByAreaTypeIdAsync(
+        int areaTypeId, Guid recruitmentId
+    )
+    {
+        var areas = await _repository.Area
+            .GetAll()
+            .Where(a => a.AreaTypeId == areaTypeId && a.RecruitmentId == recruitmentId)
+            .Include(a => a.ListLayout.Items)
+            .Include(a => a.KeyValueListLayout.Items)
+                .ThenInclude(i => i.Key)
+            .Include(a => a.ImageTextLayout.Image)
+            .Include(a => a.TextLayout)
+            .ToListAsync();
+        return _mapper.Map<IEnumerable<AreaDTO>>(areas);
+    }
+
     private async Task<Image> CreateImageFromUriAsync(string uri, string contentType = "image/jpg")
     {
         var newImage = new Image

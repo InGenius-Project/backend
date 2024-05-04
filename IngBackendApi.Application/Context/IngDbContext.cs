@@ -209,29 +209,55 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             );
         #endregion
 
+
+        #region Default AreaType
+        var skillAreaType = new AreaType
+        {
+            Id = 1,
+            Name = "技能",
+            Value = "skill",
+            Description = "編輯技能",
+            UserRole = [Enum.UserRole.Intern],
+            LayoutType = Enum.LayoutType.List,
+        };
+        var selfIntroAreaType = new AreaType
+        {
+            Id = 2,
+            Name = "自我介紹",
+            Value = "self-introduction",
+            Description = "自我介紹",
+            UserRole = [Enum.UserRole.Intern],
+            LayoutType = Enum.LayoutType.Text,
+        };
+        var companyLocationAreaType = new AreaType
+        {
+            Id = 3,
+            Name = "公司位置",
+            Value = "company-location",
+            Description = "編輯您的公司位置",
+            UserRole = [Enum.UserRole.Company],
+            LayoutType = Enum.LayoutType.KeyValueList,
+        };
+
+        var educationAreaType = new AreaType()
+        {
+            Id = 4,
+            Name = "教育背景",
+            Value = "education",
+            Description = "教育背景的描述",
+            UserRole = [Enum.UserRole.Intern, Enum.UserRole.Admin, Enum.UserRole.Company],
+            LayoutType = Enum.LayoutType.KeyValueList,
+        };
+
         modelBuilder.Entity<AreaType>().HasIndex(t => t.Value).IsUnique();
         modelBuilder.Entity<AreaType>().Property(t => t.Id).ValueGeneratedOnAdd();
         modelBuilder
             .Entity<AreaType>()
             .HasData(
-                new AreaType
-                {
-                    Id = 1,
-                    Name = "技能",
-                    Value = "skill",
-                    Description = "編輯技能",
-                    UserRole = [Enum.UserRole.Intern],
-                    LayoutType = Enum.LayoutType.List,
-                },
-                new AreaType
-                {
-                    Id = 2,
-                    Name = "自我介紹",
-                    Value = "self-introduction",
-                    Description = "自我介紹",
-                    UserRole = [Enum.UserRole.Intern],
-                    LayoutType = Enum.LayoutType.Text,
-                }
+                skillAreaType,
+                selfIntroAreaType,
+                companyLocationAreaType,
+                educationAreaType
             );
 
         modelBuilder
@@ -253,19 +279,29 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
                 at =>
                 {
                     at.HasKey("AreaTypeId", "TagTypeId");
-                    at.HasData(new { AreaTypeId = 1, TagTypeId = skillTagType.Id });
+                    at.HasData(
+                        new { AreaTypeId = skillAreaType.Id, TagTypeId = skillTagType.Id },
+                        new { AreaTypeId = educationAreaType.Id, TagTypeId = universityTagType.Id },
+                        new { AreaTypeId = educationAreaType.Id, TagTypeId = departmentTagType.Id },
+                        new { AreaTypeId = companyLocationAreaType.Id, TagTypeId = areaTagType.Id }
+                    );
                 }
             );
+        #endregion
+
     }
 
     private void SeedTestingData(
         ModelBuilder modelBuilder,
-        TagType universityTagType,
-        TagType departmentTagType,
-        TagType skillTagType
+        TagType skillTagType,
+        TagType areaTagType,
+        AreaType educationAreaType
     )
     {
         var hasher = new PasswordHasher();
+
+
+        #region Seed User
         var user = new User
         {
             Id = Guid.NewGuid(),
@@ -302,8 +338,9 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             Role = Enum.UserRole.Admin
         };
         modelBuilder.Entity<User>().HasData(user, internalUser, companyUser, adminUser);
+        #endregion
 
-        #region Ai generation test data
+        #region Seed Tag
         var collegeTag = new Tag()
         {
             Id = Guid.NewGuid(),
@@ -318,7 +355,13 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             TagTypeId = 4,
             Count = 0
         };
-
+        var areaTag = new Tag()
+        {
+            Id = Guid.NewGuid(),
+            Name = "台北市",
+            TagTypeId = areaTagType.Id,
+            Count = 0
+        };
         var educationalKeyValueItem = new KeyValueItem() { Id = Guid.NewGuid(), Value = "大學", };
         var educationalKeyValueListLayout = new KeyValueListLayout() { Id = Guid.NewGuid() };
 
@@ -330,29 +373,8 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             Title = "教育背景",
             OwnerId = adminUser.Id,
         };
-        var educationAreaType = new AreaType()
-        {
-            Id = 5,
-            Name = "教育背景",
-            Value = "education",
-            Description = "教育背景的描述",
-            UserRole = [Enum.UserRole.Intern, Enum.UserRole.Admin, Enum.UserRole.Company],
-            LayoutType = Enum.LayoutType.KeyValueList,
-        };
 
-        modelBuilder
-            .Entity<AreaType>()
-            .HasMany(a => a.ListTagTypes)
-            .WithMany(t => t.AreaTypes)
-            .UsingEntity(i =>
-                i.HasData(
-                    new { AreaTypeId = educationAreaType.Id, TagTypeId = universityTagType.Id },
-                    new { AreaTypeId = educationAreaType.Id, TagTypeId = departmentTagType.Id }
-                )
-            );
-
-        modelBuilder.Entity<Tag>().HasData(collegeTag, departmentTag);
-        modelBuilder.Entity<AreaType>().HasData(educationAreaType);
+        modelBuilder.Entity<Tag>().HasData(collegeTag, departmentTag, areaTag);
         educationalKeyValueListLayout.AreaId = educationArea.Id;
         educationalKeyValueItem.keyValueListLayoutId = educationalKeyValueListLayout.Id;
         educationArea.AreaTypeId = educationAreaType.Id;

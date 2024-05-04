@@ -344,12 +344,21 @@ public class AreaController(
         );
     }
 
-    [HttpGet("areaType/{areaTypeId}")]
+    [HttpGet("areatype/{areaTypeId}")]
     public async Task<IEnumerable<AreaDTO>> GetUserAreaByAreaType(int areaTypeId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         return await _areaService.GetUserAreaByAreaTypeIdAsync(userId, areaTypeId);
     }
+
+    [HttpGet("areatype/{areaTypeId}/{recruitmentId}")]
+    public async Task<IEnumerable<AreaDTO>> GetRecruitmentAreaByAreaType(int areaTypeId, Guid recruitmentId)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        await _userService.CheckAndGetUserAsync(userId);
+        return await _areaService.GetRecruitmentAreaByAreaTypeIdAsync(areaTypeId, recruitmentId);
+    }
+
 
     [NonAction]
     public async Task AnalyzeRecruitmentKeywordAsync(Guid areaId)

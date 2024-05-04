@@ -19,4 +19,7 @@ public interface IAreaService : IService<Area, AreaDTO, Guid>
     Task<ImageDTO?> GetImageByIdAsync(Guid imageId);
     Task<AreaDTO> AddOrUpdateAsync(AreaDTO areaDTO, Guid userId);
     Task<IEnumerable<AreaDTO>> GetUserAreaByAreaTypeIdAsync(Guid userId, int areaTypeId);
+    Task<IEnumerable<AreaDTO>> GetRecruitmentAreaByAreaTypeIdAsync(
+        int areaTypeId, Guid recruitmentId
+    );
 }
