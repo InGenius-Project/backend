@@ -4,7 +4,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 USER app
 WORKDIR /app
 EXPOSE 8080
-EXPOSE 8081
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
@@ -13,6 +12,8 @@ COPY ["./IngBackendApi.Application/IngBackendApi.Application.csproj", "."]
 COPY . .
 WORKDIR "/src/."
 RUN dotnet build "./IngBackendApi.Application/IngBackendApi.Application.csproj" -c $BUILD_CONFIGURATION -o /app/build
+USER root
+RUN dotnet tool install --global dotnet-ef
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
@@ -21,7 +22,11 @@ RUN dotnet publish "./IngBackendApi.Application/IngBackendApi.Application.csproj
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+COPY --from=publish /root/.dotnet/tools /tools
 USER root
+RUN chmod 777 -R /app/wwwroot
+RUN chmod 777 -R /tools
 RUN apt update -y && apt install -y libgssapi-krb5-2
 USER app
+ENV PATH="$PATH:/tools"
 ENTRYPOINT ["dotnet", "IngBackendApi.Application.dll"]
