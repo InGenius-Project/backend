@@ -247,6 +247,7 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
             .ThenInclude(u => u.Avatar)
             .Include(c => c.Owner)
             .ThenInclude(o => o.Avatar)
+            .Include(c => c.Messages)
             .AsNoTracking()
             .ToArrayAsync();
         return _mapper.Map<IEnumerable<ChatGroupInfoDTO>>(groups);
