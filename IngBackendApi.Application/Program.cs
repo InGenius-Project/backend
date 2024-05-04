@@ -211,6 +211,7 @@ builder.Services.AddCors(options =>
         name: devCorsPolicy,
         policy =>
         {
+            policy.WithOrigins("*").AllowCredentials().AllowAnyHeader().AllowAnyMethod();
             policy
                 .WithOrigins("https://ingenius.website", "https://www.ingenius.website")
                 .SetIsOriginAllowedToAllowWildcardSubdomains()
