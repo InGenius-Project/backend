@@ -49,6 +49,7 @@ public class UserService(
         var user = await _repository.User.GetByIdAsync(userId) ?? throw new UserNotFoundException();
         _mapper.Map(req, user);
         await _repository.User.UpdateAsync(user);
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task<UserInfoDTO> AddAsync(UserSignUpDTO req)
