@@ -250,11 +250,11 @@ public class AreaService(
             .Area.GetAll()
             .Where(a => areaDtoIds.Contains(a.Id))
             .ToListAsync();
-        areas.ForEach(async a =>
+        foreach (var a in areas)
         {
             await CheckAreaOwnership(a.Id, userId);
             a.Sequence = areaSequencePostDTOs.First(s => s.Id == a.Id)?.Sequence ?? a.Sequence;
-        });
+        }
         await _repository.User.SaveAsync();
     }
 
