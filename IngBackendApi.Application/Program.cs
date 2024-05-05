@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using AutoMapper.EquivalencyExpression;
 using AutoWrapper;
 using Hangfire;
+using Hangfire.Dashboard;
 using IngBackend.Repository;
 using IngBackendApi.Application.Hubs;
 using IngBackendApi.Application.Interfaces.Service;
@@ -247,6 +248,9 @@ builder.Services.AddCors(options =>
 builder.Services.AddHangfire(config => config.UseInMemoryStorage());
 builder.Services.AddHangfireServer();
 
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -268,7 +272,10 @@ app.UseApiResponseAndExceptionWrapper(
     }
 );
 
-app.UseHangfireDashboard("/hangfire");
+app.UseHangfireDashboard(
+    "/hangfire",
+    new DashboardOptions() { Authorization = [new LocalRequestsOnlyAuthorizationFilter()] }
+);
 app.UseCors(devCorsPolicy);
 
 app.UseHttpsRedirection();

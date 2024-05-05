@@ -253,12 +253,7 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
         modelBuilder.Entity<AreaType>().Property(t => t.Id).ValueGeneratedOnAdd();
         modelBuilder
             .Entity<AreaType>()
-            .HasData(
-                skillAreaType,
-                selfIntroAreaType,
-                companyLocationAreaType,
-                educationAreaType
-            );
+            .HasData(skillAreaType, selfIntroAreaType, companyLocationAreaType, educationAreaType);
 
         modelBuilder
             .Entity<AreaType>()
@@ -288,29 +283,49 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
                 }
             );
         #endregion
-
     }
 
-    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default(CancellationToken))
+    public override Task<int> SaveChangesAsync(
+        bool acceptAllChangesOnSuccess,
+        CancellationToken cancellationToken = default
+    )
     {
-        var AddedEntities = ChangeTracker.Entries().Where(E => E.State == EntityState.Added).ToList();
+        var AddedEntities = ChangeTracker
+            .Entries()
+            .Where(E => E.State == EntityState.Added)
+            .ToList();
 
         AddedEntities.ForEach(E =>
         {
-            E.Property("CreatedAt").CurrentValue = DateTime.Now;
-            E.Property("ModifiedAt").CurrentValue = DateTime.Now;
+            if (
+                E.GetType().GetProperty("CreatedAt") != null
+                && E.GetType().GetProperty("ModifiedAt") != null
+            )
+            {
+                Console.WriteLine("YES");
+                E.Property("CreatedAt").CurrentValue = DateTime.Now;
+                E.Property("ModifiedAt").CurrentValue = DateTime.Now;
+            }
         });
 
-        var EditedEntities = ChangeTracker.Entries().Where(E => E.State == EntityState.Modified).ToList();
+        var EditedEntities = ChangeTracker
+            .Entries()
+            .Where(E => E.State == EntityState.Modified)
+            .ToList();
 
         EditedEntities.ForEach(E =>
         {
-            E.Property("ModifiedAt").CurrentValue = DateTime.Now;
+            if (
+                E.GetType().GetProperty("CreatedAt") != null
+                && E.GetType().GetProperty("ModifiedAt") != null
+            )
+            {
+                E.Property("ModifiedAt").CurrentValue = DateTime.Now;
+            }
         });
 
         return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
-
 
     private void SeedTestingData(
         ModelBuilder modelBuilder,
@@ -320,7 +335,6 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
     )
     {
         var hasher = new PasswordHasher();
-
 
         #region Seed User
         var user = new User
