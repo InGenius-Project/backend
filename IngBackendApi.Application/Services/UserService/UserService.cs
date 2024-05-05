@@ -371,6 +371,17 @@ public class UserService(
         await _unitOfWork.SaveChangesAsync();
     }
 
+    public async Task<bool> CheckUserIsPremium(Guid userId)
+    {
+        // FIXME: remove the testing value
+        return true;
+
+        var user =
+            await _userRepository.GetAll(u => u.Id == userId).AsNoTracking().SingleOrDefaultAsync()
+            ?? throw new UserNotFoundException();
+        return user.Premium;
+    }
+
     private async Task<Image> CreateImageFromFileAsync(IFormFile file)
     {
         if (file.Length == 0)

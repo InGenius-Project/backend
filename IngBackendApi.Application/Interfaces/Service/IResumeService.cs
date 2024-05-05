@@ -11,4 +11,5 @@ public interface IResumeService : IService<Resume, ResumeDTO, Guid>
     Task<List<ResumeDTO>> GetRecruitmentResumesAsync(Guid recruitmentId);
     Task<ResumeDTO> AddOrUpdateAsync(ResumeDTO resumeDTO, Guid userId);
     Task<ResumeDTO> CheckAndGetResumeAsync(Guid id, UserInfoDTO user);
+    Task<IEnumerable<RecruitmentDTO>> SearchRelativeRecruitmentAsync(Guid resumeId);
 }

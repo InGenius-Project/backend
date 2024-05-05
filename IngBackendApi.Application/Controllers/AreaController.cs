@@ -8,6 +8,7 @@ using IngBackendApi.Application.Interfaces.Service;
 using IngBackendApi.Enum;
 using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Service;
+using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -36,8 +37,6 @@ public class AreaController(
     private readonly IWebHostEnvironment _env = env;
     private readonly IAIService _aiService = aiService;
     private readonly IBackgroundTaskService _backgroundTaskService = backgroundTaskService;
-
-    private readonly Dictionary<Guid, string?> _taskMap = [];
 
     [HttpGet("{areaId}")]
     [ProducesResponseType(typeof(ResponseDTO<AreaDTO>), StatusCodes.Status200OK)]
@@ -198,11 +197,7 @@ public class AreaController(
         var listLayoutDTO = _mapper.Map<ListLayoutDTO>(req);
         await _areaService.UpdateLayoutAsync(areaId, listLayoutDTO);
 
-        await _backgroundTaskService.ScheduleTaskAsync(
-            $"{areaId}_report",
-            () => GenerateSafetyReportAsync(areaId),
-            TimeSpan.FromMinutes(1)
-        );
+        await PassToSafetyReportTask(areaId);
 
         return Ok();
     }
@@ -220,17 +215,8 @@ public class AreaController(
         await _areaService.UpdateLayoutAsync(areaId, textLayoutDTO);
 
         // Analyze Keywords & safety report
-        await _backgroundTaskService.ScheduleTaskAsync(
-            $"{areaId}_keyword",
-            () => AnalyzeRecruitmentKeywordAsync(areaId),
-            TimeSpan.FromMinutes(1)
-        );
-
-        await _backgroundTaskService.ScheduleTaskAsync(
-            $"{areaId}_report",
-            () => GenerateSafetyReportAsync(areaId),
-            TimeSpan.FromMinutes(1)
-        );
+        await PassToAnalyzeKeywordTask(areaId);
+        await PassToSafetyReportTask(areaId);
 
         return Ok();
     }
@@ -251,17 +237,8 @@ public class AreaController(
         await _areaService.UpdateLayoutAsync(areaId, imageTextLayoutPostDTO);
 
         // Analyze Keywords & safety report
-        await _backgroundTaskService.ScheduleTaskAsync(
-            $"{areaId}_keyword",
-            () => AnalyzeRecruitmentKeywordAsync(areaId),
-            TimeSpan.FromMinutes(1)
-        );
-
-        await _backgroundTaskService.ScheduleTaskAsync(
-            $"{areaId}_report",
-            () => GenerateSafetyReportAsync(areaId),
-            TimeSpan.FromMinutes(1)
-        );
+        await PassToAnalyzeKeywordTask(areaId);
+        await PassToSafetyReportTask(areaId);
 
         return Ok();
     }
@@ -281,12 +258,7 @@ public class AreaController(
         var keyValueListLayoutDTO = _mapper.Map<KeyValueListLayoutDTO>(keyValueListLayoutPostDTO);
         await _areaService.UpdateLayoutAsync(areaId, keyValueListLayoutDTO);
 
-        await _backgroundTaskService.ScheduleTaskAsync(
-            $"{areaId}_report",
-            () => GenerateSafetyReportAsync(areaId),
-            TimeSpan.FromMinutes(1)
-        );
-
+        await PassToSafetyReportTask(areaId);
         return Ok();
     }
 
@@ -352,37 +324,75 @@ public class AreaController(
     }
 
     [HttpGet("areatype/{areaTypeId}/{recruitmentId}")]
-    public async Task<IEnumerable<AreaDTO>> GetRecruitmentAreaByAreaType(int areaTypeId, Guid recruitmentId)
+    public async Task<IEnumerable<AreaDTO>> GetRecruitmentAreaByAreaType(
+        int areaTypeId,
+        Guid recruitmentId
+    )
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
         return await _areaService.GetRecruitmentAreaByAreaTypeIdAsync(areaTypeId, recruitmentId);
     }
 
-
     [NonAction]
-    public async Task AnalyzeRecruitmentKeywordAsync(Guid areaId)
+    public async Task AnalyzeKeywordAsync(Guid targetId, AreaGenType type)
     {
-        var area = await _areaService.GetByIdAsync(areaId);
-        if (area == null || area.RecruitmentId == null)
-        {
-            return;
-        }
-        var parsedRecruitmentId = area.RecruitmentId ?? Guid.Empty;
-
-        var result = await _aiService.GetKeywordsByAIAsync(parsedRecruitmentId);
-        await _aiService.SetKeywordsAsync(result, parsedRecruitmentId);
+        var result = await _aiService.GetKeywordsByAIAsync(targetId, type);
+        await _aiService.SetKeywordsAsync(result, targetId, type);
     }
 
     [NonAction]
-    public async Task GenerateSafetyReportAsync(Guid areaId)
+    public async Task GenerateSafetyReportAsync(Guid recruitmentId)
     {
-        var area = await _areaService.GetAreaIncludeAllById(areaId);
-        if (area == null || area.RecruitmentId == null)
+        var entity = await _aiService.GenerateSafetyReportAsync(recruitmentId);
+        await _aiService.SaveSafetyReportAsync(entity);
+    }
+
+    private async Task PassToAnalyzeKeywordTask(Guid areaId)
+    {
+        var area =
+            await _areaService.GetByIdAsync(areaId)
+            ?? throw new NotFoundException("Area Id not found.");
+
+        Guid targetId;
+        var type = AreaGenType.Recruitment;
+        if (area.RecruitmentId != null)
+        {
+            targetId = (Guid)area.RecruitmentId;
+            type = AreaGenType.Recruitment;
+        }
+        // else if (area.ResumeId != null)
+        // {
+        //     targetId = (Guid)area.ResumeId;
+        //     type = AreaGenType.Resume;
+        // }
+        else
         {
             return;
         }
-        var entity = await _aiService.GenerateSafetyReportAsync((Guid)area.RecruitmentId);
-        await _aiService.SaveSafetyReportAsync(entity);
+
+        // Analyze Keywords & safety report
+        await _backgroundTaskService.ScheduleTaskAsync(
+            $"{areaId}_{type}_keyword",
+            () => AnalyzeKeywordAsync(targetId, type),
+            TimeSpan.FromMinutes(5)
+        );
+    }
+
+    private async Task PassToSafetyReportTask(Guid areaId)
+    {
+        var area =
+            await _areaService.GetByIdAsync(areaId)
+            ?? throw new NotFoundException("Area Id not found.");
+
+        if (area.RecruitmentId == null)
+        {
+            return;
+        }
+        await _backgroundTaskService.ScheduleTaskAsync(
+            $"{areaId}_report",
+            () => GenerateSafetyReportAsync((Guid)area.RecruitmentId),
+            TimeSpan.FromMinutes(5)
+        );
     }
 }

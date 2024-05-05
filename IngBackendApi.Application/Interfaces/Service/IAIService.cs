@@ -6,8 +6,8 @@ using IngBackendApi.Models.DTO;
 
 public interface IAIService
 {
-    Task<string[]> GetKeywordsByAIAsync(Guid recruitmentId);
-    Task SetKeywordsAsync(string[] keywords, Guid recruitmentId);
+    Task<string[]> GetKeywordsByAIAsync(Guid id, AreaGenType type);
+    Task SetKeywordsAsync(string[] keywords, Guid id, AreaGenType type);
     Task<IEnumerable<AreaDTO>> GenerateAreaAsync(
         Guid userId,
         string title,

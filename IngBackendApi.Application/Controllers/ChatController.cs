@@ -41,9 +41,7 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
             throw new BadRequestException("使用者已經在群組中");
         }
 
-        var user =
-            await _userRepository.GetByIdAsync(userId)
-            ?? throw new UserNotFoundException()
+        var user = await _userRepository.GetByIdAsync(userId) ?? throw new UserNotFoundException();
 
         if (!chatGroup.Private)
         {
@@ -75,8 +73,7 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
                 .FirstOrDefaultAsync() ?? throw new ChatGroupNotFoundException();
 
         var inviteUser =
-            await _userRepository.GetByIdAsync(userId)
-            ?? throw new UserNotFoundException();
+            await _userRepository.GetByIdAsync(userId) ?? throw new UserNotFoundException();
 
         if (!group.Users.Any(u => u.Id == currentUserId))
         {
@@ -133,14 +130,17 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
                 .AsNoTracking()
                 .FirstOrDefaultAsync() ?? throw new ChatGroupNotFoundException();
 
-        if (!IsUserInGroup(userId, groupId) && !IsUserInInviteList(userId, groupId) && chatGroup.Private)
+        if (
+            !IsUserInGroup(userId, groupId)
+            && !IsUserInInviteList(userId, groupId)
+            && chatGroup.Private
+        )
         {
             throw new ForbiddenException("您沒有權限訪問此群組");
         }
 
         return _mapper.Map<ChatGroupDTO>(chatGroup);
     }
-
 
     [HttpDelete("groups/{groupId}")]
     public async Task<ApiResponse> DeleteChatGroup(Guid groupId)
@@ -237,7 +237,6 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
 
         return new ApiResponse("ok");
     }
-
 
     [AllowAnonymous]
     [HttpGet("groups/public")]

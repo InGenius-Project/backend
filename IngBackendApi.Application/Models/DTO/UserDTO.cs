@@ -23,6 +23,7 @@ public class UserInfoDTO
 
     public string Email { get; set; }
     public bool Verified { get; set; }
+    public bool Premium { get; set; }
 
     public string Username { get; set; }
     public ImageDTO? Avatar { get; set; }

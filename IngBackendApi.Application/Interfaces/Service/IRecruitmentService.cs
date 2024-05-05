@@ -16,4 +16,8 @@ public interface IRecruitmentService : IService<Recruitment, RecruitmentDTO, Gui
     );
     Task ApplyRecruitmentAsync(Guid recruitmentId, Guid resumeId, Guid userId);
     Task<SafetyReport?> GetSafetyReportAsync(Guid recruitmentId);
+    Task<IEnumerable<ResumeDTO>> SearchRelativeResumeAsync(
+        Guid recruitmentId,
+        bool searchAll = false
+    );
 }

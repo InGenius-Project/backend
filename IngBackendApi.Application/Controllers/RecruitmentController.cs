@@ -122,4 +122,18 @@ public class RecruitmentController(
     public async Task<SafetyReport> GetSafetyReport(Guid recruitmentId) =>
         await _recruitmentService.GetSafetyReportAsync(recruitmentId)
         ?? throw new NotFoundException("Report not found.");
+
+    [HttpGet("{recruitmentId}/relative")]
+    public async Task<IEnumerable<ResumeDTO>> SearchRelativeResumes(
+        Guid recruitmentId,
+        bool searchAll = false
+    )
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        if (!await _userService.CheckUserIsPremium(userId))
+        {
+            throw new UnauthorizedException("User have no access to premium feature.");
+        }
+        return await _recruitmentService.SearchRelativeResumeAsync(recruitmentId, searchAll);
+    }
 }

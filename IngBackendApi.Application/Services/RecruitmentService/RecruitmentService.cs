@@ -20,6 +20,10 @@ public class RecruitmentService(
     private readonly IRepositoryWrapper _repository = repository;
     private readonly IRepository<KeywordRecord, string> _keywordRecordRepository =
         unitOfWork.Repository<KeywordRecord, string>();
+    private readonly IRepository<Recruitment, Guid> _recruitmentRepository = unitOfWork.Repository<
+        Recruitment,
+        Guid
+    >();
 
     public async Task<List<RecruitmentDTO>> GetPublisherRecruitmentsAsync(Guid userId)
     {
@@ -174,5 +178,33 @@ public class RecruitmentService(
         recruitment.Resumes.Add(resume);
 
         await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<ResumeDTO>> SearchRelativeResumeAsync(
+        Guid recruitmentId,
+        bool searchAll = false
+    )
+    {
+        var recruitment =
+            await _recruitmentRepository
+                .GetAll(r => r.Id == recruitmentId)
+                .AsNoTracking()
+                .Include(r => r.Resumes)
+                .Include(r => r.Keywords)
+                .ThenInclude(k => k.Resumes)
+                .SingleOrDefaultAsync() ?? throw new NotFoundException("Recruitment not found");
+        var query = recruitment.Keywords.SelectMany(k => k.Resumes);
+
+        if (!searchAll)
+        {
+            query = query.Where(recruitment.Resumes.Contains);
+        }
+
+        var resumes = query
+            .GroupBy(r => r.Id)
+            .OrderByDescending(g => g.Count())
+            .Select(g => g.First());
+
+        return _mapper.Map<IEnumerable<ResumeDTO>>(resumes);
     }
 }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using AutoMapper;
 using IngBackendApi.Enum;
 using IngBackendApi.Exceptions;
+using IngBackendApi.Interfaces.Models;
 using IngBackendApi.Interfaces.Repository;
 using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Interfaces.UnitOfWork;
@@ -54,7 +55,10 @@ public class AIService(
             { ["教育"], null },
             { ["聯絡"], null }
         };
-
+    private readonly IRepository<Resume, Guid> _resumeRepository = unitOfWork.Repository<
+        Resume,
+        Guid
+    >();
     private readonly IRepository<User, Guid> _userRepository = unitOfWork.Repository<User, Guid>();
     private readonly IRepository<AreaType, int> _areaTypeRepository = unitOfWork.Repository<
         AreaType,
@@ -62,37 +66,56 @@ public class AIService(
     >();
     private readonly IMapper _mapper = mapper;
 
-    public async Task<string[]> GetKeywordsByAIAsync(Guid recruitmentId)
+    public async Task<string[]> GetKeywordsByAIAsync(Guid id, AreaGenType type)
     {
         var areaArray =
-            await _recruitmentRepository
-                .GetAll(r => r.Id == recruitmentId)
-                .AsNoTracking()
-                .Include(r => r.Areas)
-                .ThenInclude(a => a.ListLayout)
-                .Include(r => r.Areas)
-                .ThenInclude(a => a.ImageTextLayout)
-                .Include(r => r.Areas)
-                .ThenInclude(a => a.TextLayout)
-                .Include(r => r.Areas)
-                .ThenInclude(a => a.KeyValueListLayout)
-                .SelectMany(a => a.Areas)
-                .ToArrayAsync() ?? throw new NotFoundException("Recruitment not found");
+            type == AreaGenType.Recruitment
+                ? await _recruitmentRepository
+                    .GetAll(r => r.Id == id)
+                    .AsNoTracking()
+                    .Include(r => r.Areas)
+                    .ThenInclude(a => a.ListLayout)
+                    .Include(r => r.Areas)
+                    .ThenInclude(a => a.ImageTextLayout)
+                    .Include(r => r.Areas)
+                    .ThenInclude(a => a.TextLayout)
+                    .Include(r => r.Areas)
+                    .ThenInclude(a => a.KeyValueListLayout)
+                    .SelectMany(a => a.Areas)
+                    .ToArrayAsync() ?? throw new NotFoundException("Recruitment not found")
+                : await _resumeRepository
+                    .GetAll(r => r.Id == id)
+                    .AsNoTracking()
+                    .Include(r => r.Areas)
+                    .ThenInclude(a => a.ListLayout)
+                    .Include(r => r.Areas)
+                    .ThenInclude(a => a.ImageTextLayout)
+                    .Include(r => r.Areas)
+                    .ThenInclude(a => a.TextLayout)
+                    .Include(r => r.Areas)
+                    .ThenInclude(a => a.KeyValueListLayout)
+                    .SelectMany(a => a.Areas)
+                    .ToArrayAsync() ?? throw new NotFoundException("Resume not found");
 
         var content = string.Join("\n", areaArray.Select(a => a.ToString()));
         return await _aiHttpClient.PostKeyExtractionAsync(content);
     }
 
-    public async Task SetKeywordsAsync(string[] keywords, Guid recruitmentId)
+    public async Task SetKeywordsAsync(string[] keywords, Guid id, AreaGenType type)
     {
-        var recruitment =
-            await _recruitmentRepository
-                .GetAll(r => r.Id == recruitmentId)
-                .Include(r => r.Keywords)
-                .FirstOrDefaultAsync() ?? throw new NotFoundException("Recruitment not found");
+        IKeywordable entity =
+            type == AreaGenType.Recruitment
+                ? await _recruitmentRepository
+                    .GetAll(r => r.Id == id)
+                    .Include(r => r.Keywords)
+                    .FirstOrDefaultAsync() ?? throw new NotFoundException("Recruitment not found")
+                : await _resumeRepository
+                    .GetAll(r => r.Id == id)
+                    .Include(r => r.Keywords)
+                    .FirstOrDefaultAsync() ?? throw new NotFoundException("Resume not found");
 
         // Delete old keywords
-        recruitment.Keywords.Clear();
+        entity.Keywords.Clear();
 
         // Add new keywords
         foreach (var keyword in keywords)
@@ -100,14 +123,27 @@ public class AIService(
             var keywordEntity = await _keywordRepository
                 .GetAll(a => a.Id == keyword)
                 .Include(a => a.Recruitments)
+                .Include(a => a.Resumes)
                 .FirstOrDefaultAsync();
+
             if (keywordEntity != null)
             {
-                keywordEntity.Recruitments.Add(recruitment);
-                return;
+                if (type == AreaGenType.Recruitment)
+                {
+                    keywordEntity.Recruitments.Add((Recruitment)entity);
+                }
+                else if (type == AreaGenType.Resume)
+                {
+                    keywordEntity.Resumes.Add((Resume)entity);
+                }
+                await _unitOfWork.SaveChangesAsync();
+                continue;
             }
+
             await _keywordRepository.AddAsync(
-                new KeywordRecord { Id = keyword, Recruitments = [recruitment] }
+                type == AreaGenType.Resume
+                    ? new KeywordRecord { Id = keyword, Recruitments = [(Recruitment)entity] }
+                    : new KeywordRecord { Id = keyword, Resumes = [(Resume)entity] }
             );
         }
 

@@ -4,18 +4,27 @@ using AutoMapper;
 using IngBackendApi.Application.Interfaces.Service;
 using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Repository;
+using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Interfaces.UnitOfWork;
 using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 
-public class ResumeService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository)
-    : Service<Resume, ResumeDTO, Guid>(unitOfWork, mapper),
-        IResumeService
+public class ResumeService(
+    IUnitOfWork unitOfWork,
+    IMapper mapper,
+    IRepositoryWrapper repository,
+    IBackgroundTaskService backgroundTaskService
+) : Service<Resume, ResumeDTO, Guid>(unitOfWork, mapper), IResumeService
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IMapper _mapper = mapper;
     private readonly IRepositoryWrapper _repository = repository;
+    private readonly IBackgroundTaskService _backgroundTaskService = backgroundTaskService;
+    private readonly IRepository<Resume, Guid> _resumeRepository = unitOfWork.Repository<
+        Resume,
+        Guid
+    >();
 
     public async Task<List<ResumeDTO>> GetUserResumesAsync(Guid userId)
     {
@@ -114,6 +123,26 @@ public class ResumeService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWr
         }
 
         return _mapper.Map<ResumeDTO>(resume);
+    }
+
+    public async Task<IEnumerable<RecruitmentDTO>> SearchRelativeRecruitmentAsync(Guid resumeId)
+    {
+        // TODO: Add page search
+        var resume =
+            await _resumeRepository
+                .GetAll(r => r.Id == resumeId)
+                .Include(r => r.Keywords)
+                .ThenInclude(k => k.Recruitments)
+                .AsNoTracking()
+                .SingleOrDefaultAsync() ?? throw new NotFoundException("Resume not found");
+
+        var recruitments = resume
+            .Keywords.SelectMany(k => k.Recruitments)
+            .Where(r => r.Enable)
+            .GroupBy(r => r.Id)
+            .OrderByDescending(g => g.Count())
+            .Select(g => g.First());
+        return _mapper.Map<IEnumerable<RecruitmentDTO>>(recruitments);
     }
 
     /// <summary>
