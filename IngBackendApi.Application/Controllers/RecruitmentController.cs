@@ -160,7 +160,7 @@ public class RecruitmentController(
             await _backgroundTaskService.ScheduleTaskAsync(
                 $"{resumeId}_keyword",
                 () => AnalyzeKeywordAsync(resumeId, AreaGenType.Resume),
-                TimeSpan.FromMinutes(5)
+                TimeSpan.FromMinutes(0)
             );
         }
 

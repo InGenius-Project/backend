@@ -91,7 +91,7 @@ public class ResumeController(
         await _backgroundTaskService.ScheduleTaskAsync(
             $"{resumeId}_keyword",
             () => AnalyzeKeywordAsync(resumeId, AreaGenType.Resume),
-            TimeSpan.FromMinutes(5)
+            TimeSpan.FromMinutes(0)
         );
 
         return new ApiResponse("請求已接受");
