@@ -38,12 +38,12 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
                 .FirstOrDefaultAsync() ?? throw new NotFoundException("Group not found");
         if (chatGroup.Users.Any(u => u.Id == userId))
         {
-            throw new BadRequestException("User already in group");
+            throw new BadRequestException("使用者已經在群組中");
         }
 
         var user =
             await _userRepository.GetByIdAsync(userId)
-            ?? throw new NotFoundException("User not found");
+            ?? throw new UserNotFoundException()
 
         if (!chatGroup.Private)
         {
@@ -59,7 +59,7 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
             await _unitOfWork.SaveChangesAsync();
             return new ApiResponse("ok");
         }
-        throw new ForbiddenException("User not in invite list");
+        throw new ForbiddenException("使用者沒有權限加入群組");
     }
 
     [HttpGet("groups/invite/{groupId}/{userId}")]
@@ -72,25 +72,25 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
                 .Include(g => g.Owner)
                 .Include(g => g.InvitedUsers)
                 .Include(g => g.Users)
-                .FirstOrDefaultAsync() ?? throw new NotFoundException("Group not found");
+                .FirstOrDefaultAsync() ?? throw new ChatGroupNotFoundException();
 
         var inviteUser =
             await _userRepository.GetByIdAsync(userId)
-            ?? throw new NotFoundException("User not found");
+            ?? throw new UserNotFoundException();
 
         if (!group.Users.Any(u => u.Id == currentUserId))
         {
-            throw new ForbiddenException("User no invite permission.");
+            throw new ForbiddenException("使用者不在群組中");
         }
 
         if (group.Users.Any(u => u.Id == userId))
         {
-            throw new BadRequestException("User already in group.");
+            throw new BadRequestException("使用者已經在群組中");
         }
 
         if (group.InvitedUsers.Any(u => u.Id == userId))
         {
-            throw new BadRequestException("User already in invite list.");
+            throw new BadRequestException("使用者已經被邀請過");
         }
 
         group.InvitedUsers.Add(inviteUser);
@@ -111,7 +111,7 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
                 .Include(g => g.ChatRooms)
                 .ThenInclude(c => c.Users)
                 .ThenInclude(u => u.Avatar)
-                .FirstOrDefaultAsync() ?? throw new NotFoundException("User not found");
+                .FirstOrDefaultAsync() ?? throw new UserNotFoundException();
 
         return _mapper.Map<IEnumerable<ChatGroupInfoDTO>>(user.ChatRooms);
     }
@@ -131,7 +131,7 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
                 .Include(g => g.Messages)
                 .ThenInclude(m => m.Sender.Avatar)
                 .AsNoTracking()
-                .FirstOrDefaultAsync() ?? throw new NotFoundException("Group not found");
+                .FirstOrDefaultAsync() ?? throw new ChatGroupNotFoundException();
 
         if (!IsUserInGroup(userId, groupId) && !IsUserInInviteList(userId, groupId) && chatGroup.Private)
         {
@@ -154,7 +154,7 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
                 .GetAll(g => g.Id == groupId)
                 .Include(u => u.Users)
                 .Include(u => u.Owner)
-                .FirstOrDefaultAsync() ?? throw new NotFoundException("group not found");
+                .FirstOrDefaultAsync() ?? throw new ChatGroupNotFoundException();
 
         if (group.Owner.Id != currentUserId)
         {
@@ -194,7 +194,7 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
                 .Include(g => g.InvitedUsers)
                 .ThenInclude(u => u.Avatar)
                 .AsNoTracking()
-                .FirstOrDefaultAsync() ?? throw new NotFoundException("group not found");
+                .FirstOrDefaultAsync() ?? throw new ChatGroupNotFoundException();
 
         if (!group.Users.Any(u => u.Id == userId))
         {
@@ -216,7 +216,7 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
                 .GetAll(g => g.Id == groupId)
                 .Include(u => u.InvitedUsers)
                 .Include(u => u.Users)
-                .FirstOrDefaultAsync() ?? throw new NotFoundException("group not found");
+                .FirstOrDefaultAsync() ?? throw new ChatGroupNotFoundException();
 
         if (!group.Users.Any(u => u.Id == currentUserId))
         {
@@ -225,12 +225,12 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
 
         if (!group.InvitedUsers.Any(u => u.Id == userId))
         {
-            throw new BadRequestException("User has not been invited");
+            throw new BadRequestException("使用者未被邀請");
         }
 
         var invitedUser =
             await _userRepository.GetByIdAsync(userId)
-            ?? throw new NotFoundException("The user invitation to deleted not found");
+            ?? throw new ChatGroupInvitationNotFoundException();
 
         group.InvitedUsers.Remove(invitedUser);
         await _unitOfWork.SaveChangesAsync();
@@ -262,7 +262,7 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
                 .GetAll(g => g.Id == groupId)
                 .Include(g => g.Users)
                 .AsNoTracking()
-                .FirstOrDefault() ?? throw new NotFoundException("Group not found");
+                .FirstOrDefault() ?? throw new ChatGroupNotFoundException();
         return chatGroup.Users.Any(u => u.Id == userId);
     }
 
@@ -273,7 +273,7 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
                 .GetAll(g => g.Id == groupId)
                 .Include(g => g.InvitedUsers)
                 .AsNoTracking()
-                .FirstOrDefault() ?? throw new NotFoundException("Group not found");
+                .FirstOrDefault() ?? throw new ChatGroupNotFoundException();
         return chatGroup.InvitedUsers.Any(u => u.Id == userId);
     }
 }
