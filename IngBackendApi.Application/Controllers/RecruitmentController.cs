@@ -49,21 +49,27 @@ public class RecruitmentController(
         return recruitmentsDTO;
     }
 
+    [AllowAnonymous]
     [HttpGet("{recruitmentId}")]
     [ProducesResponseType(typeof(RecruitmentDTO), 200)]
     public async Task<RecruitmentDTO?> GetRecruitmentById(Guid recruitmentId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.CheckAndGetUserAsync(userId);
 
         var recruitment = await _recruitmentService.GetRecruitmentByIdIncludeAllAsync(
             recruitmentId
         );
 
         // Attach resumes to recruitment if user is the publisher
-        if (recruitment.PublisherId == userId && user.Role == UserRole.Company)
+        if (userId != Guid.Empty && recruitment.PublisherId == userId)
         {
-            recruitment.Resumes = await _resumeService.GetRecruitmentResumesAsync(recruitmentId);
+            var user = await _userService.CheckAndGetUserAsync(userId);
+            if (user.Role == UserRole.Company)
+            {
+                recruitment.Resumes = await _resumeService.GetRecruitmentResumesAsync(
+                    recruitmentId
+                );
+            }
         }
 
         return recruitment;

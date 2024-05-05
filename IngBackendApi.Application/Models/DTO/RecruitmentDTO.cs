@@ -1,7 +1,6 @@
 namespace IngBackendApi.Models.DTO;
 
 using System.ComponentModel.DataAnnotations;
-using IngBackendApi.Models.DBEntity;
 
 public class RecruitmentDTO
 {
@@ -13,7 +12,6 @@ public class RecruitmentDTO
     public OwnerUserDTO Publisher { get; set; }
     public Guid PublisherId { get; set; }
     public bool IsUserFav { get; set; }
-    public List<KeywordRecord> Keywords { get; set; }
 }
 
 public class RecruitmentPostDTO
