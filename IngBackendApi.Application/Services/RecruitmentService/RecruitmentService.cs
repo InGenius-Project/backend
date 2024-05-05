@@ -207,4 +207,26 @@ public class RecruitmentService(
 
         return _mapper.Map<IEnumerable<ResumeDTO>>(resumes);
     }
+
+    public async Task<IEnumerable<Guid>> GetNotAnalyzedApplyedResumeIdAsync(Guid recruitmentId)
+    {
+        var recruitment =
+            await _recruitmentRepository
+                .GetAll(r => r.Id == recruitmentId)
+                .AsNoTracking()
+                .Include(r => r.Resumes)
+                .ThenInclude(r => r.Keywords)
+                .SingleOrDefaultAsync() ?? throw new NotFoundException("Recruitment not found");
+        return recruitment.Resumes.Where(r => r.Keywords.Count > 0).Select(r => r.Id);
+    }
+
+    public async Task<bool> CheckRecruitmentOwnershipAsync(Guid userId, Guid recruitmentId)
+    {
+        var recruitment =
+            await _recruitmentRepository
+                .GetAll(r => r.Id == recruitmentId)
+                .AsNoTracking()
+                .SingleOrDefaultAsync() ?? throw new NotFoundException("Recruitment not found");
+        return recruitment.PublisherId == userId;
+    }
 }

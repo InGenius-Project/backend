@@ -82,6 +82,10 @@ public class ResumeController(
         {
             throw new UnauthorizedException("User have no access to premium feature.");
         }
+        if (!await _resumeService.CheckResumeOwnership(userId, resumeId))
+        {
+            throw new UnauthorizedException("Not resume owner.");
+        }
 
         // Analyze Keywords & safety report
         await _backgroundTaskService.ScheduleTaskAsync(
@@ -94,12 +98,16 @@ public class ResumeController(
     }
 
     [HttpGet("{resumeId}/relative")]
-    public async Task<IEnumerable<RecruitmentDTO>> SearchRecruitment(Guid resumeId)
+    public async Task<IEnumerable<RecruitmentDTO>> SearchRelativeRecruitment(Guid resumeId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         if (!await _userService.CheckUserIsPremium(userId))
         {
             throw new UnauthorizedException("User have no access to premium feature.");
+        }
+        if (!await _resumeService.CheckResumeOwnership(userId, resumeId))
+        {
+            throw new UnauthorizedException("Not resume owner.");
         }
 
         return await _resumeService.SearchRelativeRecruitmentAsync(resumeId);

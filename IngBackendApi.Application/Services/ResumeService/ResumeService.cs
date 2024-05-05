@@ -145,6 +145,16 @@ public class ResumeService(
         return _mapper.Map<IEnumerable<RecruitmentDTO>>(recruitments);
     }
 
+    public async Task<bool> CheckResumeOwnership(Guid userId, Guid resumeId)
+    {
+        var resume =
+            await _resumeRepository
+                .GetAll(r => r.Id == resumeId)
+                .AsNoTracking()
+                .SingleOrDefaultAsync() ?? throw new NotFoundException("resume not found");
+        return resume.UserId == userId;
+    }
+
     /// <summary>
     /// Checks if the provided user is from a company related to the resume.
     /// </summary>

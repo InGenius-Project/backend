@@ -21,19 +21,19 @@ using Microsoft.AspNetCore.SignalR;
 [ApiController]
 public class RecruitmentController(
     IMapper mapper,
-    IAreaService areaService,
     IUserService userService,
     IRecruitmentService recruitmentService,
     IResumeService resumeService,
-    IAIService aiService
+    IAIService aiService,
+    IBackgroundTaskService backgroundTaskService
 ) : BaseController
 {
     private readonly IMapper _mapper = mapper;
     private readonly IUserService _userService = userService;
     private readonly IRecruitmentService _recruitmentService = recruitmentService;
-    private readonly IAreaService _areaService = areaService;
     private readonly IAIService _aiService = aiService;
     private readonly IResumeService _resumeService = resumeService;
+    private readonly IBackgroundTaskService _backgroundTaskService = backgroundTaskService;
 
     [HttpGet]
     [ProducesResponseType(typeof(List<RecruitmentDTO>), 200)]
@@ -134,6 +134,43 @@ public class RecruitmentController(
         {
             throw new UnauthorizedException("User have no access to premium feature.");
         }
+        if (!await _recruitmentService.CheckRecruitmentOwnershipAsync(userId, recruitmentId))
+        {
+            throw new UnauthorizedException("Not recruitment owner");
+        }
         return await _recruitmentService.SearchRelativeResumeAsync(recruitmentId, searchAll);
+    }
+
+    [HttpGet("{recruitmentId}/apply/resume/analyze")]
+    public async Task<ApiResponse> AnalyzeApplyedResume(Guid recruitmentId)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        if (!await _userService.CheckUserIsPremium(userId))
+        {
+            throw new UnauthorizedException("User have no access to premium feature.");
+        }
+        if (!await _recruitmentService.CheckRecruitmentOwnershipAsync(userId, recruitmentId))
+        {
+            throw new UnauthorizedException("Not recruitment owner");
+        }
+        var resumeIds = await _recruitmentService.GetNotAnalyzedApplyedResumeIdAsync(recruitmentId);
+        foreach (var resumeId in resumeIds)
+        {
+            // Analyze Keywords & safety report
+            await _backgroundTaskService.ScheduleTaskAsync(
+                $"{resumeId}_keyword",
+                () => AnalyzeKeywordAsync(resumeId, AreaGenType.Resume),
+                TimeSpan.FromMinutes(5)
+            );
+        }
+
+        return new ApiResponse("請求已接受");
+    }
+
+    [NonAction]
+    public async Task AnalyzeKeywordAsync(Guid targetId, AreaGenType type)
+    {
+        var result = await _aiService.GetKeywordsByAIAsync(targetId, type);
+        await _aiService.SetKeywordsAsync(result, targetId, type);
     }
 }

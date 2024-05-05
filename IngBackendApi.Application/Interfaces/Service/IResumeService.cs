@@ -12,4 +12,5 @@ public interface IResumeService : IService<Resume, ResumeDTO, Guid>
     Task<ResumeDTO> AddOrUpdateAsync(ResumeDTO resumeDTO, Guid userId);
     Task<ResumeDTO> CheckAndGetResumeAsync(Guid id, UserInfoDTO user);
     Task<IEnumerable<RecruitmentDTO>> SearchRelativeRecruitmentAsync(Guid resumeId);
+    Task<bool> CheckResumeOwnership(Guid userId, Guid resumeId);
 }

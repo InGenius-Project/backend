@@ -20,4 +20,6 @@ public interface IRecruitmentService : IService<Recruitment, RecruitmentDTO, Gui
         Guid recruitmentId,
         bool searchAll = false
     );
+    Task<bool> CheckRecruitmentOwnershipAsync(Guid userId, Guid recruitmentId);
+    Task<IEnumerable<Guid>> GetNotAnalyzedApplyedResumeIdAsync(Guid recruitmentId);
 }
