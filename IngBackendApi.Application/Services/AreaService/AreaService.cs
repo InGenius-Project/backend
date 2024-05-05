@@ -92,13 +92,14 @@ public class AreaService(
         }
     }
 
-    public async Task<List<AreaTypeDTO>> GetAllAreaTypes(UserRole[] userRoles)
+    public async Task<IEnumerable<AreaTypeDTO>> GetAllAreaTypesAsync(string? query)
     {
-        var areaTypes = _areaTypeRepository
-            .GetAll()
-            .Where(a => a.UserRole.Any(ur => userRoles.Contains(ur)));
-        return await _mapper.ProjectTo<AreaTypeDTO>(areaTypes).ToListAsync();
-        ;
+        IQueryable<AreaType> areaTypes = _areaTypeRepository.GetAll().Include(a => a.ListTagTypes);
+        if (query != null)
+        {
+            areaTypes = areaTypes.Where(a => a.Name.Contains(query) || query.Contains(a.Name));
+        }
+        return _mapper.Map<IEnumerable<AreaTypeDTO>>(await areaTypes.ToArrayAsync());
     }
 
     public async Task UpdateLayoutAsync(Guid areaId, ListLayoutDTO listLayoutDTO)
@@ -322,15 +323,16 @@ public class AreaService(
     }
 
     public async Task<IEnumerable<AreaDTO>> GetRecruitmentAreaByAreaTypeIdAsync(
-        int areaTypeId, Guid recruitmentId
+        int areaTypeId,
+        Guid recruitmentId
     )
     {
-        var areas = await _repository.Area
-            .GetAll()
+        var areas = await _repository
+            .Area.GetAll()
             .Where(a => a.AreaTypeId == areaTypeId && a.RecruitmentId == recruitmentId)
             .Include(a => a.ListLayout.Items)
             .Include(a => a.KeyValueListLayout.Items)
-                .ThenInclude(i => i.Key)
+            .ThenInclude(i => i.Key)
             .Include(a => a.ImageTextLayout.Image)
             .Include(a => a.TextLayout)
             .ToListAsync();

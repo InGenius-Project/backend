@@ -316,14 +316,14 @@ public class AreaController(
         );
     }
 
-    [HttpGet("areatype/{areaTypeId}")]
+    [HttpGet("areaType/{areaTypeId}")]
     public async Task<IEnumerable<AreaDTO>> GetUserAreaByAreaType(int areaTypeId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         return await _areaService.GetUserAreaByAreaTypeIdAsync(userId, areaTypeId);
     }
 
-    [HttpGet("areatype/{areaTypeId}/{recruitmentId}")]
+    [HttpGet("areaType/{areaTypeId}/{recruitmentId}")]
     public async Task<IEnumerable<AreaDTO>> GetRecruitmentAreaByAreaType(
         int areaTypeId,
         Guid recruitmentId
@@ -332,6 +332,13 @@ public class AreaController(
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
         await _userService.CheckAndGetUserAsync(userId);
         return await _areaService.GetRecruitmentAreaByAreaTypeIdAsync(areaTypeId, recruitmentId);
+    }
+
+    [HttpGet("areaType/search")]
+    public async Task<IEnumerable<AreaTypeDTO>> SearchAreaTypes(string query)
+    {
+        var areaTypes = await _areaService.GetAllAreaTypesAsync(query);
+        return areaTypes;
     }
 
     [NonAction]
