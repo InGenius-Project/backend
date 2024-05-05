@@ -120,10 +120,7 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
     public async Task<ChatGroupDTO> GetChatGroup(Guid groupId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        if (!IsUserInGroup(userId, groupId) && !IsUserInInviteList(userId, groupId))
-        {
-            throw new ForbiddenException("User not in group or invite list");
-        }
+
         var chatGroup =
             await _chatGroupRepository
                 .GetAll(g => g.Id == groupId)
@@ -135,6 +132,11 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
                 .ThenInclude(m => m.Sender.Avatar)
                 .AsNoTracking()
                 .FirstOrDefaultAsync() ?? throw new NotFoundException("Group not found");
+
+        if (!IsUserInGroup(userId, groupId) && !IsUserInInviteList(userId, groupId) && chatGroup.Private)
+        {
+            throw new ForbiddenException("您沒有權限訪問此群組");
+        }
 
         return _mapper.Map<ChatGroupDTO>(chatGroup);
     }
