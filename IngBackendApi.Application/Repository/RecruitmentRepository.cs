@@ -15,7 +15,7 @@ public class RecruitmentRepository(IngDbContext context)
         _context
             .Recruitment.Include(r => r.Publisher.Avatar)
             .Include(r => r.Areas)
-            .ThenInclude(a => a.LayoutType)
+            .ThenInclude(a => a.AreaType)
             .Include(r => r.Areas)
             .ThenInclude(a => a.TextLayout)
             .Include(r => r.Areas)

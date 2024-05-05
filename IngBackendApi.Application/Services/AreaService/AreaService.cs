@@ -120,6 +120,8 @@ public class AreaService(
             area.ListLayoutId = area.ListLayout.Id;
             area.ListLayout.AreaId = area.Id;
         }
+        area.ListLayout.AreaId = area.Id;
+        area.LayoutType = LayoutType.List;
         await _repository.Area.SaveAsync();
     }
 
@@ -140,6 +142,7 @@ public class AreaService(
             _mapper.Map(textLayoutDTO, area.TextLayout);
             area.TextLayoutId = area.TextLayout.Id;
         }
+        area.LayoutType = LayoutType.Text;
         area.TextLayout.AreaId = area.Id;
         await _repository.Area.SaveAsync();
     }
@@ -203,6 +206,7 @@ public class AreaService(
             area.ImageTextLayoutId = area.ImageTextLayout.Id;
         }
         area.ImageTextLayout.AreaId = area.Id;
+        area.LayoutType = LayoutType.ImageText;
         await _repository.Area.SaveAsync();
     }
 
@@ -232,6 +236,7 @@ public class AreaService(
             area.KeyValueListLayout.AreaId = area.Id;
         }
         area.KeyValueListLayout.AreaId = areaId;
+        area.LayoutType = LayoutType.KeyValueList;
         await _repository.Area.SaveAsync();
     }
 
