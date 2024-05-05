@@ -141,7 +141,7 @@ public class AIService(
             }
 
             await _keywordRepository.AddAsync(
-                type == AreaGenType.Resume
+                type == AreaGenType.Recruitment
                     ? new KeywordRecord { Id = keyword, Recruitments = [(Recruitment)entity] }
                     : new KeywordRecord { Id = keyword, Resumes = [(Resume)entity] }
             );

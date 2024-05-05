@@ -40,6 +40,7 @@ public class AiHttpClient : IDisposable
     public async Task<string[]> PostKeyExtractionAsync(string content)
     {
         var requestBody = new Dictionary<string, string>() { ["content"] = content };
+
         var body = ParseJsonContent(requestBody);
         var response = await _client.PostAsync(_setting.Api.KeywordExtraction, body);
         var stringArray = await response.Content.ReadFromJsonAsync<string[]>();
