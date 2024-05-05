@@ -125,7 +125,12 @@ public class RecruitmentService(
             result.ForEach(r => r.IsUserFav = favRecruitmentIds.Any(id => id == r.Id));
         }
 
-        result.ForEach(r => r.Areas = []);
+        result.ForEach(r =>
+        {
+            r.Areas = [];
+            r.Keywords = r.Keywords.Take(5);
+        });
+
         return _mapper.Map<RecruitmentSearchResultDTO>(
             new RecruitmentSearchResultDTO
             {
