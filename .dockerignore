@@ -24,6 +24,7 @@
 LICENSE
 README.md
 IngBackendApi.UnitTest/
+Migrations
 !**/.gitignore
 !.git/HEAD
 !.git/config
