@@ -26,7 +26,7 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
 
     private readonly IRepository<User, Guid> _userRepository = unitOfWork.Repository<User, Guid>();
 
-    [HttpGet("groups/join/{groupId}")]
+    [HttpPost("groups/join/{groupId}")]
     public async Task<ApiResponse> JoinGroup(Guid groupId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
@@ -175,6 +175,7 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
             await _userRepository
                 .GetAll(u => u.Id == userId)
                 .Include(u => u.InvitedChatRooms)
+                    .ThenInclude(c => c.Owner)
                 .AsNoTracking()
                 .FirstOrDefaultAsync() ?? throw new UserNotFoundException();
 
@@ -191,6 +192,7 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
             await _chatGroupRepository
                 .GetAll(g => g.Id == groupId)
                 .Include(u => u.Users)
+                .Include(u => u.Owner)
                 .Include(g => g.InvitedUsers)
                 .ThenInclude(u => u.Avatar)
                 .AsNoTracking()
@@ -218,7 +220,7 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
                 .Include(u => u.Users)
                 .FirstOrDefaultAsync() ?? throw new ChatGroupNotFoundException();
 
-        if (!group.Users.Any(u => u.Id == currentUserId))
+        if (!group.Users.Any(u => u.Id == currentUserId) && !group.InvitedUsers.Any(u => u.Id == currentUserId))
         {
             throw new ForbiddenException();
         }
