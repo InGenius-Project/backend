@@ -20,6 +20,7 @@ public class UserRepository : Repository<User, Guid>, IUserRepository
     {
         return _context
             .User.Where(u => u.Id == id)
+            .Include(u => u.FavoriteRecruitments)
             .Include(u => u.Avatar)
             .Include(u => u.Recruitments)
             .ThenInclude(r => r.Areas)

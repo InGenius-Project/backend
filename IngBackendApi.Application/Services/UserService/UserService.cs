@@ -297,7 +297,11 @@ public class UserService(
             .Include(u => u.FavoriteRecruitments)
             .SelectMany(u => u.FavoriteRecruitments.Select(fr => fr.Id));
         result.ForEach(r => r.IsUserFav = favRecruitmentIds.Any(id => id == r.Id));
-
+        result.ForEach(r =>
+        {
+            r.Areas = [];
+            r.Keywords = r.Keywords.Take(5);
+        });
         return result;
     }
 
@@ -308,10 +312,13 @@ public class UserService(
                 .User.GetAll()
                 .Include(a => a.FavoriteRecruitments)
                 .FirstOrDefaultAsync(u => u.Id == userId) ?? throw new UserNotFoundException();
+        var exsitIds = user.Recruitments?.Select(r => r.Id).ToArray() ?? [];
+        recruitmentIds.RemoveAll(exsitIds.Contains);
+
         var recruitments =
-            _repository.Recruitment.GetAll(a => recruitmentIds.Contains(a.Id))
+            await _repository.Recruitment.GetAll(a => recruitmentIds.Contains(a.Id)).ToListAsync()
             ?? throw new NotFoundException($"No Recruitment was found");
-        user.FavoriteRecruitments.ToList().AddRange(recruitments);
+        recruitments.ForEach(user.FavoriteRecruitments.Add);
         await _unitOfWork.SaveChangesAsync();
     }
 

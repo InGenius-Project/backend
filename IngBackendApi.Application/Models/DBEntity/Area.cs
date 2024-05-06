@@ -46,22 +46,22 @@ public class Area : BaseEntity, IEntity<Guid>
     public Guid? TextLayoutId { get; set; }
 
     [JsonIgnore]
-    public virtual TextLayout? TextLayout { get; set; }
+    public TextLayout? TextLayout { get; set; }
 
     public Guid? ImageTextLayoutId { get; set; }
 
     [JsonIgnore]
-    public virtual ImageTextLayout? ImageTextLayout { get; set; }
+    public ImageTextLayout? ImageTextLayout { get; set; }
 
     public Guid? ListLayoutId { get; set; }
 
     [JsonIgnore]
-    public virtual ListLayout? ListLayout { get; set; }
+    public ListLayout? ListLayout { get; set; }
 
     public Guid? KeyValueListLayoutId { get; set; }
 
     [JsonIgnore]
-    public virtual KeyValueListLayout? KeyValueListLayout { get; set; }
+    public KeyValueListLayout? KeyValueListLayout { get; set; }
 
     public void ClearLayoutsExclude<TProperty>(Expression<Func<Area, TProperty>> propertyToRemain)
     {
