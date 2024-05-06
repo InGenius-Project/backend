@@ -300,8 +300,6 @@ public class AIService(
         List<AreaDTO> userInfoAreaList
     )
     {
-        // areaDTOs.RemoveAll(a => _generatedAreaFilterList.Any(f => a.Title.Contains(f)));
-
         // Determine AreaType
         foreach (var areaDTO in areaDTOs)
         {
@@ -313,6 +311,10 @@ public class AIService(
                     areaDTO.TextLayout?.Content ?? ""
                 );
                 areaDTO.TextLayout = null;
+            }
+            else
+            {
+                areaDTO.LayoutType = LayoutType.Text;
             }
         }
 
