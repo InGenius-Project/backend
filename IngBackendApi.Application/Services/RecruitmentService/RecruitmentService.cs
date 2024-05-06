@@ -89,33 +89,39 @@ public class RecruitmentService(
         var orderBy = searchDTO.OrderBy == "asc" ? "asc" : "desc";
         var keywords = searchDTO.Query?.Split(" ").ToArray() ?? [];
 
-        var query = _keywordRecordRepository
-            .GetAll(k => keywords.Contains(k.Id))
+        var query = _keywordRecordRepository.GetAll();
+
+        if (keywords.Length != 0)
+        {
+            query = query.Where(k => keywords.Contains(k.Id));
+        }
+        var recruitmentQuery = query
             .Include(k => k.Recruitments)
+            .ThenInclude(r => r.Resumes)
             .SelectMany(k => k.Recruitments)
             .Where(r => r.Enable)
             .Distinct();
 
         // count total page size
-        var total = await query.Select(r => r.Id).CountAsync();
+        var total = await recruitmentQuery.Select(r => r.Id).CountAsync();
         var maxPage = (int)Math.Ceiling((double)total / searchDTO.PageSize);
         searchDTO.Page = int.Max(maxPage, searchDTO.Page);
 
         if (orderBy == "asc")
         {
-            query = query.OrderBy(r => r.CreatedAt);
+            recruitmentQuery = recruitmentQuery.OrderBy(r => r.CreatedAt);
         }
         else
         {
-            query = query.OrderByDescending(r => r.CreatedAt);
+            recruitmentQuery = recruitmentQuery.OrderByDescending(r => r.CreatedAt);
         }
         var skip = searchDTO.PageSize * (searchDTO.Page - 1);
 
         // get recruitment with publisher and areas
-        query = query.Include(r => r.Publisher).Include(r => r.Areas);
-        query = query.Skip(skip).Take(searchDTO.PageSize);
+        recruitmentQuery = recruitmentQuery.Include(r => r.Publisher).Include(r => r.Areas);
+        recruitmentQuery = recruitmentQuery.Skip(skip).Take(searchDTO.PageSize);
 
-        var result = await _mapper.ProjectTo<RecruitmentDTO>(query).ToListAsync();
+        var result = await _mapper.ProjectTo<RecruitmentDTO>(recruitmentQuery).ToListAsync();
         if (userId != null)
         {
             var favRecruitmentIds = _repository

@@ -122,7 +122,16 @@ public class ResumeService(
             throw new ForbiddenException();
         }
 
-        return _mapper.Map<ResumeDTO>(resume);
+        var resumeDTO = _mapper.Map<ResumeDTO>(resume);
+        resumeDTO
+            .Recruitments.ToList()
+            .ForEach(r =>
+            {
+                r.Areas = [];
+                r.Keywords = r.Keywords.Take(5);
+            });
+
+        return resumeDTO;
     }
 
     public async Task<IEnumerable<RecruitmentDTO>> SearchRelativeRecruitmentAsync(Guid resumeId)

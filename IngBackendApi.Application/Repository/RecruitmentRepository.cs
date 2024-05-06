@@ -13,7 +13,8 @@ public class RecruitmentRepository(IngDbContext context)
 
     public IQueryable<Recruitment> GetIncludeAll() =>
         _context
-            .Recruitment.Include(r => r.Publisher.Avatar)
+            .Recruitment.Include(r => r.Resumes)
+            .Include(r => r.Publisher.Avatar)
             .Include(r => r.Areas)
             .ThenInclude(a => a.AreaType)
             .Include(r => r.Areas)

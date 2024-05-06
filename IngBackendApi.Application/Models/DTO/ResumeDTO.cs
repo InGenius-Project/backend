@@ -8,7 +8,9 @@ public class ResumeDTO
     public List<AreaDTO>? Areas { get; set; }
     public bool Visibility { get; set; }
     public required UserInfoDTO User { get; set; }
+    public IEnumerable<RecruitmentDTO> Recruitments { get; set; } = [];
 }
+
 public class ResumePostDTO
 {
     public Guid? Id { get; set; }
