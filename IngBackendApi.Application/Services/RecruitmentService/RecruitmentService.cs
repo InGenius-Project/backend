@@ -163,10 +163,10 @@ public class RecruitmentService(
                 .FirstOrDefaultAsync(r => r.Id == recruitmentId)
             ?? throw new RecruitmentNotFoundException(recruitmentId.ToString());
 
-        // if (recruitment.Resumes.Any(r => r.Id == resumeId))
-        // {
-        //     throw new BadRequestException("已經申請過此職缺");
-        // }
+        if (recruitment.Resumes.Any(r => r.Id == resumeId))
+        {
+            throw new BadRequestException("已經申請過此職缺");
+        }
 
         var resume =
             await _repository.Resume.GetAll().FirstOrDefaultAsync(r => r.Id == resumeId)
@@ -177,9 +177,6 @@ public class RecruitmentService(
         {
             throw new ForbiddenException();
         }
-
-        // WARNING: Remove This for testing
-        recruitment.Resumes = [];
 
         recruitment.Resumes.Add(resume);
 
