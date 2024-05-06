@@ -290,12 +290,13 @@ public class UserService(
             .Recruitment.GetIncludeAll()
             .Where(r => recruitmentIds.Contains(r.Id));
 
-        var result = await _mapper.ProjectTo<RecruitmentDTO>(query).ToListAsync();
+        var result = _mapper.Map<List<RecruitmentDTO>>(query);
 
         var favRecruitmentIds = _repository
             .User.GetAll(u => u.Id == userId)
             .Include(u => u.FavoriteRecruitments)
             .SelectMany(u => u.FavoriteRecruitments.Select(fr => fr.Id));
+
         result.ForEach(r => r.IsUserFav = favRecruitmentIds.Any(id => id == r.Id));
         result.ForEach(r =>
         {
@@ -312,8 +313,8 @@ public class UserService(
                 .User.GetAll()
                 .Include(a => a.FavoriteRecruitments)
                 .FirstOrDefaultAsync(u => u.Id == userId) ?? throw new UserNotFoundException();
-        var exsitIds = user.Recruitments?.Select(r => r.Id).ToArray() ?? [];
-        recruitmentIds.RemoveAll(exsitIds.Contains);
+        var existIds = user.Recruitments?.Select(r => r.Id).ToArray() ?? [];
+        recruitmentIds.RemoveAll(existIds.Contains);
 
         var recruitments =
             await _repository.Recruitment.GetAll(a => recruitmentIds.Contains(a.Id)).ToListAsync()
@@ -329,7 +330,10 @@ public class UserService(
                 .User.GetAll()
                 .Include(a => a.FavoriteRecruitments)
                 .FirstOrDefaultAsync(u => u.Id == userId) ?? throw new UserNotFoundException();
-        user.FavoriteRecruitments.ToList().RemoveAll(a => recruitmentIds.Contains(a.Id));
+
+        user.FavoriteRecruitments.Where(r => recruitmentIds.Contains(r.Id))
+            .ToList()
+            .ForEach(e => user.FavoriteRecruitments.Remove(e));
         await _unitOfWork.SaveChangesAsync();
     }
 
