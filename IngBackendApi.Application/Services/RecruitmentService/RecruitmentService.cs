@@ -204,11 +204,11 @@ public class RecruitmentService(
                 .ThenInclude(k => k.Resumes)
                 .ThenInclude(r => r.User.Avatar)
                 .SingleOrDefaultAsync() ?? throw new NotFoundException("Recruitment not found");
-        var query = recruitment.Keywords.SelectMany(k => k.Resumes);
+        var query = recruitment.Keywords.SelectMany(k => k.Resumes).Distinct();
 
         if (!searchAll)
         {
-            query = query.Where(recruitment.Resumes.Contains);
+            query = query.Where(r => recruitment.Resumes.Select(a => a.Id).Contains(r.Id));
         }
 
         var resumes = query
