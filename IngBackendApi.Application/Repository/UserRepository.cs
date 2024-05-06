@@ -32,6 +32,7 @@ public class UserRepository : Repository<User, Guid>, IUserRepository
             .ThenInclude(a => a.ImageTextLayout.Image)
             .Include(u => u.Areas)
             .ThenInclude(a => a.ListLayout.Items)
+            .ThenInclude(i => i.Type)
             .Include(u => u.Areas)
             .ThenInclude(a => a.KeyValueListLayout.Items)
             .ThenInclude(i => i.Key)

@@ -135,7 +135,7 @@ public class Area : BaseEntity, IEntity<Guid>
         {
             content.Append("");
         }
-        return $"{Title}: {content}";
+        return string.Format("{0}: {1}", Title, content.ToString());
     }
 }
 
