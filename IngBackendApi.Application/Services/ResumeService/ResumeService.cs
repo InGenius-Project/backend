@@ -178,6 +178,7 @@ public class ResumeService(
                 .GetAll(r => r.Id == resumeId)
                 .Include(r => r.Keywords)
                 .ThenInclude(k => k.Recruitments)
+                .ThenInclude(r => r.Publisher.Avatar)
                 .AsNoTracking()
                 .SingleOrDefaultAsync() ?? throw new NotFoundException("Resume not found");
 
@@ -187,6 +188,7 @@ public class ResumeService(
             .GroupBy(r => r.Id)
             .OrderByDescending(g => g.Count())
             .Select(g => g.First());
+
         return _mapper.Map<IEnumerable<RecruitmentDTO>>(recruitments);
     }
 

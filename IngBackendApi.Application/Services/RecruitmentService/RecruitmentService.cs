@@ -199,8 +199,10 @@ public class RecruitmentService(
                 .GetAll(r => r.Id == recruitmentId)
                 .AsNoTracking()
                 .Include(r => r.Resumes)
+                .ThenInclude(r => r.User.Avatar)
                 .Include(r => r.Keywords)
                 .ThenInclude(k => k.Resumes)
+                .ThenInclude(r => r.User.Avatar)
                 .SingleOrDefaultAsync() ?? throw new NotFoundException("Recruitment not found");
         var query = recruitment.Keywords.SelectMany(k => k.Resumes);
 
