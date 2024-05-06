@@ -36,7 +36,7 @@ public class ResumeService(
         return _mapper.Map<List<ResumeDTO>>(resumes);
     }
 
-    public async Task<ResumeDTO?> GetResumeByIdIncludeAllAsync(Guid resumeId)
+    public async Task<ResumeDTO?> GetResumeByIdIncludeAllAsync(Guid resumeId, Guid? userId)
     {
         var resume = await _repository
             .Resume.GetIncludeAll()
@@ -48,7 +48,6 @@ public class ResumeService(
             return null;
         }
         var resumeDTO = _mapper.Map<ResumeDTO>(resume);
-        resumeDTO.Keywords = resumeDTO.Keywords.Take(5);
         resumeDTO
             .Recruitments.ToList()
             .ForEach(r =>
@@ -56,6 +55,21 @@ public class ResumeService(
                 r.Areas = [];
                 r.Keywords = r.Keywords.Take(5);
             });
+        resumeDTO.Keywords = resumeDTO.Keywords.Take(5);
+
+        // Add is User Fav
+        if (userId != null)
+        {
+            var userFavRecruitmentIds = await _repository
+                .User.GetAll(u => u.Id == userId)
+                .Include(u => u.FavoriteRecruitments)
+                .SelectMany(u => u.FavoriteRecruitments.Select(r => r.Id))
+                .ToListAsync();
+            foreach (var recruitment in resumeDTO.Recruitments)
+            {
+                recruitment.IsUserFav = userFavRecruitmentIds.Contains(recruitment.Id);
+            }
+        }
         return resumeDTO;
     }
 
@@ -109,27 +123,6 @@ public class ResumeService(
                 .Where(r => r.Id == id)
                 .FirstOrDefaultAsync() ?? throw new NotFoundException("Resume");
 
-        // Is Owner
-        if (resume.UserId == user.Id)
-        {
-            return _mapper.Map<ResumeDTO>(resume);
-        }
-
-        // Not Owner => Hide Area
-        HideResumeArea(resume);
-
-        // No Visibility
-        if (resume.Visibility)
-        {
-            return _mapper.Map<ResumeDTO>(resume);
-        }
-
-        // Not Related Company
-        if (!IsRelatedCompany(resume, user.Id))
-        {
-            throw new ForbiddenException();
-        }
-
         var resumeDTO = _mapper.Map<ResumeDTO>(resume);
         resumeDTO
             .Recruitments.ToList()
@@ -140,6 +133,40 @@ public class ResumeService(
             });
 
         resumeDTO.Keywords = resumeDTO.Keywords.Take(5);
+
+        // Add is User Fav
+        var userFavRecruitmentIds = await _repository
+            .User.GetAll(u => u.Id == user.Id)
+            .Include(u => u.FavoriteRecruitments)
+            .SelectMany(u => u.FavoriteRecruitments.Select(r => r.Id))
+            .ToListAsync();
+
+        foreach (var recruitment in resumeDTO.Recruitments)
+        {
+            recruitment.IsUserFav = userFavRecruitmentIds.Contains(recruitment.Id);
+        }
+
+        // Is Owner
+        if (resume.UserId == user.Id)
+        {
+            return resumeDTO;
+        }
+
+        // Not Owner => Hide Area
+        HideResumeArea(resumeDTO);
+
+        // No Visibility
+        if (resume.Visibility)
+        {
+            return resumeDTO;
+        }
+
+        // Not Related Company
+        if (!IsRelatedCompany(resume, user.Id))
+        {
+            throw new ForbiddenException();
+        }
+
         return resumeDTO;
     }
 
@@ -206,4 +233,7 @@ public class ResumeService(
     /// </remarks>
     private static void HideResumeArea(Resume resume) =>
         resume.Areas = resume?.Areas?.Where(x => x.IsDisplayed).ToList();
+
+    private static void HideResumeArea(ResumeDTO resumeDTO) =>
+        resumeDTO.Areas = resumeDTO?.Areas?.Where(x => x.IsDisplayed).ToList();
 }

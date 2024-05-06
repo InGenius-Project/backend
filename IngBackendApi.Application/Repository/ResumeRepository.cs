@@ -30,5 +30,8 @@ public class ResumeRepository(IngDbContext context)
             .ThenInclude(i => i.Key)
             .Include(r => r.User)
             .Include(r => r.Recruitments)
+            .ThenInclude(r => r.Publisher.Avatar)
+            .Include(r => r.Recruitments)
+            .ThenInclude(r => r.Publisher.BackgroundImage)
             .Include(r => r.Keywords);
 }
