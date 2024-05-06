@@ -47,8 +47,16 @@ public class ResumeService(
         {
             return null;
         }
-
-        return _mapper.Map<ResumeDTO>(resume);
+        var resumeDTO = _mapper.Map<ResumeDTO>(resume);
+        resumeDTO.Keywords = resumeDTO.Keywords.Take(5);
+        resumeDTO
+            .Recruitments.ToList()
+            .ForEach(r =>
+            {
+                r.Areas = [];
+                r.Keywords = r.Keywords.Take(5);
+            });
+        return resumeDTO;
     }
 
     public async Task<List<ResumeDTO>> GetRecruitmentResumesAsync(Guid recruitmentId)
@@ -131,6 +139,7 @@ public class ResumeService(
                 r.Keywords = r.Keywords.Take(5);
             });
 
+        resumeDTO.Keywords = resumeDTO.Keywords.Take(5);
         return resumeDTO;
     }
 

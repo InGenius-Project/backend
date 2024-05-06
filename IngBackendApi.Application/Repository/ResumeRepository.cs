@@ -29,5 +29,6 @@ public class ResumeRepository(IngDbContext context)
             .ThenInclude(k => k.Items)
             .ThenInclude(i => i.Key)
             .Include(r => r.User)
-            .Include(r => r.Recruitments);
+            .Include(r => r.Recruitments)
+            .Include(r => r.Keywords);
 }
