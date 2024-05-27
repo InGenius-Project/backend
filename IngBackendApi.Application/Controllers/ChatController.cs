@@ -10,6 +10,7 @@ using IngBackendApi.Models.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MimeKit.Encodings;
 
 [Route("api/[controller]")]
 [Authorize]
@@ -175,7 +176,7 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
             await _userRepository
                 .GetAll(u => u.Id == userId)
                 .Include(u => u.InvitedChatRooms)
-                    .ThenInclude(c => c.Owner)
+                .ThenInclude(c => c.Owner)
                 .AsNoTracking()
                 .FirstOrDefaultAsync() ?? throw new UserNotFoundException();
 
@@ -220,7 +221,10 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
                 .Include(u => u.Users)
                 .FirstOrDefaultAsync() ?? throw new ChatGroupNotFoundException();
 
-        if (!group.Users.Any(u => u.Id == currentUserId) && !group.InvitedUsers.Any(u => u.Id == currentUserId))
+        if (
+            !group.Users.Any(u => u.Id == currentUserId)
+            && !group.InvitedUsers.Any(u => u.Id == currentUserId)
+        )
         {
             throw new ForbiddenException();
         }
@@ -242,7 +246,7 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
 
     [AllowAnonymous]
     [HttpGet("groups/public")]
-    public async Task<IEnumerable<ChatGroupInfoDTO>> GetPublicGroup()
+    public async Task<IEnumerable<ChatGroupInfoDTO>> GetPublicGroups()
     {
         var groups = await _chatGroupRepository
             .GetAll(c => !c.Private)
@@ -254,6 +258,27 @@ public class ChatController(IUnitOfWork unitOfWork, IMapper mapper) : BaseContro
             .AsNoTracking()
             .ToArrayAsync();
         return _mapper.Map<IEnumerable<ChatGroupInfoDTO>>(groups);
+    }
+
+    [HttpGet("groups/private")]
+    public async Task<IEnumerable<ChatGroupInfoDTO>> GetPrivateGroups()
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        var user =
+            await _userRepository
+                .GetAll()
+                .Where(u => u.Id == userId)
+                .Include(u => u.ChatRooms)
+                .ThenInclude(c => c.Users)
+                .ThenInclude(u => u.Avatar)
+                .Include(u => u.ChatRooms)
+                .ThenInclude(c => c.Owner)
+                .ThenInclude(o => o.Avatar)
+                .Include(u => u.ChatRooms)
+                .ThenInclude(c => c.Messages)
+                .FirstOrDefaultAsync() ?? throw new UserNotFoundException();
+
+        return _mapper.Map<IEnumerable<ChatGroupInfoDTO>>(user.ChatRooms.Where(c => c.Private));
     }
 
     private bool IsUserInGroup(Guid userId, Guid groupId)
