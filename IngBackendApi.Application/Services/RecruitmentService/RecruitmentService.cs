@@ -87,14 +87,14 @@ public class RecruitmentService(
 
         var sortBy = searchDTO.SortBy ?? "CreatedTime";
         var orderBy = searchDTO.OrderBy == "asc" ? "asc" : "desc";
-        var keywords = searchDTO.Query?.Split(" ").ToArray() ?? [];
 
         var query = _keywordRecordRepository.GetAll();
 
-        if (keywords.Length != 0)
+        if (searchDTO.Query != null && searchDTO.Query.Length > 0)
         {
-            query = query.Where(k => keywords.Contains(k.Id));
+            query = query.Where(k => searchDTO.Query.Contains(k.Id));
         }
+
         var recruitmentQuery = query
             .Include(k => k.Recruitments)
             .ThenInclude(r => r.Resumes)
