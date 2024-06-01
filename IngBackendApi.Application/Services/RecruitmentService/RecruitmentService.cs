@@ -63,6 +63,7 @@ public class RecruitmentService(
             await _unitOfWork.SaveChangesAsync();
             return _mapper.Map<RecruitmentDTO>(recruitment);
         }
+
         // Update recruitment
         _mapper.Map(recruitmentDTO, recruitment);
         recruitment.PublisherId = userId;
@@ -184,6 +185,7 @@ public class RecruitmentService(
             throw new ForbiddenException();
         }
 
+        resume.Visibility = true;
         recruitment.Resumes.Add(resume);
 
         await _unitOfWork.SaveChangesAsync();

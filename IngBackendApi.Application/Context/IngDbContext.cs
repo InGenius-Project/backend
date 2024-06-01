@@ -299,39 +299,23 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
         CancellationToken cancellationToken = default
     )
     {
-        var AddedEntities = ChangeTracker
-            .Entries()
-            .Where(E => E.State == EntityState.Added)
-            .ToList();
-
-        AddedEntities.ForEach(E =>
+        foreach (var entry in ChangeTracker.Entries<BaseEntity>())
         {
-            if (
-                E.GetType().GetProperty("CreatedAt") != null
-                && E.GetType().GetProperty("ModifiedAt") != null
-            )
+            if (entry.State == EntityState.Added)
             {
-                Console.WriteLine("YES");
-                E.Property("CreatedAt").CurrentValue = DateTime.Now;
-                E.Property("ModifiedAt").CurrentValue = DateTime.Now;
+                entry.Entity.CreatedAt = DateTime.UtcNow;
             }
-        });
+            entry.Entity.ModifiedAt = DateTime.UtcNow;
+        }
 
-        var EditedEntities = ChangeTracker
-            .Entries()
-            .Where(E => E.State == EntityState.Modified)
-            .ToList();
-
-        EditedEntities.ForEach(E =>
+        // Check Resume In Applied
+        foreach (var entry in ChangeTracker.Entries<Resume>())
         {
-            if (
-                E.GetType().GetProperty("CreatedAt") != null
-                && E.GetType().GetProperty("ModifiedAt") != null
-            )
+            if (entry.Entity.Recruitments.Count > 0)
             {
-                E.Property("ModifiedAt").CurrentValue = DateTime.Now;
+                entry.Entity.Visibility = true;
             }
-        });
+        }
 
         return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }

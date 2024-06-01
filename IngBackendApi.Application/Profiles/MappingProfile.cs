@@ -37,12 +37,15 @@ public class MappingProfile : Profile
 
         #region Resume Mapping
         CreateMap<Resume, ResumeDTO>().EqualityComparison((dto, entity) => dto.Id == entity.Id);
-        CreateMap<ResumeDTO, Resume>().EqualityComparison((dto, entity) => dto.Id == entity.Id);
+        CreateMap<ResumeDTO, Resume>()
+            .EqualityComparison((dto, entity) => dto.Id == entity.Id)
+            .ForMember(dest => dest.Recruitments, opt => opt.Ignore());
         CreateMap<ResumePostDTO, ResumeDTO>()
             .EqualityComparison((dto, entity) => dto.Id == entity.Id);
         CreateMap<ResumePostDTO, Resume>()
             .ForMember(rp => rp.User, r => r.Ignore())
-            .EqualityComparison((dto, entity) => dto.Id == entity.Id);
+            .EqualityComparison((dto, entity) => dto.Id == entity.Id)
+            .ForMember(dest => dest.Recruitments, opt => opt.Ignore());
         #endregion
 
         #region Recruitment Mapping

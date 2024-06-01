@@ -88,7 +88,12 @@ public class ResumeService(
 
     public async Task<ResumeDTO> AddOrUpdateAsync(ResumeDTO resumeDTO, Guid userId)
     {
-        var resume = await _repository.Resume.GetByIdAsync(resumeDTO.Id);
+        var resume = await _repository
+            .Resume.GetAll()
+            .Include(r => r.Recruitments)
+            .Where(r => r.Id == resumeDTO.Id)
+            .FirstOrDefaultAsync();
+
         // Add new resume
         if (resume == null)
         {
@@ -99,6 +104,12 @@ public class ResumeService(
             return _mapper.Map<ResumeDTO>(resume);
         }
         // Update resume
+        if (!resumeDTO.Visibility && resume.Recruitments.Count > 0)
+        {
+            throw new UnauthorizedException(
+                "Resumes applied to recruitments cannot change visibility to private."
+            );
+        }
         _mapper.Map(resumeDTO, resume);
         resume.UserId = userId;
         await _repository.Resume.UpdateAsync(resume);
