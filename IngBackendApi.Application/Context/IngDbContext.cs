@@ -115,7 +115,7 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             .HasOne(a => a.Resume)
             .WithMany(r => r.Areas)
             .HasForeignKey(a => a.ResumeId)
-            .OnDelete(DeleteBehavior.NoAction);
+            .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<TagType>().HasIndex(t => t.Value).IsUnique();
         modelBuilder.Entity<TagType>().Property(t => t.Id).ValueGeneratedOnAdd();
