@@ -93,7 +93,10 @@ public class RecruitmentService(
 
         if (searchDTO.Query != null && searchDTO.Query.Length > 0)
         {
-            query = query.Where(k => searchDTO.Query.Contains(k.Id));
+            query = query.Where(k =>
+                searchDTO.Query.Contains(k.Id, StringComparison.CurrentCultureIgnoreCase)
+                || k.Id.Contains(searchDTO.Query)
+            );
         }
 
         var recruitmentQuery = query
@@ -135,6 +138,7 @@ public class RecruitmentService(
         result.ForEach(r =>
         {
             r.Areas = [];
+            r.Resumes = [];
             r.Keywords = r.Keywords.Take(5);
         });
 

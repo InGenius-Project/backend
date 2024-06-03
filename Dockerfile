@@ -17,8 +17,8 @@ FROM build AS migration
 RUN dotnet tool install --global dotnet-ef
 ENV PATH="$PATH:/root/.dotnet/tools"
 RUN apt update -y && apt install uuid-runtime
-RUN dotnet ef migrations add $(uuidgen) --project "./IngBackendApi.Application" -o /app/build -v  -- --environment Production
-RUN dotnet ef migrations bundle --project "./IngBackendApi.Application" --self-contained -r linux-x64 --force -- --environment Production
+# RUN dotnet ef migrations add $(uuidgen) --project "./IngBackendApi.Application" -o /app/build -v  -- --environment Production
+# RUN dotnet ef migrations bundle --project "./IngBackendApi.Application" --self-contained -r linux-x64 --force -- --environment Production
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
