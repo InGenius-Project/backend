@@ -110,12 +110,12 @@ public class IngDbContext(DbContextOptions<IngDbContext> options) : DbContext(op
             .OnDelete(DeleteBehavior.NoAction);
 
         modelBuilder.Entity<Area>().HasOne(a => a.User).WithMany(u => u.Areas);
-        modelBuilder
-            .Entity<Area>()
-            .HasOne(a => a.Resume)
-            .WithMany(r => r.Areas)
-            .HasForeignKey(a => a.ResumeId)
-            .OnDelete(DeleteBehavior.SetNull);
+        // modelBuilder
+        //     .Entity<Area>()
+        //     .HasOne(a => a.Resume)
+        //     .WithMany(r => r.Areas)
+        //     .HasForeignKey(a => a.ResumeId)
+        //     .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<TagType>().HasIndex(t => t.Value).IsUnique();
         modelBuilder.Entity<TagType>().Property(t => t.Id).ValueGeneratedOnAdd();
