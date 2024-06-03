@@ -45,4 +45,5 @@ public interface IUserService : IService<User, UserInfoDTO, Guid>
     Task UpdateUserBackgroundAsync(Guid userId, ImagePostDTO req);
     Task RemoveUserBackgroundAsync(Guid userId);
     Task<bool> CheckUserIsPremium(Guid userId);
+    Task<IEnumerable<Guid>> GetUserFavRecuitmentId(Guid userId);
 }

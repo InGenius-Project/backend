@@ -393,6 +393,18 @@ public class UserService(
         return user.Premium;
     }
 
+    public async Task<IEnumerable<Guid>> GetUserFavRecuitmentId(Guid userId)
+    {
+        var user =
+            await _userRepository
+                .GetAll(u => u.Id == userId)
+                .Include(u => u.FavoriteRecruitments)
+                .AsNoTracking()
+                .FirstOrDefaultAsync() ?? throw new UserNotFoundException();
+
+        return user.FavoriteRecruitments.Select(u => u.Id);
+    }
+
     private async Task<Image> CreateImageFromFileAsync(IFormFile file)
     {
         if (file.Length == 0)

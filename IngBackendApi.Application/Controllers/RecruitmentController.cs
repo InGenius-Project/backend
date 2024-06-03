@@ -56,9 +56,9 @@ public class RecruitmentController(
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
 
-        var recruitment = await _recruitmentService.GetRecruitmentByIdIncludeAllAsync(
-            recruitmentId
-        );
+        var recruitment =
+            await _recruitmentService.GetRecruitmentByIdIncludeAllAsync(recruitmentId)
+            ?? throw new NotFoundException();
 
         // Attach resumes to recruitment if user is the publisher
         if (userId != Guid.Empty && recruitment.PublisherId == userId)
@@ -70,6 +70,12 @@ public class RecruitmentController(
                     recruitmentId
                 );
             }
+        }
+
+        if (userId != Guid.Empty)
+        {
+            var favIds = await _userService.GetUserFavRecuitmentId(userId);
+            recruitment.IsUserFav = favIds.Any(id => id == recruitmentId);
         }
 
         return recruitment;
