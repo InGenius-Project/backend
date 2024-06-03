@@ -98,7 +98,7 @@ public class RecruitmentService(
 
         var recruitmentQuery = query
             .Include(k => k.Recruitments)
-            .ThenInclude(r => r.Resumes)
+            // .ThenInclude(r => r.Resumes)
             .SelectMany(k => k.Recruitments)
             .Where(r => r.Enable)
             .Distinct();
