@@ -94,8 +94,7 @@ public class RecruitmentService(
         if (searchDTO.Query != null && searchDTO.Query.Length > 0)
         {
             query = query.Where(k =>
-                searchDTO.Query.Contains(k.Id, StringComparison.CurrentCultureIgnoreCase)
-                || k.Id.Contains(searchDTO.Query)
+                EF.Functions.Like(k.Id, $"%{searchDTO.Query}%") || k.Id.Contains(searchDTO.Query)
             );
         }
 
