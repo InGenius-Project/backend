@@ -108,7 +108,8 @@ public class RecruitmentService(
         // count total page size
         var total = await recruitmentQuery.Select(r => r.Id).CountAsync();
         var maxPage = (int)Math.Ceiling((double)total / searchDTO.PageSize);
-        searchDTO.Page = int.Max(maxPage, searchDTO.Page);
+        searchDTO.Page = int.Min(maxPage, searchDTO.Page);
+        searchDTO.Page = int.Max(1, searchDTO.Page);
 
         if (orderBy == "asc")
         {
