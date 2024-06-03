@@ -271,11 +271,12 @@ public class AreaService(
 
     public async Task<AreaDTO> AddOrUpdateAsync(AreaDTO areaDTO, Guid userId)
     {
-        var area = await _repository
-            .Area.GetAll(a => a.Id == areaDTO.Id)
-            .Include(a => a.Owner)
-            .Include(a => a.User)
-            .SingleOrDefaultAsync();
+        var area =
+            await _repository
+                .Area.GetAll(a => a.Id == areaDTO.Id)
+                .Include(a => a.Owner)
+                .Include(a => a.User)
+                .FirstOrDefaultAsync() ?? throw new NotFoundException();
 
         if (area == null && areaDTO.Id != Guid.Empty)
         {
