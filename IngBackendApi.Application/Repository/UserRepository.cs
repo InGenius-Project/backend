@@ -20,6 +20,7 @@ public class UserRepository : Repository<User, Guid>, IUserRepository
     {
         return _context
             .User.Where(u => u.Id == id)
+            .Include(u => u.FavoriteRecruitments)
             .Include(u => u.Avatar)
             .Include(u => u.Recruitments)
             .ThenInclude(r => r.Areas)
@@ -31,6 +32,7 @@ public class UserRepository : Repository<User, Guid>, IUserRepository
             .ThenInclude(a => a.ImageTextLayout.Image)
             .Include(u => u.Areas)
             .ThenInclude(a => a.ListLayout.Items)
+            .ThenInclude(i => i.Type)
             .Include(u => u.Areas)
             .ThenInclude(a => a.KeyValueListLayout.Items)
             .ThenInclude(i => i.Key)

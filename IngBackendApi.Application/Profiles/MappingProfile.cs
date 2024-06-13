@@ -37,12 +37,15 @@ public class MappingProfile : Profile
 
         #region Resume Mapping
         CreateMap<Resume, ResumeDTO>().EqualityComparison((dto, entity) => dto.Id == entity.Id);
-        CreateMap<ResumeDTO, Resume>().EqualityComparison((dto, entity) => dto.Id == entity.Id);
+        CreateMap<ResumeDTO, Resume>()
+            .EqualityComparison((dto, entity) => dto.Id == entity.Id)
+            .ForMember(dest => dest.Recruitments, opt => opt.Ignore());
         CreateMap<ResumePostDTO, ResumeDTO>()
             .EqualityComparison((dto, entity) => dto.Id == entity.Id);
         CreateMap<ResumePostDTO, Resume>()
             .ForMember(rp => rp.User, r => r.Ignore())
-            .EqualityComparison((dto, entity) => dto.Id == entity.Id);
+            .EqualityComparison((dto, entity) => dto.Id == entity.Id)
+            .ForMember(dest => dest.Recruitments, opt => opt.Ignore());
         #endregion
 
         #region Recruitment Mapping
@@ -72,12 +75,20 @@ public class MappingProfile : Profile
             );
         CreateMap<AreaPostDTO, Area>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.ImageTextLayout, opt => opt.Ignore())
+            .ForMember(dest => dest.ImageTextLayoutId, opt => opt.Ignore())
+            .ForMember(dest => dest.TextLayoutId, opt => opt.Ignore())
             .ForMember(dest => dest.ListLayoutId, opt => opt.Ignore())
+            .ForMember(dest => dest.KeyValueListLayoutId, opt => opt.Ignore())
             .EqualityComparison((dto, entity) => dto.Id == entity.Id);
         CreateMap<AreaPostDTO, AreaDTO>().ForMember(dest => dest.ListLayout, opt => opt.Ignore());
         CreateMap<AreaDTO, Area>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.ImageTextLayout, opt => opt.Ignore())
+            .ForMember(dest => dest.ImageTextLayoutId, opt => opt.Ignore())
+            .ForMember(dest => dest.TextLayoutId, opt => opt.Ignore())
+            .ForMember(dest => dest.ListLayoutId, opt => opt.Ignore())
+            .ForMember(dest => dest.KeyValueListLayoutId, opt => opt.Ignore())
             .EqualityComparison((dto, entity) => dto.Id == entity.Id);
         CreateMap<AreaType, AreaTypeDTO>();
         CreateMap<AreaTypeDTO, AreaType>().EqualityComparison((dto, entity) => dto.Id == entity.Id);

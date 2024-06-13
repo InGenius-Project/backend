@@ -4,14 +4,14 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Text;
 using System.Text.Json.Serialization;
+using IngBackendApi.Interfaces.Models;
 using IngBackendApi.Interfaces.Repository;
 
-public class Recruitment : BaseEntity, IEntity<Guid>
+public class Recruitment : BaseEntity, IEntity<Guid>, IKeywordable
 {
     [Key]
     public Guid Id { get; set; }
 
-    [MaxLength(15)]
     public string Name { get; set; }
 
     public bool Enable { get; set; }

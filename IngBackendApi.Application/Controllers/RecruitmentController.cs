@@ -21,19 +21,19 @@ using Microsoft.AspNetCore.SignalR;
 [ApiController]
 public class RecruitmentController(
     IMapper mapper,
-    IAreaService areaService,
     IUserService userService,
     IRecruitmentService recruitmentService,
     IResumeService resumeService,
-    IAIService aiService
+    IAIService aiService,
+    IBackgroundTaskService backgroundTaskService
 ) : BaseController
 {
     private readonly IMapper _mapper = mapper;
     private readonly IUserService _userService = userService;
     private readonly IRecruitmentService _recruitmentService = recruitmentService;
-    private readonly IAreaService _areaService = areaService;
     private readonly IAIService _aiService = aiService;
     private readonly IResumeService _resumeService = resumeService;
+    private readonly IBackgroundTaskService _backgroundTaskService = backgroundTaskService;
 
     [HttpGet]
     [ProducesResponseType(typeof(List<RecruitmentDTO>), 200)]
@@ -49,21 +49,33 @@ public class RecruitmentController(
         return recruitmentsDTO;
     }
 
+    [AllowAnonymous]
     [HttpGet("{recruitmentId}")]
     [ProducesResponseType(typeof(RecruitmentDTO), 200)]
     public async Task<RecruitmentDTO?> GetRecruitmentById(Guid recruitmentId)
     {
         var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
-        var user = await _userService.CheckAndGetUserAsync(userId);
 
-        var recruitment = await _recruitmentService.GetRecruitmentByIdIncludeAllAsync(
-            recruitmentId
-        );
+        var recruitment =
+            await _recruitmentService.GetRecruitmentByIdIncludeAllAsync(recruitmentId)
+            ?? throw new NotFoundException();
 
         // Attach resumes to recruitment if user is the publisher
-        if (recruitment.PublisherId == userId && user.Role == UserRole.Company)
+        if (userId != Guid.Empty && recruitment.PublisherId == userId)
         {
-            recruitment.Resumes = await _resumeService.GetRecruitmentResumesAsync(recruitmentId);
+            var user = await _userService.CheckAndGetUserAsync(userId);
+            if (user.Role == UserRole.Company)
+            {
+                recruitment.Resumes = await _resumeService.GetRecruitmentResumesAsync(
+                    recruitmentId
+                );
+            }
+        }
+
+        if (userId != Guid.Empty)
+        {
+            var favIds = await _userService.GetUserFavRecuitmentId(userId);
+            recruitment.IsUserFav = favIds.Any(id => id == recruitmentId);
         }
 
         return recruitment;
@@ -122,4 +134,55 @@ public class RecruitmentController(
     public async Task<SafetyReport> GetSafetyReport(Guid recruitmentId) =>
         await _recruitmentService.GetSafetyReportAsync(recruitmentId)
         ?? throw new NotFoundException("Report not found.");
+
+    [HttpGet("{recruitmentId}/relative")]
+    public async Task<IEnumerable<ResumeDTO>> SearchRelativeResumes(
+        Guid recruitmentId,
+        bool searchAll = false
+    )
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        if (!await _userService.CheckUserIsPremium(userId))
+        {
+            throw new UnauthorizedException("User have no access to premium feature.");
+        }
+        if (!await _recruitmentService.CheckRecruitmentOwnershipAsync(userId, recruitmentId))
+        {
+            throw new UnauthorizedException("Not recruitment owner");
+        }
+        return await _recruitmentService.SearchRelativeResumeAsync(recruitmentId, searchAll);
+    }
+
+    [HttpGet("{recruitmentId}/apply/resume/analyze")]
+    public async Task<ApiResponse> AnalyzeApplyedResume(Guid recruitmentId)
+    {
+        var userId = (Guid?)ViewData["UserId"] ?? Guid.Empty;
+        if (!await _userService.CheckUserIsPremium(userId))
+        {
+            throw new UnauthorizedException("User have no access to premium feature.");
+        }
+        if (!await _recruitmentService.CheckRecruitmentOwnershipAsync(userId, recruitmentId))
+        {
+            throw new UnauthorizedException("Not recruitment owner");
+        }
+        var resumeIds = await _recruitmentService.GetNotAnalyzedApplyedResumeIdAsync(recruitmentId);
+        foreach (var resumeId in resumeIds)
+        {
+            // Analyze Keywords & safety report
+            await _backgroundTaskService.ScheduleTaskAsync(
+                $"{resumeId}_keyword",
+                () => AnalyzeKeywordAsync(resumeId, AreaGenType.Resume),
+                TimeSpan.FromMinutes(0)
+            );
+        }
+
+        return new ApiResponse("請求已接受");
+    }
+
+    [NonAction]
+    public async Task AnalyzeKeywordAsync(Guid targetId, AreaGenType type)
+    {
+        var result = await _aiService.GetKeywordsByAIAsync(targetId, type);
+        await _aiService.SetKeywordsAsync(result, targetId, type);
+    }
 }

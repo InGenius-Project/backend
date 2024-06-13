@@ -68,10 +68,10 @@ public class AreaService(
         var area = await _repository
             .Area.GetAll()
             .Include(a => a.User)
+            .Include(a => a.Owner)
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id.Equals(areaId));
-
-        if (area == null || area.UserId != userId)
+        if (area == null || area.OwnerId != userId)
         {
             throw new ForbiddenException();
         }
@@ -92,13 +92,14 @@ public class AreaService(
         }
     }
 
-    public async Task<List<AreaTypeDTO>> GetAllAreaTypes(UserRole[] userRoles)
+    public async Task<IEnumerable<AreaTypeDTO>> GetAllAreaTypesAsync(string? query)
     {
-        var areaTypes = _areaTypeRepository
-            .GetAll()
-            .Where(a => a.UserRole.Any(ur => userRoles.Contains(ur)));
-        return await _mapper.ProjectTo<AreaTypeDTO>(areaTypes).ToListAsync();
-        ;
+        IQueryable<AreaType> areaTypes = _areaTypeRepository.GetAll().Include(a => a.ListTagTypes);
+        if (query != null)
+        {
+            areaTypes = areaTypes.Where(a => a.Name.Contains(query) || query.Contains(a.Name));
+        }
+        return _mapper.Map<IEnumerable<AreaTypeDTO>>(await areaTypes.ToArrayAsync());
     }
 
     public async Task UpdateLayoutAsync(Guid areaId, ListLayoutDTO listLayoutDTO)
@@ -119,6 +120,8 @@ public class AreaService(
             area.ListLayoutId = area.ListLayout.Id;
             area.ListLayout.AreaId = area.Id;
         }
+        area.ListLayout.AreaId = area.Id;
+        area.LayoutType = LayoutType.List;
         await _repository.Area.SaveAsync();
     }
 
@@ -139,6 +142,7 @@ public class AreaService(
             _mapper.Map(textLayoutDTO, area.TextLayout);
             area.TextLayoutId = area.TextLayout.Id;
         }
+        area.LayoutType = LayoutType.Text;
         area.TextLayout.AreaId = area.Id;
         await _repository.Area.SaveAsync();
     }
@@ -202,6 +206,7 @@ public class AreaService(
             area.ImageTextLayoutId = area.ImageTextLayout.Id;
         }
         area.ImageTextLayout.AreaId = area.Id;
+        area.LayoutType = LayoutType.ImageText;
         await _repository.Area.SaveAsync();
     }
 
@@ -231,6 +236,7 @@ public class AreaService(
             area.KeyValueListLayout.AreaId = area.Id;
         }
         area.KeyValueListLayout.AreaId = areaId;
+        area.LayoutType = LayoutType.KeyValueList;
         await _repository.Area.SaveAsync();
     }
 
@@ -244,11 +250,11 @@ public class AreaService(
             .Area.GetAll()
             .Where(a => areaDtoIds.Contains(a.Id))
             .ToListAsync();
-        areas.ForEach(async a =>
+        foreach (var a in areas)
         {
             await CheckAreaOwnership(a.Id, userId);
             a.Sequence = areaSequencePostDTOs.First(s => s.Id == a.Id)?.Sequence ?? a.Sequence;
-        });
+        }
         await _repository.User.SaveAsync();
     }
 
@@ -265,7 +271,12 @@ public class AreaService(
 
     public async Task<AreaDTO> AddOrUpdateAsync(AreaDTO areaDTO, Guid userId)
     {
-        var area = await _repository.Area.GetByIdAsync(areaDTO.Id);
+        var area = await _repository
+            .Area.GetAll(a => a.Id == areaDTO.Id)
+            .Include(a => a.Owner)
+            .Include(a => a.User)
+            .FirstOrDefaultAsync();
+
         if (area == null && areaDTO.Id != Guid.Empty)
         {
             throw new NotFoundException("Area not found");
@@ -314,6 +325,23 @@ public class AreaService(
         }
 
         return _mapper.Map<IEnumerable<AreaDTO>>(user.Areas.Where(a => a.AreaTypeId == areaTypeId));
+    }
+
+    public async Task<IEnumerable<AreaDTO>> GetRecruitmentAreaByAreaTypeIdAsync(
+        int areaTypeId,
+        Guid recruitmentId
+    )
+    {
+        var areas = await _repository
+            .Area.GetAll()
+            .Where(a => a.AreaTypeId == areaTypeId && a.RecruitmentId == recruitmentId)
+            .Include(a => a.ListLayout.Items)
+            .Include(a => a.KeyValueListLayout.Items)
+            .ThenInclude(i => i.Key)
+            .Include(a => a.ImageTextLayout.Image)
+            .Include(a => a.TextLayout)
+            .ToListAsync();
+        return _mapper.Map<IEnumerable<AreaDTO>>(areas);
     }
 
     private async Task<Image> CreateImageFromUriAsync(string uri, string contentType = "image/jpg")

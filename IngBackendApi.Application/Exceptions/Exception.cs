@@ -141,6 +141,24 @@ public class RecruitmentNotFoundException : NotFoundException
         : base($"職缺: {recruitmentId}") { }
 }
 
+public class ChatGroupNotFoundException : NotFoundException
+{
+    public ChatGroupNotFoundException()
+        : base("聊天群組") { }
+
+    public ChatGroupNotFoundException(string groupId)
+        : base($"聊天群組: {groupId}") { }
+}
+
+public class ChatGroupInvitationNotFoundException : NotFoundException
+{
+    public ChatGroupInvitationNotFoundException()
+        : base("聊天群組邀請") { }
+
+    public ChatGroupInvitationNotFoundException(string invitationId)
+        : base($"聊天群組邀請: {invitationId}") { }
+}
+
 #endregion
 
 #region System Internal Exception

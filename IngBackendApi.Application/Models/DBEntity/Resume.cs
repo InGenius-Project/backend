@@ -1,10 +1,11 @@
 ﻿namespace IngBackendApi.Models.DBEntity;
 
-using IngBackendApi.Interfaces.Repository;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using IngBackendApi.Interfaces.Models;
+using IngBackendApi.Interfaces.Repository;
 
-public class Resume : BaseEntity, IEntity<Guid>
+public class Resume : BaseEntity, IEntity<Guid>, IKeywordable
 {
     [Key]
     public Guid Id { get; set; }
@@ -22,10 +23,10 @@ public class Resume : BaseEntity, IEntity<Guid>
     public required User User { get; set; }
     public Guid UserId { get; set; }
 
-
     // Related Recruitment
     [JsonIgnore]
     public List<Recruitment> Recruitments { get; set; } = [];
+
+    [JsonIgnore]
+    public ICollection<KeywordRecord> Keywords { get; set; } = [];
 }
-
-

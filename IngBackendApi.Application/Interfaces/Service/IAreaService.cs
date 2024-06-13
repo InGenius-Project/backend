@@ -9,7 +9,8 @@ public interface IAreaService : IService<Area, AreaDTO, Guid>
     Task<AreaDTO?> GetAreaIncludeAllById(Guid areaId);
     Task CheckAreaOwnership(Guid areaId, Guid userId);
     void ClearArea(AreaDTO req);
-    Task<List<AreaTypeDTO>> GetAllAreaTypes(UserRole[] userRoles);
+
+    Task<IEnumerable<AreaTypeDTO>> GetAllAreaTypesAsync(string? query);
     Task UpdateLayoutAsync(Guid areaId, ListLayoutDTO listLayoutDTO);
     Task UpdateLayoutAsync(Guid areaId, TextLayoutDTO textLayoutDTO);
     Task UpdateLayoutAsync(Guid areaId, ImageTextLayoutPostDTO imageTextLayoutPostDTO);
@@ -19,4 +20,8 @@ public interface IAreaService : IService<Area, AreaDTO, Guid>
     Task<ImageDTO?> GetImageByIdAsync(Guid imageId);
     Task<AreaDTO> AddOrUpdateAsync(AreaDTO areaDTO, Guid userId);
     Task<IEnumerable<AreaDTO>> GetUserAreaByAreaTypeIdAsync(Guid userId, int areaTypeId);
+    Task<IEnumerable<AreaDTO>> GetRecruitmentAreaByAreaTypeIdAsync(
+        int areaTypeId,
+        Guid recruitmentId
+    );
 }

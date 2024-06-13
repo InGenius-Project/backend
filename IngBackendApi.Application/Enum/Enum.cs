@@ -16,9 +16,8 @@ public enum LayoutType
     KeyValueList
 }
 
-public enum AreaPostType
+public enum AreaGenType
 {
-    User,
     Resume,
     Recruitment
 }

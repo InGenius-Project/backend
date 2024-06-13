@@ -49,6 +49,7 @@ public class UserService(
         var user = await _repository.User.GetByIdAsync(userId) ?? throw new UserNotFoundException();
         _mapper.Map(req, user);
         await _repository.User.UpdateAsync(user);
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task<UserInfoDTO> AddAsync(UserSignUpDTO req)
@@ -289,14 +290,19 @@ public class UserService(
             .Recruitment.GetIncludeAll()
             .Where(r => recruitmentIds.Contains(r.Id));
 
-        var result = await _mapper.ProjectTo<RecruitmentDTO>(query).ToListAsync();
+        var result = _mapper.Map<List<RecruitmentDTO>>(query);
 
         var favRecruitmentIds = _repository
             .User.GetAll(u => u.Id == userId)
             .Include(u => u.FavoriteRecruitments)
             .SelectMany(u => u.FavoriteRecruitments.Select(fr => fr.Id));
-        result.ForEach(r => r.IsUserFav = favRecruitmentIds.Any(id => id == r.Id));
 
+        result.ForEach(r => r.IsUserFav = favRecruitmentIds.Any(id => id == r.Id));
+        result.ForEach(r =>
+        {
+            r.Areas = [];
+            r.Keywords = r.Keywords.Take(5);
+        });
         return result;
     }
 
@@ -307,10 +313,13 @@ public class UserService(
                 .User.GetAll()
                 .Include(a => a.FavoriteRecruitments)
                 .FirstOrDefaultAsync(u => u.Id == userId) ?? throw new UserNotFoundException();
+        var existIds = user.Recruitments?.Select(r => r.Id).ToArray() ?? [];
+        recruitmentIds.RemoveAll(existIds.Contains);
+
         var recruitments =
-            _repository.Recruitment.GetAll(a => recruitmentIds.Contains(a.Id))
+            await _repository.Recruitment.GetAll(a => recruitmentIds.Contains(a.Id)).ToListAsync()
             ?? throw new NotFoundException($"No Recruitment was found");
-        user.FavoriteRecruitments.ToList().AddRange(recruitments);
+        recruitments.ForEach(user.FavoriteRecruitments.Add);
         await _unitOfWork.SaveChangesAsync();
     }
 
@@ -321,7 +330,10 @@ public class UserService(
                 .User.GetAll()
                 .Include(a => a.FavoriteRecruitments)
                 .FirstOrDefaultAsync(u => u.Id == userId) ?? throw new UserNotFoundException();
-        user.FavoriteRecruitments.ToList().RemoveAll(a => recruitmentIds.Contains(a.Id));
+
+        user.FavoriteRecruitments.Where(r => recruitmentIds.Contains(r.Id))
+            .ToList()
+            .ForEach(e => user.FavoriteRecruitments.Remove(e));
         await _unitOfWork.SaveChangesAsync();
     }
 
@@ -368,6 +380,29 @@ public class UserService(
         }
         user.BackgroundImage = null;
         await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task<bool> CheckUserIsPremium(Guid userId)
+    {
+        // FIXME: remove the testing value
+        return true;
+
+        var user =
+            await _userRepository.GetAll(u => u.Id == userId).AsNoTracking().SingleOrDefaultAsync()
+            ?? throw new UserNotFoundException();
+        return user.Premium;
+    }
+
+    public async Task<IEnumerable<Guid>> GetUserFavRecuitmentId(Guid userId)
+    {
+        var user =
+            await _userRepository
+                .GetAll(u => u.Id == userId)
+                .Include(u => u.FavoriteRecruitments)
+                .AsNoTracking()
+                .FirstOrDefaultAsync() ?? throw new UserNotFoundException();
+
+        return user.FavoriteRecruitments.Select(u => u.Id);
     }
 
     private async Task<Image> CreateImageFromFileAsync(IFormFile file)

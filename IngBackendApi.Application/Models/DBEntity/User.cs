@@ -15,7 +15,8 @@ public class User : BaseEntity, IEntity<Guid>
     [Required]
     public required string Email { get; set; }
 
-    public bool Verified { get; set; } = false;
+    public bool Verified { get; set; }
+    public bool Premium { get; set; }
 
     public UserRole Role { get; set; }
 

@@ -4,18 +4,27 @@ using AutoMapper;
 using IngBackendApi.Application.Interfaces.Service;
 using IngBackendApi.Exceptions;
 using IngBackendApi.Interfaces.Repository;
+using IngBackendApi.Interfaces.Service;
 using IngBackendApi.Interfaces.UnitOfWork;
 using IngBackendApi.Models.DBEntity;
 using IngBackendApi.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 
-public class ResumeService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWrapper repository)
-    : Service<Resume, ResumeDTO, Guid>(unitOfWork, mapper),
-        IResumeService
+public class ResumeService(
+    IUnitOfWork unitOfWork,
+    IMapper mapper,
+    IRepositoryWrapper repository,
+    IBackgroundTaskService backgroundTaskService
+) : Service<Resume, ResumeDTO, Guid>(unitOfWork, mapper), IResumeService
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IMapper _mapper = mapper;
     private readonly IRepositoryWrapper _repository = repository;
+    private readonly IBackgroundTaskService _backgroundTaskService = backgroundTaskService;
+    private readonly IRepository<Resume, Guid> _resumeRepository = unitOfWork.Repository<
+        Resume,
+        Guid
+    >();
 
     public async Task<List<ResumeDTO>> GetUserResumesAsync(Guid userId)
     {
@@ -27,7 +36,7 @@ public class ResumeService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWr
         return _mapper.Map<List<ResumeDTO>>(resumes);
     }
 
-    public async Task<ResumeDTO?> GetResumeByIdIncludeAllAsync(Guid resumeId)
+    public async Task<ResumeDTO?> GetResumeByIdIncludeAllAsync(Guid resumeId, Guid? userId)
     {
         var resume = await _repository
             .Resume.GetIncludeAll()
@@ -38,8 +47,30 @@ public class ResumeService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWr
         {
             return null;
         }
+        var resumeDTO = _mapper.Map<ResumeDTO>(resume);
+        resumeDTO
+            .Recruitments.ToList()
+            .ForEach(r =>
+            {
+                r.Areas = [];
+                r.Keywords = r.Keywords.Take(5);
+            });
+        resumeDTO.Keywords = resumeDTO.Keywords.Take(5);
 
-        return _mapper.Map<ResumeDTO>(resume);
+        // Add is User Fav
+        if (userId != null)
+        {
+            var userFavRecruitmentIds = await _repository
+                .User.GetAll(u => u.Id == userId)
+                .Include(u => u.FavoriteRecruitments)
+                .SelectMany(u => u.FavoriteRecruitments.Select(r => r.Id))
+                .ToListAsync();
+            foreach (var recruitment in resumeDTO.Recruitments)
+            {
+                recruitment.IsUserFav = userFavRecruitmentIds.Contains(recruitment.Id);
+            }
+        }
+        return resumeDTO;
     }
 
     public async Task<List<ResumeDTO>> GetRecruitmentResumesAsync(Guid recruitmentId)
@@ -57,7 +88,12 @@ public class ResumeService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWr
 
     public async Task<ResumeDTO> AddOrUpdateAsync(ResumeDTO resumeDTO, Guid userId)
     {
-        var resume = await _repository.Resume.GetByIdAsync(resumeDTO.Id);
+        var resume = await _repository
+            .Resume.GetAll()
+            .Include(r => r.Recruitments)
+            .Where(r => r.Id == resumeDTO.Id)
+            .FirstOrDefaultAsync();
+
         // Add new resume
         if (resume == null)
         {
@@ -68,6 +104,12 @@ public class ResumeService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWr
             return _mapper.Map<ResumeDTO>(resume);
         }
         // Update resume
+        if (!resumeDTO.Visibility && resume.Recruitments.Count > 0)
+        {
+            throw new UnauthorizedException(
+                "Resumes applied to recruitments cannot change visibility to private."
+            );
+        }
         _mapper.Map(resumeDTO, resume);
         resume.UserId = userId;
         await _repository.Resume.UpdateAsync(resume);
@@ -92,19 +134,42 @@ public class ResumeService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWr
                 .Where(r => r.Id == id)
                 .FirstOrDefaultAsync() ?? throw new NotFoundException("Resume");
 
+        var resumeDTO = _mapper.Map<ResumeDTO>(resume);
+        resumeDTO
+            .Recruitments.ToList()
+            .ForEach(r =>
+            {
+                r.Areas = [];
+                r.Keywords = r.Keywords.Take(5);
+            });
+
+        resumeDTO.Keywords = resumeDTO.Keywords.Take(5);
+
+        // Add is User Fav
+        var userFavRecruitmentIds = await _repository
+            .User.GetAll(u => u.Id == user.Id)
+            .Include(u => u.FavoriteRecruitments)
+            .SelectMany(u => u.FavoriteRecruitments.Select(r => r.Id))
+            .ToListAsync();
+
+        foreach (var recruitment in resumeDTO.Recruitments)
+        {
+            recruitment.IsUserFav = userFavRecruitmentIds.Contains(recruitment.Id);
+        }
+
         // Is Owner
         if (resume.UserId == user.Id)
         {
-            return _mapper.Map<ResumeDTO>(resume);
+            return resumeDTO;
         }
 
         // Not Owner => Hide Area
-        HideResumeArea(resume);
+        HideResumeArea(resumeDTO);
 
         // No Visibility
         if (resume.Visibility)
         {
-            return _mapper.Map<ResumeDTO>(resume);
+            return resumeDTO;
         }
 
         // Not Related Company
@@ -113,7 +178,39 @@ public class ResumeService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWr
             throw new ForbiddenException();
         }
 
-        return _mapper.Map<ResumeDTO>(resume);
+        return resumeDTO;
+    }
+
+    public async Task<IEnumerable<RecruitmentDTO>> SearchRelativeRecruitmentAsync(Guid resumeId)
+    {
+        // TODO: Add page search
+        var resume =
+            await _resumeRepository
+                .GetAll(r => r.Id == resumeId)
+                .Include(r => r.Keywords)
+                .ThenInclude(k => k.Recruitments)
+                .ThenInclude(r => r.Publisher.Avatar)
+                .AsNoTracking()
+                .SingleOrDefaultAsync() ?? throw new NotFoundException("Resume not found");
+
+        var recruitments = resume
+            .Keywords.SelectMany(k => k.Recruitments)
+            .Where(r => r.Enable)
+            .GroupBy(r => r.Id)
+            .OrderByDescending(g => g.Count())
+            .Select(g => g.First());
+
+        return _mapper.Map<IEnumerable<RecruitmentDTO>>(recruitments);
+    }
+
+    public async Task<bool> CheckResumeOwnership(Guid userId, Guid resumeId)
+    {
+        var resume =
+            await _resumeRepository
+                .GetAll(r => r.Id == resumeId)
+                .AsNoTracking()
+                .SingleOrDefaultAsync() ?? throw new NotFoundException("resume not found");
+        return resume.UserId == userId;
     }
 
     /// <summary>
@@ -149,4 +246,7 @@ public class ResumeService(IUnitOfWork unitOfWork, IMapper mapper, IRepositoryWr
     /// </remarks>
     private static void HideResumeArea(Resume resume) =>
         resume.Areas = resume?.Areas?.Where(x => x.IsDisplayed).ToList();
+
+    private static void HideResumeArea(ResumeDTO resumeDTO) =>
+        resumeDTO.Areas = resumeDTO?.Areas?.Where(x => x.IsDisplayed).ToList();
 }

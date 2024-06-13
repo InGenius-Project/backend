@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using AutoMapper.EquivalencyExpression;
 using AutoWrapper;
 using Hangfire;
+using Hangfire.Dashboard;
 using IngBackend.Repository;
 using IngBackendApi.Application.Hubs;
 using IngBackendApi.Application.Interfaces.Service;
@@ -71,7 +72,12 @@ if (env.IsDevelopment())
 }
 else
 {
-    builder.Services.AddDbContext<IngDbContext>(options => options.UseSqlServer(connectionString));
+    builder.Services.AddDbContext<IngDbContext>(options =>
+        options.UseSqlServer(
+            connectionString,
+            o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
+        )
+    );
 }
 
 // Add services to the container.
@@ -207,6 +213,18 @@ builder.Services.AddCors(options =>
         name: devCorsPolicy,
         policy =>
         {
+            policy.WithOrigins("*").AllowCredentials().AllowAnyHeader().AllowAnyMethod();
+            policy
+                .WithOrigins("https://ingenius.website", "https://www.ingenius.website")
+                .SetIsOriginAllowedToAllowWildcardSubdomains()
+                .AllowCredentials()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+            policy
+                .WithOrigins("https://150.117.18.40")
+                .AllowCredentials()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
             policy
                 .WithOrigins("http://localhost:34004")
                 .AllowAnyHeader()
@@ -231,6 +249,9 @@ builder.Services.AddCors(options =>
 builder.Services.AddHangfire(config => config.UseInMemoryStorage());
 builder.Services.AddHangfireServer();
 
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -252,8 +273,12 @@ app.UseApiResponseAndExceptionWrapper(
     }
 );
 
-app.UseHangfireDashboard("/hangfire");
+app.UseHangfireDashboard(
+    "/hangfire",
+    new DashboardOptions() { Authorization = [new LocalRequestsOnlyAuthorizationFilter()] }
+);
 app.UseCors(devCorsPolicy);
+
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
